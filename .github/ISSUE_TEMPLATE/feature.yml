@@ -1,0 +1,19 @@
+name: Architecture / Feature Proposal
+description: Propose a new living .plang species, PVM-32 syscall, surgical operator, or coding-layer enhancement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Capability
+      description: Describe the proposed subsystem, new .plang organism, or surgical tool.
+    validations:
+      required: true
+  - type: textarea
+    id: invariants
+    attributes:
+      label: Preservation of Formal Invariants
+      description: How does the proposal preserve zero-header sync harvesting, 50/50 mitosis bounds, Merkle quarantine, and zero-dependency execution?
+    validations:
+      required: true

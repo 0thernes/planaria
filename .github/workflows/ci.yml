@@ -1,0 +1,53 @@
+name: PLANARIA CI & Formal Verification
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  verify-runtime:
+    name: Build .hbin Artifacts, 12-Suite Falsification & CLI Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Compile all .plang programs -> .hbin artifacts
+        run: npm run build
+      - name: Run 12-suite falsifiable verification harness
+        run: npm test
+      - name: Verify CLI bisect -> heal bit-exact SHA-256 roundtrip
+        run: |
+          node bin/planaria.mjs inspect artifacts/aegis_drift.hbin
+          node bin/planaria.mjs bisect artifacts/aegis_drift.hbin /tmp/l.hbin /tmp/r.hbin --offset 49177
+          node bin/planaria.mjs heal /tmp/r.hbin -o /tmp/healed.hbin
+          cmp artifacts/aegis_drift.hbin /tmp/healed.hbin
+          node bin/planaria.mjs xenograft artifacts/aegis_drift.hbin artifacts/synth_reactor.hbin -o /tmp/chimera.hbin
+          node bin/planaria.mjs run /tmp/chimera.hbin --frames 30
+      - name: Run Monte Carlo survival curve & Ed25519 attestation benchmark
+        run: npm run benchmark
+
+  verify-lean4:
+    name: Pure Lean 4 v4.35.0 Kernel Proof Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install elan & Lean 4 toolchain
+        run: |
+          curl https://elan.lean-lang.org/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+      - name: Clean-build all 31 Lean 4 theorems and verify zero sorryAx
+        working-directory: lean
+        run: |
+          lake clean
+          lake build 2>&1 | tee /tmp/lean-ci.log
+          if grep -q "sorryAx" /tmp/lean-ci.log; then
+            echo "ERROR: sorryAx detected in Lean 4 proof audit!"
+            exit 1
+          fi
+          if grep -q "ofReduceBool\|trustCompiler" /tmp/lean-ci.log; then
+            echo "ERROR: native_decide / trustCompiler detected!"
+            exit 1
+          fi

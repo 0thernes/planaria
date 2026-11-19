@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PLANARIA — Progressive Holographic Executable & Surgical Vivisection Studio</title>
+  <link rel="stylesheet" href="/src/web/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-dot" id="pulseDot"></div>
+      <div>
+        <h1>PLANARIA</h1>
+        <div class="sub">PROGRESSIVE HOLOGRAPHIC EXECUTABLE (.HBIN) · PVM-32 ANASTOMOSIS · LEAN 4 VERIFIED</div>
+      </div>
+    </div>
+    <div class="top-controls">
+      <select id="speciesSelect" title="Select Compiled Living .hbin Organism">
+        <option value="aegis_drift">AEGIS_DRIFT.hbin (Arcade Starfighter)</option>
+        <option value="synth_reactor">SYNTH_REACTOR.hbin (4-Voice Lissajous Synth)</option>
+        <option value="cipher_vault">CIPHER_VAULT.hbin (ARX Avalanche Vault)</option>
+      </select>
+      <button id="btnAudio" class="btn-cyan">48kHz Audio: OFF</button>
+      <button id="btnAuto" class="btn-emerald active">Autopilot: ON</button>
+      <button id="btnDownload" class="btn-gold">Export .hbin</button>
+      <button id="btnRestore" class="btn-emerald">Restore 100%</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <!-- LEFT MAIN OPERATING THEATER -->
+    <section style="display:flex; flex-direction:column; gap:14px;">
+      <!-- DUAL PATIENT LIVE EXECUTION VIEWPORTS -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Live Surgical Execution Theater (60 FPS PVM-32 Bytecode)</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span id="immuneBadge" class="badge badge-s2">IMMUNE: MERKLE ON</span>
+            <span id="modeBadge" class="badge badge-s1">CONTROL COMPARISON</span>
+          </div>
+        </div>
+
+        <div class="arena-grid">
+          <!-- PATIENT A: PLANARIA LIVING BINARY -->
+          <div class="crt-card patient-primary" id="cardPrimary">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong id="primaryLabel" style="color:#f8fafc;">PATIENT A · PLANARIA (.hbin)</strong>
+              <span id="primaryStratumBadge" class="badge badge-s3">STRATUM 3 · FULL</span>
+            </div>
+            <div class="crt-wrap">
+              <canvas id="canvasPrimary" width="160" height="120"></canvas>
+            </div>
+            <div class="crt-meta">
+              <span id="primaryRoot">ROOT: —</span>
+              <span id="primaryFps">0 insns/f</span>
+            </div>
+          </div>
+
+          <!-- PATIENT B: LINEAR CONTROL TWIN OR MITOSIS CHILD SHARD B -->
+          <div class="crt-card" id="cardSecondary">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong id="secondaryLabel" style="color:#f8fafc;">CONTROL · LINEAR BINARY (LINBIN01)</strong>
+              <span id="secondaryBadge" class="badge badge-s3">INTACT</span>
+            </div>
+            <div class="crt-wrap">
+              <canvas id="canvasSecondary" width="160" height="120"></canvas>
+            </div>
+            <div class="crt-meta">
+              <span id="secondaryMeta">SHA-256 Monolithic Loader</span>
+              <span id="secondaryStatus">ALIVE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIVE TELEMETRY STRIP -->
+        <div class="stats-strip">
+          <div class="stat-box">
+            <div class="stat-label">Surviving Cells</div>
+            <div class="stat-val good" id="statCells">192 / 192</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">RS(254,238) Healed</div>
+            <div class="stat-val" id="statRsFixed">0 B</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Byzantine Blocked</div>
+            <div class="stat-val" id="statQuarantined">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Xenografts</div>
+            <div class="stat-val" id="statXeno">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Unaligned Shifts</div>
+            <div class="stat-val" id="statShifts">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Decode Latency</div>
+            <div class="stat-val good" id="statLatency">0.0 ms</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORENSIC LAB MULTI-TAB PANEL -->
+      <div class="panel">
+        <div class="tabs-bar">
+          <button class="tab-btn active" data-tab="tissue">1. Cellular Tissue Map (192×512B)</button>
+          <button class="tab-btn" data-tab="vascular">2. Organ Anastomosis &amp; Disassembly</button>
+          <button class="tab-btn" data-tab="curve">3. Empirical Survival Phase-Transition</button>
+          <button class="tab-btn" data-tab="compiler">4. Live Plang Compiler</button>
+        </div>
+
+        <!-- TAB 1: CELLULAR TISSUE MAP -->
+        <div class="tab-pane active" id="tab-tissue">
+          <div class="tissue-layout">
+            <div>
+              <canvas id="canvasTissue" class="canvas-responsive" width="660" height="232"
+                title="Click to inspect cell anatomy; Shift+Drag to surgically destroy cells live!"></canvas>
+              <div class="legend-row">
+                <span><i class="swatch" style="background:#fbbf24"></i>S0 Stem (k=2)</span>
+                <span><i class="swatch" style="background:#22d3ee"></i>S1 Vital (k=4)</span>
+                <span><i class="swatch" style="background:#10f5a8"></i>S2 Cortex (k=6–8)</span>
+                <span><i class="swatch" style="background:#a855f7"></i>S3 Genome (k=8–16)</span>
+                <span><i class="swatch" style="background:#f43f5e"></i>Byzantine Quarantine</span>
+                <span><i class="swatch" style="background:#e879f9"></i>Xenograft Donor</span>
+                <span style="color:#f8fafc;">Tip: Shift+Drag across grid to excise cells live!</span>
+              </div>
+            </div>
+            <div class="cell-inspector" id="cellInspector">
+              <strong>512-BYTE CELL ANATOMY INSPECTOR</strong><br/>
+              Click any cell in the 192-cell tissue map to inspect its 4B Barker sync word,
+              16B header, Cauchy eval coordinate <code>x_i</code>, Depth-8 SHA-256 Merkle
+              proof, and 2-way interleaved <code>RS(254,238)</code> parity!
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: ORGAN ANASTOMOSIS GRAPH & DISASSEMBLY -->
+        <div class="tab-pane" id="tab-vascular">
+          <div style="display:grid; grid-template-columns:1.15fr 1fr; gap:12px;">
+            <div>
+              <canvas id="canvasVascular" class="canvas-responsive" width="520" height="240"></canvas>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:10px; color:var(--cyan);">LIVE PVM-32 DISASSEMBLY</span>
+                <select id="disasmBundle" style="padding:3px 6px;">
+                  <option value="0">B0: S0_STEM_NUCLEUS</option>
+                  <option value="1">B1: S1_CORE_LOGIC</option>
+                  <option value="2">B2: S1_WIREFRAME</option>
+                  <option value="3">B3: S2_CORTEX_RENDER</option>
+                  <option value="4">B4: S2_SYNTH_AUDIO</option>
+                  <option value="5">B5: S3_ORGANISM_FX</option>
+                </select>
+              </div>
+              <div class="disasm-box" id="disasmBox">Loading disassembly...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: EMPIRICAL SURVIVAL PHASE-TRANSITION CURVE -->
+        <div class="tab-pane" id="tab-curve">
+          <canvas id="canvasCurve" class="canvas-responsive" width="880" height="250"></canvas>
+          <div id="benchSummary" style="margin-top:8px; font-size:10px; color:var(--muted);"></div>
+        </div>
+
+        <!-- TAB 4: LIVE PLANG COMPILER -->
+        <div class="tab-pane" id="tab-compiler">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:10px; color:var(--emerald);">LIVE IN-BROWSER PLANG -> PVM-32 -> .HBIN COMPILER</span>
+            <button id="btnCompileLive" class="btn-emerald">Compile &amp; Inject Live .hbin</button>
+          </div>
+          <textarea id="plangEditor" class="code-box" spellcheck="false"></textarea>
+          <div id="compileStatus" style="margin-top:6px; font-size:10px; color:var(--cyan);"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT SURGICAL INSTRUMENT DOCK -->
+    <aside class="dock">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Surgical Vivisection Dock</div>
+          <span style="font-size:10px; color:var(--muted);">REAL BYTE OPS</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <!-- 1. PLANARIAN MITOSIS -->
+          <div class="tool-group">
+            <div class="tool-group-title">1. Planarian Bisection &amp; Regeneration</div>
+            <div class="btn-grid">
+              <button id="btnMitosis" class="btn-cyan">Laser Bisect (50/50)</button>
+              <button id="btnHeal" class="btn-emerald">Regenerate 100%</button>
+              <button id="btnShiftShuffle" class="btn-gold">+137B Shift &amp; Shuffle</button>
+              <button id="btnTrisectHeal" class="btn-cyan">Trisect &amp; cat(A+C)</button>
+            </div>
+          </div>
+
+          <!-- 2. PROGRESSIVE SHREDDING -->
+          <div class="tool-group">
+            <div class="tool-group-title">2. Progressive Erasure (Zero-Cliff Test)</div>
+            <div class="btn-grid">
+              <button class="btn-gold" data-shred="0.35">Shred 35% (S3)</button>
+              <button class="btn-gold" data-shred="0.62">Shred 62% (S2)</button>
+              <button class="btn-crimson" data-shred="0.78">Shred 78% (S1)</button>
+              <button class="btn-crimson" data-shred="0.88">Shred 88% (S0 Ghost!)</button>
+            </div>
+          </div>
+
+          <!-- 3. RADIATION BIT-ROT -->
+          <div class="tool-group">
+            <div class="tool-group-title">3. Radiation Bit-Rot (Inner RS(254,238))</div>
+            <div class="btn-grid">
+              <button class="btn-gold" data-rad="8">8B/Cell Random</button>
+              <button class="btn-gold" data-rad="14" data-burst="1">14B Burst ALL Cells!</button>
+              <button class="btn-crimson" data-rad="16" data-burst="1">16B Max Burst Limit</button>
+              <button class="btn-crimson" data-rad="22" data-burst="1">22B Lethal Overdose</button>
+            </div>
+          </div>
+
+          <!-- 4. BYZANTINE TROJAN ATTACK -->
+          <div class="tool-group">
+            <div class="tool-group-title">4. Byzantine Trojan Immune System</div>
+            <div class="btn-grid">
+              <button id="btnTrojan" class="btn-crimson">Inject +36 Trojans</button>
+              <button id="btnToggleImmune" class="btn-emerald">Immune: ON (Safe)</button>
+            </div>
+          </div>
+
+          <!-- 5. TARGETED ORGAN SCALPEL -->
+          <div class="tool-group">
+            <div class="tool-group-title">5. Targeted Organ Scalpel (Anastomosis)</div>
+            <div class="btn-grid">
+              <button class="btn-gold" data-amp="5">Amputate S3 FX</button>
+              <button class="btn-crimson" data-amp="3">Amputate S2 Render</button>
+              <button class="btn-crimson" data-amp="4">Amputate S2 Audio</button>
+              <button class="btn-crimson" data-amp="2,3">Amputate All Visuals</button>
+            </div>
+          </div>
+
+          <!-- 6. CROSS-SPECIES XENOGRAFT CHIMERA -->
+          <div class="tool-group">
+            <div class="tool-group-title">6. Cross-Species Xenograft Splicer</div>
+            <div class="btn-row" style="margin-bottom:6px;">
+              <select id="donorSelect">
+                <option value="synth_reactor">Donor: SYNTH_REACTOR</option>
+                <option value="cipher_vault">Donor: CIPHER_VAULT</option>
+                <option value="aegis_drift">Donor: AEGIS_DRIFT</option>
+              </select>
+            </div>
+            <button id="btnXenograft" class="btn-magenta" style="width:100%;">
+              Amputate Render+Audio &amp; Splice Chimera!
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SURGICAL EVENT LOG -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Surgical Telemetry Log</div>
+          <span style="font-size:10px; color:var(--muted);">Keys: WASD/Arrows + Space</span>
+        </div>
+        <div class="event-log" id="eventLog"></div>
+      </div>
+    </aside>
+  </main>
+
+  <script type="module" src="/src/web/app.js"></script>
+</body>
+</html>

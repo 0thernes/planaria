@@ -1,0 +1,377 @@
+program AEGIS_DRIFT;
+
+// Standardized Xenograft Shared-Memory ABI Offsets
+const M_FRAME     = 0;
+const M_SCORE     = 1;
+const M_ENERGY    = 2;
+const M_PX        = 3;
+const M_PY        = 4;
+const M_PANG      = 5;
+const M_COMBO     = 6;
+const M_EVENTS    = 7;   // bit0=fire, bit1=hit, bit2=shield, bit3=damage
+const M_ROOTNOTE  = 8;
+const M_TEMPO     = 9;
+const M_PALETTE   = 10;
+const M_ENTROPY   = 11;
+const M_ENT_CNT   = 12;
+const M_PART_CNT  = 13;
+const M_INPUT     = 14;
+const M_INIT      = 15;
+const ENT_BASE    = 64;  // 12 entities * 8 words: [type, x, y, vx, vy, hp, phase, color]
+const PART_BASE   = 256; // 20 particles * 4 words: [x, y, vx, life]
+
+// ============================================================================
+// STRATUM 0: STEM NUCLEUS (k=2, n=24 — survives 91.7% binary destruction!)
+// ============================================================================
+bundle S0_STEM_NUCLEUS {
+  let f = frame();
+  mem[0] = f;
+  mem[14] = input();
+
+  // Attempt core logic via Anastomosis; if dead, run minimal reflex drift
+  let hasLogic = organ_call(LOGIC, 1);
+  if (hasLogic == 0) {
+    let sx = 80 + (sin(f * 3) >> 3);
+    mem[3] = sx;
+    mem[4] = 96;
+  }
+
+  // Attempt highest viable Renderer (S2 Cortex -> S1 Wireframe -> S0 Ghost)
+  let drew = organ_call(RENDERER, 2);
+  if (drew == 0) {
+    clear(0);
+    let px = mem[3];
+    let py = mem[4];
+    if (px < 10) { px = 80; }
+    if (py < 10) { py = 92; }
+    let r = 8 + ((f >> 2) & 15);
+    circle(px, py, r, 4, 0);
+    tri(px, py - 6, px - 5, py + 5, px + 5, py + 5, 4);
+    line(0, 108, 159, 108, 1);
+    let beat = 108 - ((sin(f * 18) >> 5));
+    pixel(f % 160, beat, 4);
+    label(4, 4, "S0:G", "HOST", 4);
+    number(126, 4, f, 14);
+  }
+
+  // Attempt Stratum 3 Full Organism FX
+  organ_call(FX, 3);
+
+  // Attempt Stratum 2 Audio; if missing, emit minimal 1-bit Stem Heartbeat
+  let heard = organ_call(AUDIO, 2);
+  if (heard == 0) {
+    let pulse = f % 48;
+    if (pulse < 5) {
+      voice(0, 4, 1760, 22, 0, 900);
+    } else {
+      voice(0, 0, 0, 0, 0, 900);
+    }
+  }
+}
+
+// ============================================================================
+// STRATUM 1: CORE LOGIC (k=4, n=24 — survives 83.3% binary destruction!)
+// ============================================================================
+bundle S1_CORE_LOGIC {
+  let f = mem[0];
+  let inp = mem[14];
+  mem[7] = 0;
+
+  if (mem[15] == 0) {
+    mem[15] = 1;
+    mem[3] = 80;
+    mem[4] = 98;
+    mem[2] = 100;
+  }
+
+  let px = mem[3];
+  let py = mem[4];
+
+  if ((inp & 1) != 0) { px -= 3; }
+  if ((inp & 2) != 0) { px += 3; }
+  if ((inp & 4) != 0) { py -= 2; }
+  if ((inp & 8) != 0) { py += 2; }
+  if ((inp & 32) != 0 && (inp & 15) == 0) {
+    px = 80 + (sin(f * 2) * 52 >> 8) + (cos(f * 5) * 14 >> 8);
+    py = 96 + (sin(f * 3) * 8 >> 8);
+  }
+  if (px < 10) { px = 10; }
+  if (px > 149) { px = 149; }
+  if (py < 36) { py = 36; }
+  if (py > 110) { py = 110; }
+  mem[3] = px;
+  mem[4] = py;
+
+  // Fire plasma bolts (slots 0..4)
+  let wantFire = ((inp & 48) != 0) && ((f % 9) == 0);
+  let i = 0;
+  while (i < 5) {
+    let base = ENT_BASE + i * 8;
+    let ty = mem[base];
+    if (ty == 0 && wantFire) {
+      mem[base] = 2;
+      mem[base + 1] = px;
+      mem[base + 2] = py - 7;
+      mem[7] = mem[7] | 1;
+      wantFire = 0;
+    } else if (ty == 2) {
+      let by = mem[base + 2] - 5;
+      mem[base + 2] = by;
+      if (by < 4) { mem[base] = 0; }
+    }
+    i += 1;
+  }
+
+  // Hostiles & energy orbs (slots 5..11)
+  while (i < 12) {
+    let base = ENT_BASE + i * 8;
+    let ty = mem[base];
+    if (ty == 0 && ((f + i * 17) % 23) == 0) {
+      mem[base] = (rand(7) == 0) ? 3 : 1;
+      mem[base + 1] = 14 + rand(132);
+      mem[base + 2] = 6;
+      mem[base + 3] = rand(3) - 1;
+      mem[base + 4] = 1 + (i & 1);
+      mem[base + 6] = rand(360);
+    } else if (ty != 0) {
+      let ex = mem[base + 1] + mem[base + 3];
+      let ey = mem[base + 2] + mem[base + 4];
+      if (ex < 10 || ex > 149) { mem[base + 3] = 0 - mem[base + 3]; }
+      mem[base + 1] = ex;
+      mem[base + 2] = ey;
+      if (ey > 118) { mem[base] = 0; }
+
+      if (ty == 1) {
+        let b = 0;
+        while (b < 5) {
+          let bb = ENT_BASE + b * 8;
+          if (mem[bb] == 2 && abs(mem[bb + 1] - ex) < 8 && abs(mem[bb + 2] - ey) < 8) {
+            mem[bb] = 0;
+            mem[base] = 0;
+            mem[1] += 25;
+            mem[7] = mem[7] | 2;
+            mem[250] = ex;
+            mem[251] = ey;
+          }
+          b += 1;
+        }
+      }
+
+      if (abs(ex - px) < 9 && abs(ey - py) < 9) {
+        mem[base] = 0;
+        if (ty == 3) {
+          mem[2] += 15;
+          if (mem[2] > 100) { mem[2] = 100; }
+          mem[1] += 50;
+          mem[7] = mem[7] | 4;
+        } else {
+          mem[2] -= 12;
+          if (mem[2] < 10) { mem[2] = 100; }
+          mem[7] = mem[7] | 8;
+        }
+      }
+    }
+    i += 1;
+  }
+}
+
+// ============================================================================
+// STRATUM 1: WIREFRAME TACTICAL FALLBACK RENDERER (k=4, n=24)
+// ============================================================================
+bundle S1_WIREFRAME {
+  clear(0);
+  // Tactical radar border & crosshairs
+  rect(2, 12, 156, 106, 15, 0);
+  line(80, 12, 80, 117, 1);
+  line(2, 65, 157, 65, 1);
+
+  let px = mem[3];
+  let py = mem[4];
+  tri(px, py - 6, px - 5, py + 5, px + 5, py + 5, 2);
+
+  let i = 0;
+  while (i < 12) {
+    let base = ENT_BASE + i * 8;
+    let ty = mem[base];
+    if (ty != 0) {
+      let x = mem[base + 1];
+      let y = mem[base + 2];
+      if (ty == 2) {
+        line(x, y - 3, x, y + 3, 10);
+      } else if (ty == 3) {
+        circle(x, y, 3, 3, 0);
+      } else {
+        rect(x - 3, y - 3, 7, 7, 4, 0);
+      }
+    }
+    i += 1;
+  }
+
+  label(4, 2, "S1:W", "IRE ", 3);
+  number(64, 2, mem[1], 2);
+  number(132, 2, mem[2], 4);
+}
+
+// ============================================================================
+// STRATUM 2: CORTEX FULL VECTOR RENDERER (k=8, n=32 — Xenograftable!)
+// ============================================================================
+bundle S2_CORTEX_RENDER {
+  let f = mem[0];
+  glow(165);
+
+  // Perspective tactical floor grid
+  let gy = 20 + ((f * 2) % 20);
+  while (gy < 120) {
+    line(0, gy, 159, gy, 1);
+    gy += 20;
+  }
+
+  let px = mem[3];
+  let py = mem[4];
+
+  // Render glowing neon starfighter hull + wings + cockpit + engine flame
+  tri(px, py - 8, px - 8, py + 6, px + 8, py + 6, 3);
+  tri(px, py - 4, px - 4, py + 4, px + 4, py + 4, 7);
+  line(px - 2, py + 6, px, py + 10 + (f & 3), 4);
+  line(px + 2, py + 6, px, py + 10 + (f & 3), 4);
+
+  // Render all active entities
+  let i = 0;
+  while (i < 12) {
+    let base = ENT_BASE + i * 8;
+    let ty = mem[base];
+    if (ty != 0) {
+      let x = mem[base + 1];
+      let y = mem[base + 2];
+      if (ty == 2) {
+        line(x, y - 5, x, y + 3, 2);
+        pixel(x, y - 6, 7);
+      } else if (ty == 3) {
+        circle(x, y, 4, 3, 0);
+        circle(x, y, 2, 7, 1);
+      } else {
+        // Armored alien diamond interceptor
+        line(x, y - 5, x + 5, y, 5);
+        line(x + 5, y, x, y + 5, 5);
+        line(x, y + 5, x - 5, y, 5);
+        line(x - 5, y, x, y - 5, 5);
+        pixel(x, y, 11);
+      }
+    }
+    i += 1;
+  }
+
+  // Top telemetry bar
+  rect(0, 0, 160, 11, 0, 1);
+  line(0, 11, 159, 11, 15);
+  label(3, 2, "AEGI", "S", 2);
+  number(44, 2, mem[1], 7);
+  // Energy gauge
+  rect(108, 3, 46, 5, 15, 0);
+  let barW = (mem[2] * 44) / 100;
+  if (barW > 0) { rect(109, 4, barW, 3, 3, 1); }
+}
+
+// ============================================================================
+// STRATUM 2: SYNTHWAVE 4-CHANNEL AUDIO ORGAN (k=6, n=24 — Xenograftable!)
+// ============================================================================
+bundle S2_SYNTH_AUDIO {
+  let f = mem[0];
+  let ev = mem[7];
+  let step = (f >> 3) & 7;
+
+  // Ch 0: Driving sawtooth synthwave bassline (A1-C2-D2-E2)
+  let bass = 880; // 55 Hz * 16
+  if (step == 2 || step == 3) { bass = 1046; }
+  if (step == 4 || step == 5) { bass = 1175; }
+  if (step == 6 || step == 7) { bass = 1318; }
+  let bassEnv = 28 - ((f & 7) * 2);
+  voice(0, 3, bass, bassEnv, 4, 900);
+
+  // Ch 1: Arpeggiated square lead reacting to ship X position
+  let arpIdx = (f >> 2) & 3;
+  let lead = 3520;
+  if (arpIdx == 1) { lead = 4186; }
+  if (arpIdx == 2) { lead = 5274; }
+  if (arpIdx == 3) { lead = 6272; }
+  lead += (mem[3] - 80) * 4;
+  voice(1, 2, lead, 18, -3, 2800);
+
+  // Ch 2: Reactive laser pew sweep on fire event
+  if ((ev & 1) != 0) {
+    voice(2, 4, 9600, 26, 0, 4200);
+  } else if ((f & 7) < 3) {
+    voice(2, 1, 2640, 10, 6, 1600);
+  } else {
+    voice(2, 0, 0, 0, 0, 1200);
+  }
+
+  // Ch 3: White-noise explosion burst on hit/damage or hi-hat tick
+  if ((ev & 2) != 0 || (ev & 8) != 0) {
+    voice(3, 5, 1800, 38, 0, 2400);
+  } else if ((f & 7) == 0) {
+    voice(3, 5, 6400, 12, 0, 5000);
+  } else {
+    voice(3, 0, 0, 0, 0, 1200);
+  }
+}
+
+// ============================================================================
+// STRATUM 3: FULL ORGANISM FX (k=16, n=40 — Starfield, Shrapnel, Shield Halo)
+// ============================================================================
+bundle S3_ORGANISM_FX {
+  let f = mem[0];
+
+  // Spawn shrapnel burst when LOGIC triggers hit event (bit 1)
+  if ((mem[7] & 2) != 0) {
+    let bx = mem[250];
+    let by = mem[251];
+    let k = 0;
+    while (k < 6) {
+      let pi = PART_BASE + ((f + k) % 20) * 4;
+      mem[pi] = bx;
+      mem[pi + 1] = by;
+      mem[pi + 2] = (k - 3) * 2 + 1;
+      mem[pi + 3] = 16;
+      k += 1;
+    }
+    circle(bx, by, 9, 11, 0);
+  }
+
+  // Multi-layer parallax starfield
+  let s = 0;
+  while (s < 18) {
+    let sx = (s * 47 + 13) % 160;
+    let speed = 1 + (s & 3);
+    let sy = (s * 29 + f * speed) % 108 + 12;
+    let col = (speed > 2) ? 7 : 14;
+    pixel(sx, sy, col);
+    s += 1;
+  }
+
+  // Update & render explosive particle shrapnel & plasma bloom
+  let p = 0;
+  while (p < 20) {
+    let pi = PART_BASE + p * 4;
+    let life = mem[pi + 3];
+    if (life > 0) {
+      let x = mem[pi] + mem[pi + 2];
+      let y = mem[pi + 1] + ((p & 3) - 1);
+      mem[pi] = x;
+      mem[pi + 1] = y;
+      mem[pi + 3] = life - 1;
+      let col = life > 8 ? 11 : 6;
+      circle(x, y, life >> 3, col, 1);
+    }
+    p += 1;
+  }
+
+  // Dynamic shield harmonic aura around player ship
+  let px = mem[3];
+  let py = mem[4];
+  let aura = 10 + ((sin(f * 6) * 2) >> 8);
+  circle(px, py, aura, 6, 0);
+
+  // Stratum-3 Live Crown Badge
+  label(82, 2, "S3", "", 6);
+}

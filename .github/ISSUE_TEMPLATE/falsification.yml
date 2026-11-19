@@ -1,0 +1,23 @@
+name: Falsification / Counterexample / Security Audit Report
+description: Submit a counterexample, Byzantine attack bypass, coding-bound violation, prior-art citation, or Lean 4 scope critique
+title: "[Falsification]: "
+labels: ["verification", "falsification", "security"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every theorem, coding bound, Byzantine quarantine guarantee, and novelty claim in **PLANARIA** is explicitly falsifiable (see `VERIFICATION.md` and `paper/WHITE_PAPER.md`). Adversarial counterexamples, decoder-poisoning vectors, Lean 4 proof audits, and prior-art citations are strongly welcomed.
+  - type: input
+    id: target
+    attributes:
+      label: Target Claim, Theorem, or Security Guarantee
+      placeholder: "e.g., Theorem I (Cauchy 2x2), Theorem II (Unaligned Mitosis), Theorem IV (Merkle Quarantine), or RS(254,238) Burst Limit"
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Counterexample Payload, Reproducible Script, or Prior Citation
+      description: Provide exact seed/byte offset, forged cell payload, Lean 4 counterexample, or bibliographic DOI/arXiv citation.
+    validations:
+      required: true

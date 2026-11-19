@@ -1,0 +1,21 @@
+{
+  "name": "planaria",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "PLANARIA — Progressive Holographic Executable Architecture (.hbin), Plang Compiler, PVM-32 Anastomosis Virtual Machine, Byzantine Cellular Immune System, Live Surgical Vivisection Studio & Pure Lean 4 Proofs",
+  "author": "Alexander S. Donahue <0_0@0thernes.art> (0thernes LLC)",
+  "license": "SEE LICENSE IN LICENSE",
+  "bin": {
+    "planaria": "./bin/planaria.mjs"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "build": "node scripts/build-artifacts.mjs",
+    "test": "node test/verify.mjs",
+    "benchmark": "node scripts/benchmark.mjs",
+    "cli": "node bin/planaria.mjs"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

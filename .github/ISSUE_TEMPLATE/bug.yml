@@ -1,0 +1,25 @@
+name: Bug / Runtime Defect Report
+description: Report a defect in the .hbin codec, Plang compiler, PVM-32 VM, CLI, AudioWorklet, or Surgical Vivisection Studio
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Defect Summary
+      description: Describe what went wrong and which subsystem was affected (GF256/RS/Cauchy, Merkle Immune, Plang Compiler, PVM-32, CLI, or Studio UI).
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal Reproducible Command or Byte Sequence
+      description: Include exact CLI command, Plang snippet, or surgical button sequence + Node/browser version.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs. Observed Behavior
+    validations:
+      required: true

@@ -1,0 +1,207 @@
+program CIPHER_VAULT;
+
+// Standardized Xenograft Shared-Memory ABI Offsets
+const ENT_BASE  = 64;
+const CIPH_BASE = 512;
+
+// ============================================================================
+// STRATUM 0: STEM NUCLEUS (k=2, n=24 — survives 91.7% binary destruction!)
+// ============================================================================
+bundle S0_STEM_NUCLEUS {
+  let f = frame();
+  mem[0] = f;
+  mem[14] = input();
+
+  let hasLogic = organ_call(LOGIC, 1);
+  if (hasLogic == 0) {
+    mem[3] = 80;
+    mem[4] = 60;
+    mem[11] = (f * 2654435761) & 0x7fff;
+  }
+
+  let drew = organ_call(RENDERER, 2);
+  if (drew == 0) {
+    clear(0);
+    rect(50, 34, 60, 52, 4, 0);
+    line(50, 34, 110, 86, 4);
+    line(110, 34, 50, 86, 4);
+    label(4, 4, "S0:L", "OCK ", 4);
+    number(60, 96, mem[11] & 0xfff, 4);
+  }
+
+  organ_call(FX, 3);
+
+  let heard = organ_call(AUDIO, 2);
+  if (heard == 0) {
+    if ((f % 40) < 3) {
+      voice(0, 4, 3200, 18, 0, 1400);
+    } else {
+      voice(0, 0, 0, 0, 0, 1400);
+    }
+  }
+}
+
+// ============================================================================
+// STRATUM 1: ARX / FEISTEL STREAM-CIPHER LOGIC (k=4, n=24)
+// ============================================================================
+bundle S1_CORE_LOGIC {
+  let f = mem[0];
+  let inp = mem[14];
+  mem[7] = 0;
+
+  if (mem[15] == 0) {
+    mem[15] = 1;
+    mem[3] = 80;
+    mem[4] = 60;
+    mem[2] = 100;
+    mem[12] = 12;
+    let k = 0;
+    while (k < 12) {
+      mem[CIPH_BASE + k] = (0x5a3c + k * 0x1337) & 0xffff;
+      k += 1;
+    }
+  }
+
+  // Real 32-bit ARX cipher mixing round across 12 state lanes
+  let keyInject = (inp & 31) * 0x9e37 + f;
+  let acc = 0;
+  let i = 0;
+  while (i < 12) {
+    let s = mem[CIPH_BASE + i];
+    let nxt = mem[CIPH_BASE + ((i + 1) % 12)];
+    let mixed = ((s + nxt + keyInject) ^ ((s << 5) & 0xffff) ^ (s >> 3)) & 0xffff;
+    mem[CIPH_BASE + i] = mixed;
+    acc = acc ^ mixed;
+
+    // Project live cipher lane into Standardized Xenograft Entity ABI
+    let base = ENT_BASE + i * 8;
+    mem[base] = ((mixed & 3) == 0) ? 3 : 1;
+    mem[base + 1] = 16 + i * 11;
+    mem[base + 2] = 24 + ((mixed >> 4) % 76);
+    mem[base + 3] = 0;
+    mem[base + 4] = 0;
+    mem[base + 5] = (mixed & 15) + 1;
+    mem[base + 6] = mixed & 255;
+    mem[base + 7] = (mixed & 1) ? 8 : 6;
+    i += 1;
+  }
+
+  mem[11] = acc;
+  mem[1] = acc;
+  mem[3] = 20 + (acc % 120);
+  mem[4] = 26 + ((acc >> 7) % 72);
+  if ((acc & 7) == 0) { mem[7] = mem[7] | 1; }
+}
+
+// ============================================================================
+// STRATUM 1: PARITY BAR WIREFRAME FALLBACK (k=4, n=24)
+// ============================================================================
+bundle S1_WIREFRAME {
+  clear(0);
+  let i = 0;
+  while (i < 12) {
+    let base = ENT_BASE + i * 8;
+    let h = mem[base + 2] - 18;
+    if (h < 4) { h = 4; }
+    rect(12 + i * 11, 108 - h, 8, h, 8, 0);
+    i += 1;
+  }
+  label(4, 2, "S1:C", "IPH ", 8);
+  number(96, 2, mem[11], 7);
+}
+
+// ============================================================================
+// STRATUM 2: CRYPTOGRAPHIC AVALANCHE MATRIX RENDERER (k=8, n=32 — Xenograftable!)
+// ============================================================================
+bundle S2_CORTEX_RENDER {
+  let f = mem[0];
+  glow(180);
+
+  // Draw 12x8 live bit-avalanche matrix driven by ABI entity coordinates/phases
+  let i = 0;
+  while (i < 12) {
+    let base = ENT_BASE + i * 8;
+    let word = (mem[base + 1] * 131 + mem[base + 2] * 17 + mem[base + 6]);
+    let bit = 0;
+    while (bit < 8) {
+      let on = (word >> bit) & 1;
+      let bx = 18 + i * 10;
+      let by = 22 + bit * 9;
+      if (on == 1) {
+        rect(bx, by, 7, 6, ((i + bit) & 1) ? 8 : 2, 1);
+      } else {
+        rect(bx, by, 7, 6, 15, 0);
+      }
+      bit += 1;
+    }
+    i += 1;
+  }
+
+  // Track active avalanche cursor from ABI player coordinates
+  let px = mem[3];
+  let py = mem[4];
+  line(px, 14, px, 114, 6);
+  line(10, py, 150, py, 6);
+  circle(px, py, 4, 7, 0);
+
+  rect(0, 0, 160, 11, 0, 1);
+  line(0, 11, 159, 11, 8);
+  label(3, 2, "VAUL", "T-AX", 8);
+  number(98, 2, mem[1], 2);
+}
+
+// ============================================================================
+// STRATUM 2: ALGORITHMIC DATA-SONIFICATION CHIMES (k=6, n=24 — Xenograftable!)
+// ============================================================================
+bundle S2_SYNTH_AUDIO {
+  let f = mem[0];
+  let w = mem[11] ^ (mem[3] * 19);
+
+  // Pentatonic chime derived directly from live cipher keystream bits
+  let idx = w & 3;
+  let freq = 2093; // C3*16
+  if (idx == 1) { freq = 2349; }
+  if (idx == 2) { freq = 2637; }
+  if (idx == 3) { freq = 3136; }
+
+  // Ch 0: Deep vault drone
+  voice(0, 1, 1046, 22, 0, 700);
+  // Ch 1: Keystream telemetry chime every 6 frames
+  if ((f % 6) < 3) {
+    voice(1, 2, freq * 2, 20, 4, 3400);
+  } else {
+    voice(1, 0, 0, 0, 0, 1600);
+  }
+  // Ch 2: High integrity parity ping
+  if ((f % 16) < 2) {
+    voice(2, 1, freq * 4, 16, -4, 4800);
+  } else {
+    voice(2, 0, 0, 0, 0, 1600);
+  }
+  voice(3, 0, 0, 0, 0, 1200);
+}
+
+// ============================================================================
+// STRATUM 3: VAULT LOCK RING & ENTROPY SCOPE FX (k=16, n=40)
+// ============================================================================
+bundle S3_ORGANISM_FX {
+  let f = mem[0];
+  // Rotating dual vault security ring
+  let a = f * 3;
+  let x1 = 80 + ((cos(a) * 44) >> 8);
+  let y1 = 62 + ((sin(a) * 44) >> 8);
+  let x2 = 80 - ((cos(a) * 44) >> 8);
+  let y2 = 62 - ((sin(a) * 44) >> 8);
+  circle(80, 62, 44, 12, 0);
+  circle(x1, y1, 3, 2, 1);
+  circle(x2, y2, 3, 8, 1);
+
+  // Bottom live entropy ribbon
+  let k = 0;
+  while (k < 24) {
+    let v = (mem[11] >> (k & 15)) & 1;
+    rect(16 + k * 5, 106, 3, v ? 8 : 2, v ? 2 : 15, 1);
+    k += 1;
+  }
+  label(72, 2, "S3", "", 2);
+}

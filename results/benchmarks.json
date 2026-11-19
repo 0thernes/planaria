@@ -1,0 +1,612 @@
+{
+  "schema": "PLANARIA-BENCHMARKS-1.0",
+  "generatedAt": "2026-11-19T04:47:16.214Z",
+  "nodeVersion": "v25.9.0",
+  "artifacts": [
+    {
+      "name": "AEGIS_DRIFT",
+      "bytes": 98304,
+      "lineageRootHex": "2ce3fb499c8f94c684a3fbfeb38496bf",
+      "sha256Hex": "462b56071e0f52b6fb28015d4f409af27f2c6e970b2d096e8a1f19b102c54fd0",
+      "instructions": 958,
+      "codeBytes": 3832
+    },
+    {
+      "name": "SYNTH_REACTOR",
+      "bytes": 98304,
+      "lineageRootHex": "3650bf9e153d0eb1314f64e9eca0c2f0",
+      "sha256Hex": "0d7dd32f971a7f979cec418703f7ffa2843205beb2d06efa67e5ae4214a50864",
+      "instructions": 621,
+      "codeBytes": 2484
+    },
+    {
+      "name": "CIPHER_VAULT",
+      "bytes": 98304,
+      "lineageRootHex": "38731bc0ca687abdce12c6bfa3437e1c",
+      "sha256Hex": "fd902cb1ab867dc0c4e1fbebb98f91c52e1f469e41144310a9ae2a1c97f70b56",
+      "instructions": 526,
+      "codeBytes": 2104
+    }
+  ],
+  "performance": {
+    "meanFullDecodeMs": 10.5,
+    "meanPvm32FrameMs": 0.12,
+    "effectiveFrameRateHeadroomFps": 8333,
+    "pvm32ThroughputMIPS": 19.45
+  },
+  "survivalCurve": [
+    {
+      "dropPct": 0,
+      "survivingPct": 100,
+      "linearSurvivalPct": 100,
+      "rsCliffSurvivalPct": 100,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 100,
+      "stratumDist": {
+        "s3": 40,
+        "s2": 0,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 4,
+      "survivingPct": 96,
+      "linearSurvivalPct": 82.5,
+      "rsCliffSurvivalPct": 100,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 100,
+      "stratumDist": {
+        "s3": 40,
+        "s2": 0,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 8,
+      "survivingPct": 92,
+      "linearSurvivalPct": 60,
+      "rsCliffSurvivalPct": 100,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 100,
+      "stratumDist": {
+        "s3": 40,
+        "s2": 0,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 12,
+      "survivingPct": 88,
+      "linearSurvivalPct": 32.5,
+      "rsCliffSurvivalPct": 100,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 100,
+      "stratumDist": {
+        "s3": 40,
+        "s2": 0,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 16,
+      "survivingPct": 84,
+      "linearSurvivalPct": 7.5,
+      "rsCliffSurvivalPct": 100,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 100,
+      "stratumDist": {
+        "s3": 40,
+        "s2": 0,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 20,
+      "survivingPct": 80,
+      "linearSurvivalPct": 20,
+      "rsCliffSurvivalPct": 100,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 100,
+      "stratumDist": {
+        "s3": 40,
+        "s2": 0,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 24,
+      "survivingPct": 76,
+      "linearSurvivalPct": 10,
+      "rsCliffSurvivalPct": 100,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 100,
+      "stratumDist": {
+        "s3": 40,
+        "s2": 0,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 28,
+      "survivingPct": 72,
+      "linearSurvivalPct": 7.5,
+      "rsCliffSurvivalPct": 100,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 100,
+      "stratumDist": {
+        "s3": 40,
+        "s2": 0,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 32,
+      "survivingPct": 68,
+      "linearSurvivalPct": 2.5,
+      "rsCliffSurvivalPct": 100,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 100,
+      "stratumDist": {
+        "s3": 40,
+        "s2": 0,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 36,
+      "survivingPct": 64,
+      "linearSurvivalPct": 5,
+      "rsCliffSurvivalPct": 100,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 100,
+      "stratumDist": {
+        "s3": 40,
+        "s2": 0,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 40,
+      "survivingPct": 60,
+      "linearSurvivalPct": 2.5,
+      "rsCliffSurvivalPct": 100,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 100,
+      "stratumDist": {
+        "s3": 40,
+        "s2": 0,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 44,
+      "survivingPct": 56,
+      "linearSurvivalPct": 0,
+      "rsCliffSurvivalPct": 100,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 100,
+      "stratumDist": {
+        "s3": 40,
+        "s2": 0,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 48,
+      "survivingPct": 52,
+      "linearSurvivalPct": 0,
+      "rsCliffSurvivalPct": 100,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 100,
+      "stratumDist": {
+        "s3": 40,
+        "s2": 0,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 52,
+      "survivingPct": 48,
+      "linearSurvivalPct": 0,
+      "rsCliffSurvivalPct": 95,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 98.8,
+      "stratumDist": {
+        "s3": 38,
+        "s2": 2,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 56,
+      "survivingPct": 44,
+      "linearSurvivalPct": 0,
+      "rsCliffSurvivalPct": 87.5,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 96.3,
+      "stratumDist": {
+        "s3": 34,
+        "s2": 6,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 60,
+      "survivingPct": 40,
+      "linearSurvivalPct": 0,
+      "rsCliffSurvivalPct": 52.5,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 87.5,
+      "stratumDist": {
+        "s3": 20,
+        "s2": 20,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 64,
+      "survivingPct": 36,
+      "linearSurvivalPct": 0,
+      "rsCliffSurvivalPct": 37.5,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 83.1,
+      "stratumDist": {
+        "s3": 13,
+        "s2": 27,
+        "s1": 0,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 68,
+      "survivingPct": 32,
+      "linearSurvivalPct": 0,
+      "rsCliffSurvivalPct": 20,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 76.9,
+      "stratumDist": {
+        "s3": 5,
+        "s2": 33,
+        "s1": 2,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 72,
+      "survivingPct": 28,
+      "linearSurvivalPct": 0,
+      "rsCliffSurvivalPct": 0,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 70,
+      "stratumDist": {
+        "s3": 0,
+        "s2": 32,
+        "s1": 8,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 76,
+      "survivingPct": 24,
+      "linearSurvivalPct": 0,
+      "rsCliffSurvivalPct": 0,
+      "planariaSurvivalPct": 100,
+      "meanCapabilityScore": 63.1,
+      "stratumDist": {
+        "s3": 0,
+        "s2": 21,
+        "s1": 19,
+        "s0": 0
+      }
+    },
+    {
+      "dropPct": 80,
+      "survivingPct": 20,
+      "linearSurvivalPct": 0,
+      "rsCliffSurvivalPct": 0,
+      "planariaSurvivalPct": 97.5,
+      "meanCapabilityScore": 54.4,
+      "stratumDist": {
+        "s3": 0,
+        "s2": 10,
+        "s1": 28,
+        "s0": 1
+      }
+    },
+    {
+      "dropPct": 84,
+      "survivingPct": 16,
+      "linearSurvivalPct": 0,
+      "rsCliffSurvivalPct": 0,
+      "planariaSurvivalPct": 97.5,
+      "meanCapabilityScore": 43.8,
+      "stratumDist": {
+        "s3": 0,
+        "s2": 2,
+        "s1": 27,
+        "s0": 10
+      }
+    },
+    {
+      "dropPct": 88,
+      "survivingPct": 12,
+      "linearSurvivalPct": 0,
+      "rsCliffSurvivalPct": 0,
+      "planariaSurvivalPct": 82.5,
+      "meanCapabilityScore": 30.6,
+      "stratumDist": {
+        "s3": 0,
+        "s2": 0,
+        "s1": 16,
+        "s0": 17
+      }
+    },
+    {
+      "dropPct": 92,
+      "survivingPct": 8,
+      "linearSurvivalPct": 0,
+      "rsCliffSurvivalPct": 0,
+      "planariaSurvivalPct": 70,
+      "meanCapabilityScore": 21.9,
+      "stratumDist": {
+        "s3": 0,
+        "s2": 0,
+        "s1": 7,
+        "s0": 21
+      }
+    },
+    {
+      "dropPct": 96,
+      "survivingPct": 4,
+      "linearSurvivalPct": 0,
+      "rsCliffSurvivalPct": 0,
+      "planariaSurvivalPct": 37.5,
+      "meanCapabilityScore": 9.4,
+      "stratumDist": {
+        "s3": 0,
+        "s2": 0,
+        "s1": 0,
+        "s0": 15
+      }
+    }
+  ],
+  "radiationSweep": [
+    {
+      "burstBytesPerCell": 0,
+      "totalFileBytesCorrupted": 0,
+      "rawErrorRatePct": 0,
+      "linearAlive": true,
+      "planariaCellsRepaired": 192,
+      "planariaByteErrorsHealed": 0,
+      "planariaFullExactRegen": true
+    },
+    {
+      "burstBytesPerCell": 2,
+      "totalFileBytesCorrupted": 384,
+      "rawErrorRatePct": 0.39,
+      "linearAlive": false,
+      "planariaCellsRepaired": 192,
+      "planariaByteErrorsHealed": 384,
+      "planariaFullExactRegen": true
+    },
+    {
+      "burstBytesPerCell": 4,
+      "totalFileBytesCorrupted": 768,
+      "rawErrorRatePct": 0.78,
+      "linearAlive": false,
+      "planariaCellsRepaired": 192,
+      "planariaByteErrorsHealed": 768,
+      "planariaFullExactRegen": true
+    },
+    {
+      "burstBytesPerCell": 6,
+      "totalFileBytesCorrupted": 1152,
+      "rawErrorRatePct": 1.17,
+      "linearAlive": false,
+      "planariaCellsRepaired": 192,
+      "planariaByteErrorsHealed": 1152,
+      "planariaFullExactRegen": true
+    },
+    {
+      "burstBytesPerCell": 8,
+      "totalFileBytesCorrupted": 1536,
+      "rawErrorRatePct": 1.56,
+      "linearAlive": false,
+      "planariaCellsRepaired": 192,
+      "planariaByteErrorsHealed": 1536,
+      "planariaFullExactRegen": true
+    },
+    {
+      "burstBytesPerCell": 10,
+      "totalFileBytesCorrupted": 1920,
+      "rawErrorRatePct": 1.95,
+      "linearAlive": false,
+      "planariaCellsRepaired": 192,
+      "planariaByteErrorsHealed": 1920,
+      "planariaFullExactRegen": true
+    },
+    {
+      "burstBytesPerCell": 12,
+      "totalFileBytesCorrupted": 2304,
+      "rawErrorRatePct": 2.34,
+      "linearAlive": false,
+      "planariaCellsRepaired": 192,
+      "planariaByteErrorsHealed": 2304,
+      "planariaFullExactRegen": true
+    },
+    {
+      "burstBytesPerCell": 14,
+      "totalFileBytesCorrupted": 2688,
+      "rawErrorRatePct": 2.73,
+      "linearAlive": false,
+      "planariaCellsRepaired": 192,
+      "planariaByteErrorsHealed": 2688,
+      "planariaFullExactRegen": true
+    },
+    {
+      "burstBytesPerCell": 16,
+      "totalFileBytesCorrupted": 3072,
+      "rawErrorRatePct": 3.13,
+      "linearAlive": false,
+      "planariaCellsRepaired": 192,
+      "planariaByteErrorsHealed": 3072,
+      "planariaFullExactRegen": true
+    },
+    {
+      "burstBytesPerCell": 18,
+      "totalFileBytesCorrupted": 3456,
+      "rawErrorRatePct": 3.52,
+      "linearAlive": false,
+      "planariaCellsRepaired": 0,
+      "planariaByteErrorsHealed": 0,
+      "planariaFullExactRegen": false
+    },
+    {
+      "burstBytesPerCell": 20,
+      "totalFileBytesCorrupted": 3840,
+      "rawErrorRatePct": 3.91,
+      "linearAlive": false,
+      "planariaCellsRepaired": 0,
+      "planariaByteErrorsHealed": 0,
+      "planariaFullExactRegen": false
+    },
+    {
+      "burstBytesPerCell": 22,
+      "totalFileBytesCorrupted": 4224,
+      "rawErrorRatePct": 4.3,
+      "linearAlive": false,
+      "planariaCellsRepaired": 0,
+      "planariaByteErrorsHealed": 0,
+      "planariaFullExactRegen": false
+    }
+  ],
+  "byzantineAudit": [
+    {
+      "trojansInjected": 1,
+      "immuneOnQuarantined": 1,
+      "immuneOnExactMatch": true,
+      "immuneOffB0CorruptedBytes": 415,
+      "immuneOffPoisoned": true
+    },
+    {
+      "trojansInjected": 5,
+      "immuneOnQuarantined": 5,
+      "immuneOnExactMatch": true,
+      "immuneOffB0CorruptedBytes": 415,
+      "immuneOffPoisoned": true
+    },
+    {
+      "trojansInjected": 20,
+      "immuneOnQuarantined": 20,
+      "immuneOnExactMatch": true,
+      "immuneOffB0CorruptedBytes": 415,
+      "immuneOffPoisoned": true
+    },
+    {
+      "trojansInjected": 60,
+      "immuneOnQuarantined": 60,
+      "immuneOnExactMatch": true,
+      "immuneOffB0CorruptedBytes": 415,
+      "immuneOffPoisoned": true
+    },
+    {
+      "trojansInjected": 192,
+      "immuneOnQuarantined": 192,
+      "immuneOnExactMatch": true,
+      "immuneOffB0CorruptedBytes": 415,
+      "immuneOffPoisoned": true
+    }
+  ],
+  "mitosisResults": [
+    {
+      "cutByteOffset": 49152,
+      "aligned512": true,
+      "leftBytes": 49152,
+      "rightBytes": 49152,
+      "leftExactSha256": true,
+      "rightExactSha256": true,
+      "dualDecodeRegenMs": 25.56
+    },
+    {
+      "cutByteOffset": 49153,
+      "aligned512": false,
+      "leftBytes": 49153,
+      "rightBytes": 49151,
+      "leftExactSha256": true,
+      "rightExactSha256": true,
+      "dualDecodeRegenMs": 21.38
+    },
+    {
+      "cutByteOffset": 49177,
+      "aligned512": false,
+      "leftBytes": 49177,
+      "rightBytes": 49127,
+      "leftExactSha256": true,
+      "rightExactSha256": true,
+      "dualDecodeRegenMs": 23.13
+    },
+    {
+      "cutByteOffset": 48701,
+      "aligned512": false,
+      "leftBytes": 48701,
+      "rightBytes": 49603,
+      "leftExactSha256": true,
+      "rightExactSha256": true,
+      "dualDecodeRegenMs": 30.72
+    },
+    {
+      "cutByteOffset": 49597,
+      "aligned512": false,
+      "leftBytes": 49597,
+      "rightBytes": 48707,
+      "leftExactSha256": true,
+      "rightExactSha256": true,
+      "dualDecodeRegenMs": 33.52
+    },
+    {
+      "cutByteOffset": 49000,
+      "aligned512": false,
+      "leftBytes": 49000,
+      "rightBytes": 49304,
+      "leftExactSha256": true,
+      "rightExactSha256": true,
+      "dualDecodeRegenMs": 33.84
+    }
+  ],
+  "xenograftMatrix": [
+    {
+      "chimera": "AEGIS_DRIFT x SYNTH_REACTOR",
+      "transplantedBundles": [
+        "S2_CORTEX_RENDER",
+        "S2_SYNTH_AUDIO"
+      ],
+      "bootable": true,
+      "maxStratum": 3
+    },
+    {
+      "chimera": "AEGIS_DRIFT x CIPHER_VAULT",
+      "transplantedBundles": [
+        "S2_CORTEX_RENDER",
+        "S2_SYNTH_AUDIO"
+      ],
+      "bootable": true,
+      "maxStratum": 3
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+name = "PlanariaProofs"
+version = "1.0.0"
+defaultTargets = ["PlanariaProofs"]
+
+[[lean_lib]]
+name = "PlanariaProofs"

@@ -1,0 +1,185 @@
+{
+  "format": "PLANARIA-HBIN-1",
+  "artifacts": [
+    {
+      "file": "artifacts/aegis_drift.hbin",
+      "source": "programs/aegis_drift.plang",
+      "name": "AEGIS_DRIFT",
+      "bytes": 98304,
+      "lineageRootHex": "2ce3fb499c8f94c684a3fbfeb38496bf",
+      "sha256Hex": "462b56071e0f52b6fb28015d4f409af27f2c6e970b2d096e8a1f19b102c54fd0",
+      "totalInstructions": 958,
+      "totalCodeBytes": 3832,
+      "bundles": [
+        {
+          "bundleId": 0,
+          "name": "S0_STEM_NUCLEUS",
+          "instructions": 104,
+          "bytes": 416,
+          "capacityBytes": 664,
+          "utilizationPct": 62.7
+        },
+        {
+          "bundleId": 1,
+          "name": "S1_CORE_LOGIC",
+          "instructions": 317,
+          "bytes": 1268,
+          "capacityBytes": 1328,
+          "utilizationPct": 95.5
+        },
+        {
+          "bundleId": 2,
+          "name": "S1_WIREFRAME",
+          "instructions": 88,
+          "bytes": 352,
+          "capacityBytes": 1328,
+          "utilizationPct": 26.5
+        },
+        {
+          "bundleId": 3,
+          "name": "S2_CORTEX_RENDER",
+          "instructions": 172,
+          "bytes": 688,
+          "capacityBytes": 2656,
+          "utilizationPct": 25.9
+        },
+        {
+          "bundleId": 4,
+          "name": "S2_SYNTH_AUDIO",
+          "instructions": 146,
+          "bytes": 584,
+          "capacityBytes": 1992,
+          "utilizationPct": 29.3
+        },
+        {
+          "bundleId": 5,
+          "name": "S3_ORGANISM_FX",
+          "instructions": 131,
+          "bytes": 524,
+          "capacityBytes": 5312,
+          "utilizationPct": 9.9
+        }
+      ]
+    },
+    {
+      "file": "artifacts/synth_reactor.hbin",
+      "source": "programs/synth_reactor.plang",
+      "name": "SYNTH_REACTOR",
+      "bytes": 98304,
+      "lineageRootHex": "3650bf9e153d0eb1314f64e9eca0c2f0",
+      "sha256Hex": "0d7dd32f971a7f979cec418703f7ffa2843205beb2d06efa67e5ae4214a50864",
+      "totalInstructions": 621,
+      "totalCodeBytes": 2484,
+      "bundles": [
+        {
+          "bundleId": 0,
+          "name": "S0_STEM_NUCLEUS",
+          "instructions": 75,
+          "bytes": 300,
+          "capacityBytes": 664,
+          "utilizationPct": 45.2
+        },
+        {
+          "bundleId": 1,
+          "name": "S1_CORE_LOGIC",
+          "instructions": 169,
+          "bytes": 676,
+          "capacityBytes": 1328,
+          "utilizationPct": 50.9
+        },
+        {
+          "bundleId": 2,
+          "name": "S1_WIREFRAME",
+          "instructions": 63,
+          "bytes": 252,
+          "capacityBytes": 1328,
+          "utilizationPct": 19
+        },
+        {
+          "bundleId": 3,
+          "name": "S2_CORTEX_RENDER",
+          "instructions": 129,
+          "bytes": 516,
+          "capacityBytes": 2656,
+          "utilizationPct": 19.4
+        },
+        {
+          "bundleId": 4,
+          "name": "S2_SYNTH_AUDIO",
+          "instructions": 95,
+          "bytes": 380,
+          "capacityBytes": 1992,
+          "utilizationPct": 19.1
+        },
+        {
+          "bundleId": 5,
+          "name": "S3_ORGANISM_FX",
+          "instructions": 90,
+          "bytes": 360,
+          "capacityBytes": 5312,
+          "utilizationPct": 6.8
+        }
+      ]
+    },
+    {
+      "file": "artifacts/cipher_vault.hbin",
+      "source": "programs/cipher_vault.plang",
+      "name": "CIPHER_VAULT",
+      "bytes": 98304,
+      "lineageRootHex": "38731bc0ca687abdce12c6bfa3437e1c",
+      "sha256Hex": "fd902cb1ab867dc0c4e1fbebb98f91c52e1f469e41144310a9ae2a1c97f70b56",
+      "totalInstructions": 526,
+      "totalCodeBytes": 2104,
+      "bundles": [
+        {
+          "bundleId": 0,
+          "name": "S0_STEM_NUCLEUS",
+          "instructions": 78,
+          "bytes": 312,
+          "capacityBytes": 664,
+          "utilizationPct": 47
+        },
+        {
+          "bundleId": 1,
+          "name": "S1_CORE_LOGIC",
+          "instructions": 138,
+          "bytes": 552,
+          "capacityBytes": 1328,
+          "utilizationPct": 41.6
+        },
+        {
+          "bundleId": 2,
+          "name": "S1_WIREFRAME",
+          "instructions": 41,
+          "bytes": 164,
+          "capacityBytes": 1328,
+          "utilizationPct": 12.3
+        },
+        {
+          "bundleId": 3,
+          "name": "S2_CORTEX_RENDER",
+          "instructions": 107,
+          "bytes": 428,
+          "capacityBytes": 2656,
+          "utilizationPct": 16.1
+        },
+        {
+          "bundleId": 4,
+          "name": "S2_SYNTH_AUDIO",
+          "instructions": 73,
+          "bytes": 292,
+          "capacityBytes": 1992,
+          "utilizationPct": 14.7
+        },
+        {
+          "bundleId": 5,
+          "name": "S3_ORGANISM_FX",
+          "instructions": 89,
+          "bytes": 356,
+          "capacityBytes": 5312,
+          "utilizationPct": 6.7
+        }
+      ]
+    }
+  ]
+}

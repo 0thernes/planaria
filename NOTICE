@@ -1,0 +1,20 @@
+PLANARIA
+Copyright (c) 2026 0thernes (0thernes LLC) <0_0@0thernes.art>.
+All commercial rights reserved. Licensed under the COSMOGONIC LICENSE — NON-COMMERCIAL RESEARCH & PLAY (see LICENSE).
+
+Third-Party Runtime Dependencies:
+  NONE. The PLANARIA GF(2^8) finite-field arithmetic library, RS(254, 238) Berlekamp-Massey /
+  Chien / Forney codec, Cauchy MDS erasure engine, FIPS 180-4 SHA-256 & Depth-8 Merkle tree,
+  .hbin cellular binary codec, Plang compiler, PVM-32 virtual machine, AudioWorklet 4-voice
+  synthesizer, Surgical Vivisection Studio UI, CLI, and HTTP server contain ZERO third-party
+  npm packages or vendored libraries.
+
+External Toolchains Used for Execution & Formal Proof Checking (not vendored):
+  - Node.js >= 20 (MIT License) — executes the CLI, local HTTP server, build scripts, 12-suite
+    falsification harness, and Monte Carlo benchmarks (plus Node built-in `node:crypto` for
+    SHA-256 cross-checking and Ed25519 attestation signing).
+  - Lean 4 v4.35.0 & Lake (Apache License 2.0) — machine-checks all 31 formal proofs in lean/
+    using core Lean 4 only (no Mathlib dependency).
+
+Mention of Node.js, Lean, WebAudio, or any cited academic authors does not imply institutional
+sponsorship, endorsement, or relicensing of this work.

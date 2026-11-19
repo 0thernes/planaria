@@ -1,0 +1,8 @@
+# Build & editor artifacts
+node_modules/
+lean/.lake/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.ppm

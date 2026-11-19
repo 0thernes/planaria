@@ -1,0 +1,236 @@
+program SYNTH_REACTOR;
+
+// Standardized Xenograft Shared-Memory ABI Offsets
+const ENT_BASE  = 64;
+const PART_BASE = 256;
+
+// ============================================================================
+// STRATUM 0: STEM NUCLEUS (k=2, n=24 — survives 91.7% binary destruction!)
+// ============================================================================
+bundle S0_STEM_NUCLEUS {
+  let f = frame();
+  mem[0] = f;
+  mem[14] = input();
+
+  let hasLogic = organ_call(LOGIC, 1);
+  if (hasLogic == 0) {
+    mem[3] = 80;
+    mem[4] = 60;
+  }
+
+  let drew = organ_call(RENDERER, 2);
+  if (drew == 0) {
+    clear(0);
+    let r = 10 + ((f >> 1) & 15);
+    circle(80, 60, r, 4, 0);
+    line(56, 60, 104, 60, 4);
+    line(80, 36, 80, 84, 4);
+    label(4, 4, "S0:P", "ULSE", 4);
+    number(126, 4, f, 14);
+  }
+
+  organ_call(FX, 3);
+
+  let heard = organ_call(AUDIO, 2);
+  if (heard == 0) {
+    if ((f % 36) < 4) {
+      voice(0, 1, 2200, 20, 0, 1200);
+    } else {
+      voice(0, 0, 0, 0, 0, 1200);
+    }
+  }
+}
+
+// ============================================================================
+// STRATUM 1: HARMONIC ORBITAL LOGIC (k=4, n=24)
+// ============================================================================
+bundle S1_CORE_LOGIC {
+  let f = mem[0];
+  let inp = mem[14];
+  mem[7] = 0;
+
+  if (mem[15] == 0) {
+    mem[15] = 1;
+    mem[3] = 80;
+    mem[4] = 60;
+    mem[2] = 92;
+    mem[8] = 220 * 16;
+    mem[9] = 3; // harmonic ratio A
+    mem[10] = 2; // harmonic ratio B
+    mem[12] = 12;
+  }
+
+  // Interactive pitch & ratio bending via keyboard
+  if ((inp & 1) != 0) { mem[9] = 2; }
+  if ((inp & 2) != 0) { mem[9] = 5; }
+  if ((inp & 4) != 0) { mem[10] = 4; }
+  if ((inp & 8) != 0) { mem[10] = 3; }
+  if ((inp & 16) != 0) { mem[7] = mem[7] | 1; }
+
+  // Cycle chord/ratio smoothly every 120 frames
+  let chord = (f / 120) & 3;
+  mem[6] = chord;
+  if ((f % 120) == 0) { mem[7] = mem[7] | 4; }
+  let rA = mem[9] + (chord & 1);
+  let rB = mem[10] + ((chord >> 1) & 1);
+
+  // Player coordinate tracks the main harmonic Lissajous attractor
+  mem[3] = 80 + ((sin(f * rA) * 52) >> 8);
+  mem[4] = 64 + ((cos(f * rB) * 38) >> 8);
+  mem[1] = (rA * 100 + rB * 10 + chord);
+
+  // Update 12 orbital harmonic resonance nodes in shared Xenograft ABI slots
+  let i = 0;
+  while (i < 12) {
+    let base = ENT_BASE + i * 8;
+    let ang = f * 2 + i * 30;
+    let rad = 20 + ((sin(f * 3 + i * 25) * 20) >> 8);
+    mem[base] = (i & 1) + 1;
+    mem[base + 1] = 80 + ((cos(ang * rA / 2) * (rad + 14)) >> 8);
+    mem[base + 2] = 64 + ((sin(ang * rB / 2) * rad) >> 8);
+    mem[base + 3] = 0;
+    mem[base + 4] = 0;
+    mem[base + 5] = 1;
+    mem[base + 6] = ang % 360;
+    mem[base + 7] = (i % 3) == 0 ? 13 : 3;
+    i += 1;
+  }
+}
+
+// ============================================================================
+// STRATUM 1: OSCILLOSCOPE WIREFRAME FALLBACK (k=4, n=24)
+// ============================================================================
+bundle S1_WIREFRAME {
+  clear(0);
+  line(0, 64, 159, 64, 15);
+  line(80, 12, 80, 119, 15);
+
+  // Plot simple Lissajous node points
+  let i = 0;
+  while (i < 12) {
+    let base = ENT_BASE + i * 8;
+    if (mem[base] != 0) {
+      let x = mem[base + 1];
+      let y = mem[base + 2];
+      circle(x, y, 2, 2, 0);
+      if (i > 0) {
+        let pb = ENT_BASE + (i - 1) * 8;
+        if (mem[pb] != 0) {
+          line(mem[pb + 1], mem[pb + 2], x, y, 10);
+        }
+      }
+    }
+    i += 1;
+  }
+  label(4, 2, "S1:O", "SC  ", 2);
+  number(112, 2, mem[1], 3);
+}
+
+// ============================================================================
+// STRATUM 2: LISSAJOUS PLASMA WEB RENDERER (k=8, n=32 — Xenograftable!)
+// Reads ANY species' shared ABI entities & renders harmonic phase webs!
+// ============================================================================
+bundle S2_CORTEX_RENDER {
+  let f = mem[0];
+  glow(215); // Rich glowing phosphor oscilloscope trails!
+
+  let px = mem[3];
+  let py = mem[4];
+
+  // Central phase crosshair & attractor halo
+  circle(px, py, 5, 13, 0);
+  circle(px, py, 2, 7, 1);
+
+  // Connect all active ABI entities into a glowing Lissajous harmonic web
+  let prevX = px;
+  let prevY = py;
+  let i = 0;
+  while (i < 12) {
+    let base = ENT_BASE + i * 8;
+    if (mem[base] != 0) {
+      let x = mem[base + 1];
+      let y = mem[base + 2];
+      let col = ((i & 1) == 0) ? 13 : 3;
+      line(prevX, prevY, x, y, col);
+      circle(x, y, 3, (mem[base] == 2) ? 11 : 6, 0);
+      prevX = x;
+      prevY = y;
+    }
+    i += 1;
+  }
+  line(prevX, prevY, px, py, 6);
+
+  // Live scrolling harmonic waveform ribbon along bottom
+  let x = 0;
+  while (x < 156) {
+    let y1 = 104 + ((sin(x * 5 + f * 6) * 8) >> 8);
+    let y2 = 104 + ((sin((x + 4) * 5 + f * 6) * 8) >> 8);
+    line(x, y1, x + 4, y2, 3);
+    x += 4;
+  }
+
+  rect(0, 0, 160, 11, 0, 1);
+  line(0, 11, 159, 11, 6);
+  label(3, 2, "SYNT", "H-RX", 13);
+  number(114, 2, mem[1], 3);
+}
+
+// ============================================================================
+// STRATUM 2: 4-VOICE LYDIAN POLYPHONIC SYNTH ORGAN (k=6, n=24 — Xenograftable!)
+// ============================================================================
+bundle S2_SYNTH_AUDIO {
+  let f = mem[0];
+  let ev = mem[7];
+  let chord = (f / 120) & 3;
+
+  // Ch 0: Warm sine sub-bass root (F2 -> G2 -> A2 -> C2)
+  let root = 1396; // 87.3 Hz * 16
+  if (chord == 1) { root = 1568; }
+  if (chord == 2) { root = 1760; }
+  if (chord == 3) { root = 1046; }
+  voice(0, 1, root, 30, 0, 600);
+
+  // Ch 1: Detuned triangle fifth harmonic pad
+  voice(1, 2, (root * 3) / 2, 20, 7, 1800);
+
+  // Ch 2: Shimmering Lydian arpeggio driven by player position & events
+  let step = (f >> 3) & 3;
+  let mul = 4;
+  if (step == 1) { mul = 5; }
+  if (step == 2) { mul = 6; }
+  if (step == 3) { mul = 9; }
+  let arpFreq = (root * mul) / 2 + ((mem[3] - 80) * 3);
+  voice(2, 1, arpFreq, 18, -5, 3200);
+
+  // Ch 3: Crystalline FM/square chime on events or beat pulse
+  if ((ev & 3) != 0) {
+    voice(3, 2, root * 6, 26, 12, 4800);
+  } else if ((f & 15) < 4) {
+    voice(3, 1, root * 4, 14, 0, 3600);
+  } else {
+    voice(3, 0, 0, 0, 0, 1400);
+  }
+}
+
+// ============================================================================
+// STRATUM 3: FULL SPECTRUM REACTOR FX (k=16, n=40)
+// ============================================================================
+bundle S3_ORGANISM_FX {
+  let f = mem[0];
+  // Outer orbital harmonic containment rings
+  let r1 = 36 + ((sin(f * 3) * 4) >> 8);
+  let r2 = 46 + ((cos(f * 2) * 4) >> 8);
+  circle(80, 64, r1, 15, 0);
+  circle(80, 64, r2, 12, 0);
+
+  // 8-band animated harmonic spectrum meter on left/right margins
+  let b = 0;
+  while (b < 8) {
+    let h = 6 + abs(sin(f * (3 + b) + b * 40) * 18 >> 8);
+    let y = 92 - h;
+    rect(4 + b * 3, y, 2, h, (b & 1) ? 13 : 3, 1);
+    rect(154 - b * 3, y, 2, h, (b & 1) ? 6 : 2, 1);
+    b += 1;
+  }
+  label(82, 2, "S3", "", 13);
+}

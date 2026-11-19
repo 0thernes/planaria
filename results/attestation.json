@@ -1,0 +1,23 @@
+{
+  "schema": "PLANARIA-ATTESTATION-1.0",
+  "timestamp": "2026-11-19T04:47:16.229Z",
+  "digests": {
+    "src/core/gf256.js": "dfbd7a79c73e384bdf17fa347797befd78b4ba102f932415494fdbe3a9e29b8c",
+    "src/core/rs.js": "1402467d63bbf97d2ca428deb77e45ea82c744f5f39101ccb1fbb0cd081428b5",
+    "src/core/cauchy.js": "821806ca6e53da5d3367f9d640a4ae4b75f504bd166ed37afffa92782bc786d4",
+    "src/core/sha256.js": "51c086688e0d4660ce0a19348a995722aed43ade254398246bfca45dc5a402cd",
+    "src/core/hbin.js": "2ed484137836855cfbaa3e13ddea9985e78b7569a8a80a79687025e2a4cf5aeb",
+    "src/compiler/codegen.js": "5d7dec562b1a15e002c57ad886bfbdb80e223e1d023b8cd0a62567068644d248",
+    "src/vm/pvm32.js": "9bdb25577ffe643c6b1ae7cd88668d8253599ba24a4fdcdfc06182c8c6b548f7",
+    "programs/aegis_drift.plang": "883713d8b11054b45511e44ec4b5f0d94f38018ba1bde7632dfec45e9c743120",
+    "programs/synth_reactor.plang": "7799d2b8dceddf9c7a651ae1c9895a781c8263e213d882092cbeb86d5a636fdd",
+    "programs/cipher_vault.plang": "e1365e5919b47ba0e6d30be388fcabc32613af9d205fe183b5649a3a7657242d",
+    "artifacts/aegis_drift.hbin": "462b56071e0f52b6fb28015d4f409af27f2c6e970b2d096e8a1f19b102c54fd0",
+    "artifacts/synth_reactor.hbin": "0d7dd32f971a7f979cec418703f7ffa2843205beb2d06efa67e5ae4214a50864",
+    "artifacts/cipher_vault.hbin": "fd902cb1ab867dc0c4e1fbebb98f91c52e1f469e41144310a9ae2a1c97f70b56",
+    "results/benchmarks.json": "dd233f05cc6ab405d4844bf5e2de3a6e7bbc09ef6ac881745a757295370391bf"
+  },
+  "ed25519PublicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoMHlwfvi31r8vZnsKI69ggsjqgZE7tswbLtuBVEY4uc=\n-----END PUBLIC KEY-----\n",
+  "ed25519SignatureHex": "b92dcbe25d2b32f3c0eaaf28ddc1c6ce37d2d43a455c59d4689b2007746019a6167afb49bf39545aa2fce57d57a09c03c8508c0b9b2b5801c381eee39a45dd0e",
+  "selfVerified": true
+}
