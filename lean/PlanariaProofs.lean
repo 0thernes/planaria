@@ -3,6 +3,7 @@ import PlanariaProofs.MitosisBounds
 import PlanariaProofs.StratumAnastomosis
 import PlanariaProofs.ByzantineImmune
 import PlanariaProofs.XenograftABI
+import PlanariaProofs.QuantumTemporal
 
 /-!
 # PLANARIA Formal Verification Audit Entrypoint
@@ -47,3 +48,11 @@ Audits every core theorem across all five modules to verify:
 #print axioms Planaria.Xenograft.xenograft_preserves_sovereignty
 #print axioms Planaria.Xenograft.xenograft_abi_safety
 #print axioms Planaria.Xenograft.xenograft_improves_amputated_host
+
+#print axioms Planaria.QuantumTemporal.pauliX_preserves_normSq
+#print axioms Planaria.QuantumTemporal.pauliZ_preserves_normSq
+#print axioms Planaria.QuantumTemporal.cnot_preserves_normSq
+#print axioms Planaria.QuantumTemporal.hadamard_scaled_normSq
+#print axioms Planaria.QuantumTemporal.temporal_rewind_exact_left_inv
+#print axioms Planaria.QuantumTemporal.temporal_rewind_exact_right_inv
+#print axioms Planaria.QuantumTemporal.combinatorial_1of1_space_exceeds_6_trillion

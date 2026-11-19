@@ -2,6 +2,17 @@
 
 All notable changes to **PLANARIA** are documented in this file.
 
+## [2.0.0] — 2026-11-18
+
+### Added
+- **Custom Zero-Dependency WebGL2 (`GLSL 300 es`) 3D Temporal-Quantum Renderer (`src/web/renderer3d.js`)**: Relativistic 6-Order Sky Dome (`10^-15 m` → `10^9 m`), live GPU-evaluated Schrödinger multi-slit wave-interference 3D arena floor, procedural 3D polyhedral NPCs/Bosses/Pillars/Astrolabe Rings, all **192 live orbiting 3D `.hbin` Holographic Cell Crystals**, real-time `.hbin` Stratum metamorphosis (`S3 Full 3D → S2 Shaded → S1 3D Wireframe → S0 Ghost Point-Cloud`), vibrating Bell-state entanglement filaments, Retrocausal Future-Cones, Past-Timeline Echo Clones, and translucent spherical 3D Chrono-Wells.
+- **Real 4-Qubit Quantum Mechanics Engine (`src/quantum/qengine.js`)**: Exact complex statevector `QuantumRegister` ($\mathbb{C}^{16}$ with `H, X, Z, RX, RY, RZ, CNOT, CZ`), Born projective collapse, exact CHSH Tsirelson correlator ($|S| = 2\sqrt{2} \approx 2.828 > 2.0$), Lindblad decoherence purity damping, WKB barrier tunneling probability $T = e^{-2\kappa d}$, exact minimum-uncertainty Heisenberg Stance ($\Delta x \cdot \Delta p = 0.5$), Quantum Zeno observer suppression, and multi-source wave interference.
+- **Real Temporal Causality Engine (`src/quantum/temporal.js`)**: 360-frame lossless 3D world Rewind (`Hold R`), global bullet-time (`Hold Shift`) & continuous clock slider, spherical local time-dilation Chrono-Wells (`F`), Chrono-Fork Past-Timeline Echo Allies (`T`), and Retrocausal 1.1s Future-Cone predictions.
+- **Endless 1/1 Procedural Combinatorial Universe Forge (`src/world/generator.js`, `src/world/game3d.js`)**: Over 6.8 trillion discrete Weapon (`80,640`) × Armor (`3,072`) × NPC (`27,648`) builds × $2^{64}$ SHA-256 Lineage IDs across 24 spatial orders of magnitude (6 distinct realm biomes, endless Stages `1..∞`), adaptive reactive NPC evolution (countering player tactics), Weapon Quantum Entanglement, 12-node 4-branch Adaptive Skill Tree, and 8 active Quantum-Temporal abilities (`Q/E/R/T/F/V/X/C`).
+- **4th Living Compiled `.hbin` Species**: `programs/quantum_chronicle.plang` → `artifacts/quantum_chronicle.hbin` (98,304 B, 418 insns, Root `60a1bb8748538186e3f4d16fa61e4289`).
+- **Lean 4 Formal Proof Module #6 (`lean/PlanariaProofs/QuantumTemporal.lean`)**: Added 7 new pure Lean 4 kernel proofs (total **38/38 audited theorems**, zero `sorryAx`, zero `native_decide`, zero Mathlib) covering unitary norm preservation (`Pauli-X`, `Pauli-Z`, `CNOT`, scaled `Hadamard`), exact bijective temporal rewind reversibility, and the >6.8-trillion combinatorial cardinality bound.
+- **Expanded Verification Harness (`test/verify.mjs`)**: Upgraded from 12 to **16 passing verification & falsification suites** (adding Suites 13–16 for quantum unitarity/CHSH/WKB/Heisenberg, lossless temporal rewind/echoes, 1/1 uniqueness/adaptive AI/6-order stages, and `QUANTUM_CHRONICLE.hbin` integration).
+
 ## [1.0.0] — 2026-11-18
 
 ### Added

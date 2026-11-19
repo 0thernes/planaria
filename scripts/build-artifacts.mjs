@@ -15,7 +15,7 @@ const ART_DIR = path.join(ROOT, 'artifacts');
 
 fs.mkdirSync(ART_DIR, { recursive: true });
 
-const programs = ['aegis_drift', 'synth_reactor', 'cipher_vault'];
+const programs = ['quantum_chronicle', 'aegis_drift', 'synth_reactor', 'cipher_vault'];
 const manifest = [];
 
 for (const name of programs) {

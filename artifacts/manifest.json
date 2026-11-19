@@ -2,6 +2,66 @@
   "format": "PLANARIA-HBIN-1",
   "artifacts": [
     {
+      "file": "artifacts/quantum_chronicle.hbin",
+      "source": "programs/quantum_chronicle.plang",
+      "name": "QUANTUM_CHRONICLE",
+      "bytes": 98304,
+      "lineageRootHex": "60a1bb8748538186e3f4d16fa61e4289",
+      "sha256Hex": "299827cdc11ff3848b738d7b47f5941fd6eabac101fafd9a169a227a61bd8af0",
+      "totalInstructions": 418,
+      "totalCodeBytes": 1672,
+      "bundles": [
+        {
+          "bundleId": 0,
+          "name": "S0_STEM_NUCLEUS",
+          "instructions": 82,
+          "bytes": 328,
+          "capacityBytes": 664,
+          "utilizationPct": 49.4
+        },
+        {
+          "bundleId": 1,
+          "name": "S1_CORE_LOGIC",
+          "instructions": 122,
+          "bytes": 488,
+          "capacityBytes": 1328,
+          "utilizationPct": 36.7
+        },
+        {
+          "bundleId": 2,
+          "name": "S1_WIREFRAME",
+          "instructions": 46,
+          "bytes": 184,
+          "capacityBytes": 1328,
+          "utilizationPct": 13.9
+        },
+        {
+          "bundleId": 3,
+          "name": "S2_CORTEX_RENDER",
+          "instructions": 92,
+          "bytes": 368,
+          "capacityBytes": 2656,
+          "utilizationPct": 13.9
+        },
+        {
+          "bundleId": 4,
+          "name": "S2_SYNTH_AUDIO",
+          "instructions": 53,
+          "bytes": 212,
+          "capacityBytes": 1992,
+          "utilizationPct": 10.6
+        },
+        {
+          "bundleId": 5,
+          "name": "S3_ORGANISM_FX",
+          "instructions": 23,
+          "bytes": 92,
+          "capacityBytes": 5312,
+          "utilizationPct": 1.7
+        }
+      ]
+    },
+    {
       "file": "artifacts/aegis_drift.hbin",
       "source": "programs/aegis_drift.plang",
       "name": "AEGIS_DRIFT",

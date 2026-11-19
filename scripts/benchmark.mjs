@@ -35,7 +35,8 @@ const ROOT = path.resolve(__dirname, '..');
 const RESULTS_DIR = path.join(ROOT, 'results');
 fs.mkdirSync(RESULTS_DIR, { recursive: true });
 
-console.log('[BENCH] Compiling AEGIS_DRIFT, SYNTH_REACTOR, CIPHER_VAULT...');
+console.log('[BENCH] Compiling QUANTUM_CHRONICLE, AEGIS_DRIFT, SYNTH_REACTOR, CIPHER_VAULT...');
+const qchron = compilePlangToHbin(fs.readFileSync(path.join(ROOT, 'programs/quantum_chronicle.plang'), 'utf8'));
 const aegis = compilePlangToHbin(fs.readFileSync(path.join(ROOT, 'programs/aegis_drift.plang'), 'utf8'));
 const synth = compilePlangToHbin(fs.readFileSync(path.join(ROOT, 'programs/synth_reactor.plang'), 'utf8'));
 const vault = compilePlangToHbin(fs.readFileSync(path.join(ROOT, 'programs/cipher_vault.plang'), 'utf8'));
@@ -195,7 +196,7 @@ const benchmarks = {
   schema: 'PLANARIA-BENCHMARKS-1.0',
   generatedAt: new Date().toISOString(),
   nodeVersion: process.version,
-  artifacts: [aegis, synth, vault].map((p) => ({
+  artifacts: [qchron, aegis, synth, vault].map((p) => ({
     name: p.name,
     bytes: p.bytes.length,
     lineageRootHex: p.lineageRootHex,
@@ -244,9 +245,16 @@ const filesToAttest = [
   'src/core/hbin.js',
   'src/compiler/codegen.js',
   'src/vm/pvm32.js',
+  'src/quantum/qengine.js',
+  'src/quantum/temporal.js',
+  'src/world/generator.js',
+  'src/world/game3d.js',
+  'src/web/renderer3d.js',
+  'programs/quantum_chronicle.plang',
   'programs/aegis_drift.plang',
   'programs/synth_reactor.plang',
   'programs/cipher_vault.plang',
+  'artifacts/quantum_chronicle.hbin',
   'artifacts/aegis_drift.hbin',
   'artifacts/synth_reactor.hbin',
   'artifacts/cipher_vault.hbin',

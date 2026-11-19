@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PLANARIA — Progressive Holographic Executable & Surgical Vivisection Studio</title>
+  <title>PLANARIA v2.0 — 3D Temporal-Quantum Holographic Executable Engine &amp; Surgical Vivisection Studio</title>
   <link rel="stylesheet" href="/src/web/styles.css" />
 </head>
 <body>
@@ -11,72 +11,119 @@
     <div class="brand">
       <div class="brand-dot" id="pulseDot"></div>
       <div>
-        <h1>PLANARIA</h1>
-        <div class="sub">PROGRESSIVE HOLOGRAPHIC EXECUTABLE (.HBIN) · PVM-32 ANASTOMOSIS · LEAN 4 VERIFIED</div>
+        <h1>PLANARIA 3D</h1>
+        <div class="sub">TEMPORAL-QUANTUM WEBGL2 ENGINE · PROGRESSIVE HOLOGRAPHIC .HBIN · 1/1 ENDLESS FORGE · LEAN 4 VERIFIED</div>
       </div>
     </div>
     <div class="top-controls">
-      <select id="speciesSelect" title="Select Compiled Living .hbin Organism">
+      <select id="speciesSelect" title="Select Living Compiled .hbin Organism Kernel">
+        <option value="quantum_chronicle">QUANTUM_CHRONICLE.hbin (3D Chrono-Quantum)</option>
         <option value="aegis_drift">AEGIS_DRIFT.hbin (Arcade Starfighter)</option>
         <option value="synth_reactor">SYNTH_REACTOR.hbin (4-Voice Lissajous Synth)</option>
         <option value="cipher_vault">CIPHER_VAULT.hbin (ARX Avalanche Vault)</option>
       </select>
       <button id="btnAudio" class="btn-cyan">48kHz Audio: OFF</button>
       <button id="btnAuto" class="btn-emerald active">Autopilot: ON</button>
+      <button id="btnNextStage" class="btn-magenta">Next Stage (∞)</button>
       <button id="btnDownload" class="btn-gold">Export .hbin</button>
       <button id="btnRestore" class="btn-emerald">Restore 100%</button>
     </div>
   </header>
 
   <main class="shell">
-    <!-- LEFT MAIN OPERATING THEATER -->
-    <section style="display:flex; flex-direction:column; gap:14px;">
-      <!-- DUAL PATIENT LIVE EXECUTION VIEWPORTS -->
+    <!-- LEFT MAIN 3D ENGINE + FORENSIC / RPG WORKBENCH -->
+    <section style="display:flex; flex-direction:column; gap:12px;">
+      <!-- LIVE 3D WEBGL2 TEMPORAL-QUANTUM HOLOGRAPHIC VIEWPORT -->
       <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">Live Surgical Execution Theater (60 FPS PVM-32 Bytecode)</div>
-          <div style="display:flex; gap:8px; align-items:center;">
+          <div class="panel-title" id="stageHeader">STAGE 1 · PLANCK FOAM CRUCIBLE (10^-15 m)</div>
+          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+            <span id="primaryStratumBadge" class="badge badge-s3">STRATUM 3 · FULL 3D</span>
             <span id="immuneBadge" class="badge badge-s2">IMMUNE: MERKLE ON</span>
-            <span id="modeBadge" class="badge badge-s1">CONTROL COMPARISON</span>
+            <span id="modeBadge" class="badge badge-s1">REALTIME 1.00x</span>
           </div>
         </div>
 
-        <div class="arena-grid">
-          <!-- PATIENT A: PLANARIA LIVING BINARY -->
-          <div class="crt-card patient-primary" id="cardPrimary">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <strong id="primaryLabel" style="color:#f8fafc;">PATIENT A · PLANARIA (.hbin)</strong>
-              <span id="primaryStratumBadge" class="badge badge-s3">STRATUM 3 · FULL</span>
+        <div class="viewport3d-wrap" id="viewport3dWrap">
+          <canvas id="canvas3d"></canvas>
+
+          <!-- Top-Left Live Combat & Organism Vitality HUD -->
+          <div class="hud-overlay-tl">
+            <div style="display:flex; justify-content:space-between; gap:12px; font-size:10px;">
+              <strong id="hudStageScale" style="color:var(--gold);">ORDER 10^-15 m</strong>
+              <span id="hudWave" style="color:var(--cyan);">WAVE 1/3 · Lv.1</span>
             </div>
-            <div class="crt-wrap">
-              <canvas id="canvasPrimary" width="160" height="120"></canvas>
+            <div class="meter-row">
+              <span style="width:42px; color:#fda4af;">HP</span>
+              <div class="meter-track"><div id="barHp" class="meter-fill" style="width:100%; background:#f43f5e;"></div></div>
+              <span id="valHp" style="width:36px; text-align:right;">100</span>
             </div>
-            <div class="crt-meta">
-              <span id="primaryRoot">ROOT: —</span>
-              <span id="primaryFps">0 insns/f</span>
+            <div class="meter-row">
+              <span style="width:42px; color:#22d3ee;">SHIELD</span>
+              <div class="meter-track"><div id="barShield" class="meter-fill" style="width:100%; background:#22d3ee;"></div></div>
+              <span id="valShield" style="width:36px; text-align:right;">150</span>
+            </div>
+            <div class="meter-row">
+              <span style="width:42px; color:#fbbf24;">CHRONO</span>
+              <div class="meter-track"><div id="barChrono" class="meter-fill" style="width:100%; background:#fbbf24;"></div></div>
+              <span id="valChrono" style="width:36px; text-align:right;">100</span>
+            </div>
+            <div class="meter-row">
+              <span style="width:42px; color:#e879f9;">COHER</span>
+              <div class="meter-track"><div id="barCoh" class="meter-fill" style="width:100%; background:#e879f9;"></div></div>
+              <span id="valCoh" style="width:36px; text-align:right;">100%</span>
             </div>
           </div>
 
-          <!-- PATIENT B: LINEAR CONTROL TWIN OR MITOSIS CHILD SHARD B -->
-          <div class="crt-card" id="cardSecondary">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <strong id="secondaryLabel" style="color:#f8fafc;">CONTROL · LINEAR BINARY (LINBIN01)</strong>
-              <span id="secondaryBadge" class="badge badge-s3">INTACT</span>
+          <!-- Top-Right Live Quantum Mechanics Telemetry HUD -->
+          <div class="hud-overlay-tr">
+            <div style="font-size:10px; color:var(--magenta); font-weight:700;">4-QUBIT QUANTUM REGISTER</div>
+            <div id="hudChsh" style="font-size:11px; color:#f8fafc; margin-top:2px;">CHSH |S| = 2.83 (QUANTUM!)</div>
+            <div id="hudWaveRidge" style="font-size:10px; color:var(--emerald); margin-top:2px;">WAVE |ψ|² = 1.00 · NORMAL</div>
+            <div id="hudScore" style="font-size:10px; color:var(--gold); margin-top:2px;">SCORE 0 · KILLS 0 · SP 2</div>
+            <div id="hudEchoes" style="font-size:9.5px; color:var(--cyan); margin-top:2px;">ECHOES 0 · WELLS 0 · PARADOX 0</div>
+          </div>
+
+          <!-- Bottom Floating Equipped 1/1 Loadout & Controls Hint -->
+          <div class="hud-overlay-bl">
+            <div id="hudEquipped" style="background:rgba(5,10,17,0.8); border:1px solid rgba(16,245,168,0.4); border-radius:4px; padding:5px 9px; font-size:10px;">
+              WEAPON: —
             </div>
-            <div class="crt-wrap">
-              <canvas id="canvasSecondary" width="160" height="120"></canvas>
-            </div>
-            <div class="crt-meta">
-              <span id="secondaryMeta">SHA-256 Monolithic Loader</span>
-              <span id="secondaryStatus">ALIVE</span>
+            <div style="background:rgba(5,10,17,0.75); border:1px solid rgba(27,44,64,0.8); border-radius:4px; padding:4px 8px; font-size:9.5px; color:var(--muted);">
+              Drag: Orbit 3D · Wheel: Zoom · WASD: Move · Space: Fire · Hold R: Rewind · Hold Shift: Bullet-Time · 1-4: Weapons
             </div>
           </div>
         </div>
 
-        <!-- LIVE TELEMETRY STRIP -->
-        <div class="stats-strip">
+        <!-- 8 ACTIVE QUANTUM-TEMPORAL ABILITY BAR -->
+        <div class="ability-bar" id="abilityBar"></div>
+
+        <!-- LIVE HEISENBERG UNCERTAINTY STANCE + TEMPORAL CLOCK SLIDERS -->
+        <div class="slider-bar">
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:4px;">
+              <span style="color:var(--cyan); font-weight:700;">HEISENBERG STANCE (Δx·Δp = 0.50)</span>
+              <span id="heisenLabel" style="color:var(--gold);">BALANCED · 1.72x Crit · 29% Dodge</span>
+            </div>
+            <input id="sliderHeisen" type="range" min="0" max="100" value="50" style="width:100%;" />
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:4px;">
+              <span style="color:var(--magenta); font-weight:700;">TEMPORAL CLOCK &amp; SCALE ORDER</span>
+              <span id="timeLabel" style="color:var(--emerald);">1.00x · Real-Time</span>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <input id="sliderTime" type="range" min="15" max="250" value="100" style="flex:1;" />
+              <button id="btnRewindHold" class="btn-cyan" style="padding:3px 7px; font-size:10px;">Rewind 1s</button>
+              <button id="btnOrderNext" class="btn-gold" style="padding:3px 7px; font-size:10px;">Scale 10^x</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIVE .HBIN + QUANTUM TELEMETRY STRIP -->
+        <div class="q-strip">
           <div class="stat-box">
-            <div class="stat-label">Surviving Cells</div>
+            <div class="stat-label">.hbin 3D Cells</div>
             <div class="stat-val good" id="statCells">192 / 192</div>
           </div>
           <div class="stat-box">
@@ -92,56 +139,99 @@
             <div class="stat-val" id="statXeno">0</div>
           </div>
           <div class="stat-box">
-            <div class="stat-label">Unaligned Shifts</div>
-            <div class="stat-val" id="statShifts">0</div>
+            <div class="stat-label">Q-Entropy H(ψ)</div>
+            <div class="stat-val xeno" id="statEntropy">2.00 b</div>
           </div>
           <div class="stat-box">
-            <div class="stat-label">Decode Latency</div>
-            <div class="stat-val good" id="statLatency">0.0 ms</div>
+            <div class="stat-label">Decode / Hostiles</div>
+            <div class="stat-val cyan" id="statLatency">0.0 ms</div>
           </div>
         </div>
       </div>
 
-      <!-- FORENSIC LAB MULTI-TAB PANEL -->
+      <!-- MULTI-TAB RPG FORGE + PLANARIA FORENSIC LAB -->
       <div class="panel">
         <div class="tabs-bar">
-          <button class="tab-btn active" data-tab="tissue">1. Cellular Tissue Map (192×512B)</button>
-          <button class="tab-btn" data-tab="vascular">2. Organ Anastomosis &amp; Disassembly</button>
-          <button class="tab-btn" data-tab="curve">3. Empirical Survival Phase-Transition</button>
-          <button class="tab-btn" data-tab="compiler">4. Live Plang Compiler</button>
+          <button class="tab-btn active" data-tab="rpg">1. 1/1 Arsenal, Armor, Adaptive NPCs &amp; Skill Tree</button>
+          <button class="tab-btn" data-tab="crt">2. Dual-Patient 2D PVM-32 &amp; Linear Control Twin</button>
+          <button class="tab-btn" data-tab="tissue">3. 192-Cell Tissue Surgery Map</button>
+          <button class="tab-btn" data-tab="vascular">4. Organ Anastomosis &amp; Disasm</button>
+          <button class="tab-btn" data-tab="curve">5. Survival Curve &amp; Plang Compiler</button>
         </div>
 
-        <!-- TAB 1: CELLULAR TISSUE MAP -->
-        <div class="tab-pane active" id="tab-tissue">
+        <!-- TAB 1: ENDLESS 1/1 ARSENAL, ARMORS, ADAPTIVE NPCs & 12-SKILL TREE -->
+        <div class="tab-pane active" id="tab-rpg">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+            <span id="comboSpaceLabel" style="font-size:10px; color:var(--cyan);">1/1 Combinatorial Space: 6.8+ Trillion discrete builds × 2^64 SHA-256 genomes across 24 Orders of Magnitude</span>
+            <div style="display:flex; gap:6px;">
+              <button id="btnForgeLoot" class="btn-magenta">Forge New 1/1 Weapon &amp; Armor (C)</button>
+              <button id="btnEntangleWpns" class="btn-cyan">Entangle Weapons #1 ↔ #2</button>
+            </div>
+          </div>
+          <div class="rpg-grid">
+            <div class="rpg-col">
+              <div class="tool-group-title" style="margin-bottom:6px;">1/1 WEAPONS (Keys 1–4) &amp; ARMORS</div>
+              <div id="weaponList"></div>
+              <div class="tool-group-title" style="margin:8px 0 6px; color:var(--emerald);">1/1 QUANTUM ARMORS</div>
+              <div id="armorList"></div>
+            </div>
+            <div class="rpg-col">
+              <div class="tool-group-title" style="margin-bottom:6px; color:var(--gold);">ADAPTIVE 1/1 SKILL TREE (<span id="spBadge">2 SP</span>)</div>
+              <div id="skillList"></div>
+            </div>
+            <div class="rpg-col">
+              <div class="tool-group-title" style="margin-bottom:6px; color:#fda4af;">LIVE ADAPTIVE 1/1 NPCs &amp; BOSSES</div>
+              <div id="npcList"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: DUAL PATIENT 2D PVM-32 MONITOR + LINEAR CONTROL TWIN -->
+        <div class="tab-pane" id="tab-crt">
+          <div class="arena-grid">
+            <div class="crt-card patient-primary" id="cardPrimary">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <strong id="primaryLabel" style="color:#f8fafc;">PATIENT A · PLANARIA (.hbin)</strong>
+                <span id="primaryCrtBadge" class="badge badge-s3">STRATUM 3</span>
+              </div>
+              <div class="crt-wrap"><canvas id="canvasPrimary" width="160" height="120"></canvas></div>
+              <div class="crt-meta"><span id="primaryRoot">ROOT: —</span><span id="primaryFps">0 insns/f</span></div>
+            </div>
+            <div class="crt-card" id="cardSecondary">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <strong id="secondaryLabel" style="color:#f8fafc;">CONTROL · LINEAR BINARY (LINBIN01)</strong>
+                <span id="secondaryBadge" class="badge badge-s3">INTACT</span>
+              </div>
+              <div class="crt-wrap"><canvas id="canvasSecondary" width="160" height="120"></canvas></div>
+              <div class="crt-meta"><span id="secondaryMeta">Monolithic ELF-style Loader</span><span id="secondaryStatus">ALIVE</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: CELLULAR TISSUE MAP -->
+        <div class="tab-pane" id="tab-tissue">
           <div class="tissue-layout">
             <div>
               <canvas id="canvasTissue" class="canvas-responsive" width="660" height="232"
-                title="Click to inspect cell anatomy; Shift+Drag to surgically destroy cells live!"></canvas>
+                title="Click to inspect cell anatomy; Shift+Drag to surgically excise cells live!"></canvas>
               <div class="legend-row">
                 <span><i class="swatch" style="background:#fbbf24"></i>S0 Stem (k=2)</span>
                 <span><i class="swatch" style="background:#22d3ee"></i>S1 Vital (k=4)</span>
                 <span><i class="swatch" style="background:#10f5a8"></i>S2 Cortex (k=6–8)</span>
                 <span><i class="swatch" style="background:#a855f7"></i>S3 Genome (k=8–16)</span>
-                <span><i class="swatch" style="background:#f43f5e"></i>Byzantine Quarantine</span>
-                <span><i class="swatch" style="background:#e879f9"></i>Xenograft Donor</span>
-                <span style="color:#f8fafc;">Tip: Shift+Drag across grid to excise cells live!</span>
+                <span><i class="swatch" style="background:#f43f5e"></i>Quarantined</span>
+                <span><i class="swatch" style="background:#e879f9"></i>Xenograft</span>
+                <span style="color:#f8fafc;">Shift+Drag to excise live 3D cells!</span>
               </div>
             </div>
-            <div class="cell-inspector" id="cellInspector">
-              <strong>512-BYTE CELL ANATOMY INSPECTOR</strong><br/>
-              Click any cell in the 192-cell tissue map to inspect its 4B Barker sync word,
-              16B header, Cauchy eval coordinate <code>x_i</code>, Depth-8 SHA-256 Merkle
-              proof, and 2-way interleaved <code>RS(254,238)</code> parity!
-            </div>
+            <div class="cell-inspector" id="cellInspector">Click any cell to inspect its 512-byte anatomy.</div>
           </div>
         </div>
 
-        <!-- TAB 2: ORGAN ANASTOMOSIS GRAPH & DISASSEMBLY -->
+        <!-- TAB 4: ORGAN ANASTOMOSIS & DISASSEMBLY -->
         <div class="tab-pane" id="tab-vascular">
           <div style="display:grid; grid-template-columns:1.15fr 1fr; gap:12px;">
-            <div>
-              <canvas id="canvasVascular" class="canvas-responsive" width="520" height="240"></canvas>
-            </div>
+            <div><canvas id="canvasVascular" class="canvas-responsive" width="520" height="240"></canvas></div>
             <div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <span style="font-size:10px; color:var(--cyan);">LIVE PVM-32 DISASSEMBLY</span>
@@ -159,36 +249,31 @@
           </div>
         </div>
 
-        <!-- TAB 3: EMPIRICAL SURVIVAL PHASE-TRANSITION CURVE -->
+        <!-- TAB 5: EMPIRICAL SURVIVAL CURVE & LIVE PLANG COMPILER -->
         <div class="tab-pane" id="tab-curve">
-          <canvas id="canvasCurve" class="canvas-responsive" width="880" height="250"></canvas>
-          <div id="benchSummary" style="margin-top:8px; font-size:10px; color:var(--muted);"></div>
-        </div>
-
-        <!-- TAB 4: LIVE PLANG COMPILER -->
-        <div class="tab-pane" id="tab-compiler">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <canvas id="canvasCurve" class="canvas-responsive" width="880" height="210"></canvas>
+          <div id="benchSummary" style="margin:6px 0 10px; font-size:10px; color:var(--muted);"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
             <span style="font-size:10px; color:var(--emerald);">LIVE IN-BROWSER PLANG -> PVM-32 -> .HBIN COMPILER</span>
             <button id="btnCompileLive" class="btn-emerald">Compile &amp; Inject Live .hbin</button>
           </div>
-          <textarea id="plangEditor" class="code-box" spellcheck="false"></textarea>
-          <div id="compileStatus" style="margin-top:6px; font-size:10px; color:var(--cyan);"></div>
+          <textarea id="plangEditor" class="code-box" spellcheck="false" style="height:150px;"></textarea>
+          <div id="compileStatus" style="margin-top:5px; font-size:10px; color:var(--cyan);"></div>
         </div>
       </div>
     </section>
 
-    <!-- RIGHT SURGICAL INSTRUMENT DOCK -->
+    <!-- RIGHT SURGICAL VIVISECTION & QUANTUM CONTROL DOCK -->
     <aside class="dock">
       <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">Surgical Vivisection Dock</div>
-          <span style="font-size:10px; color:var(--muted);">REAL BYTE OPS</span>
+          <div class="panel-title">Live .hbin 3D Vivisection Dock</div>
+          <span style="font-size:10px; color:var(--muted);">MUTATES 3D REALTIME</span>
         </div>
 
-        <div style="display:flex; flex-direction:column; gap:10px;">
-          <!-- 1. PLANARIAN MITOSIS -->
+        <div style="display:flex; flex-direction:column; gap:9px;">
           <div class="tool-group">
-            <div class="tool-group-title">1. Planarian Bisection &amp; Regeneration</div>
+            <div class="tool-group-title">1. Planarian Mitosis &amp; Regeneration</div>
             <div class="btn-grid">
               <button id="btnMitosis" class="btn-cyan">Laser Bisect (50/50)</button>
               <button id="btnHeal" class="btn-emerald">Regenerate 100%</button>
@@ -197,29 +282,26 @@
             </div>
           </div>
 
-          <!-- 2. PROGRESSIVE SHREDDING -->
           <div class="tool-group">
-            <div class="tool-group-title">2. Progressive Erasure (Zero-Cliff Test)</div>
+            <div class="tool-group-title">2. Progressive Erasure (3D Stratum Morph!)</div>
             <div class="btn-grid">
-              <button class="btn-gold" data-shred="0.35">Shred 35% (S3)</button>
-              <button class="btn-gold" data-shred="0.62">Shred 62% (S2)</button>
-              <button class="btn-crimson" data-shred="0.78">Shred 78% (S1)</button>
-              <button class="btn-crimson" data-shred="0.88">Shred 88% (S0 Ghost!)</button>
+              <button class="btn-gold" data-shred="0.35">Shred 35% (S3 3D)</button>
+              <button class="btn-gold" data-shred="0.62">Shred 62% (S2 3D)</button>
+              <button class="btn-crimson" data-shred="0.78">Shred 78% (S1 Wire)</button>
+              <button class="btn-crimson" data-shred="0.88">Shred 88% (S0 Cloud)</button>
             </div>
           </div>
 
-          <!-- 3. RADIATION BIT-ROT -->
           <div class="tool-group">
-            <div class="tool-group-title">3. Radiation Bit-Rot (Inner RS(254,238))</div>
+            <div class="tool-group-title">3. Radiation Decoherence (Inner RS(254,238))</div>
             <div class="btn-grid">
               <button class="btn-gold" data-rad="8">8B/Cell Random</button>
-              <button class="btn-gold" data-rad="14" data-burst="1">14B Burst ALL Cells!</button>
+              <button class="btn-gold" data-rad="14" data-burst="1">14B Burst ALL Cells</button>
               <button class="btn-crimson" data-rad="16" data-burst="1">16B Max Burst Limit</button>
               <button class="btn-crimson" data-rad="22" data-burst="1">22B Lethal Overdose</button>
             </div>
           </div>
 
-          <!-- 4. BYZANTINE TROJAN ATTACK -->
           <div class="tool-group">
             <div class="tool-group-title">4. Byzantine Trojan Immune System</div>
             <div class="btn-grid">
@@ -228,7 +310,6 @@
             </div>
           </div>
 
-          <!-- 5. TARGETED ORGAN SCALPEL -->
           <div class="tool-group">
             <div class="tool-group-title">5. Targeted Organ Scalpel (Anastomosis)</div>
             <div class="btn-grid">
@@ -239,28 +320,27 @@
             </div>
           </div>
 
-          <!-- 6. CROSS-SPECIES XENOGRAFT CHIMERA -->
           <div class="tool-group">
-            <div class="tool-group-title">6. Cross-Species Xenograft Splicer</div>
-            <div class="btn-row" style="margin-bottom:6px;">
+            <div class="tool-group-title">6. Cross-Species Xenograft Chimera</div>
+            <div class="btn-row" style="margin-bottom:5px;">
               <select id="donorSelect">
                 <option value="synth_reactor">Donor: SYNTH_REACTOR</option>
                 <option value="cipher_vault">Donor: CIPHER_VAULT</option>
                 <option value="aegis_drift">Donor: AEGIS_DRIFT</option>
+                <option value="quantum_chronicle">Donor: QUANTUM_CHRONICLE</option>
               </select>
             </div>
             <button id="btnXenograft" class="btn-magenta" style="width:100%;">
-              Amputate Render+Audio &amp; Splice Chimera!
+              Amputate &amp; Splice 3D Xenograft Chimera!
             </button>
           </div>
         </div>
       </div>
 
-      <!-- SURGICAL EVENT LOG -->
       <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">Surgical Telemetry Log</div>
-          <span style="font-size:10px; color:var(--muted);">Keys: WASD/Arrows + Space</span>
+          <div class="panel-title">Chrono-Quantum &amp; Surgical Log</div>
+          <span style="font-size:10px; color:var(--muted);">REALTIME FEED</span>
         </div>
         <div class="event-log" id="eventLog"></div>
       </div>

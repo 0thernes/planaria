@@ -1,8 +1,16 @@
 {
   "schema": "PLANARIA-BENCHMARKS-1.0",
-  "generatedAt": "2026-11-19T04:47:16.214Z",
+  "generatedAt": "2026-11-19T05:08:25.146Z",
   "nodeVersion": "v25.9.0",
   "artifacts": [
+    {
+      "name": "QUANTUM_CHRONICLE",
+      "bytes": 98304,
+      "lineageRootHex": "60a1bb8748538186e3f4d16fa61e4289",
+      "sha256Hex": "299827cdc11ff3848b738d7b47f5941fd6eabac101fafd9a169a227a61bd8af0",
+      "instructions": 418,
+      "codeBytes": 1672
+    },
     {
       "name": "AEGIS_DRIFT",
       "bytes": 98304,
@@ -29,10 +37,10 @@
     }
   ],
   "performance": {
-    "meanFullDecodeMs": 10.5,
-    "meanPvm32FrameMs": 0.12,
-    "effectiveFrameRateHeadroomFps": 8333,
-    "pvm32ThroughputMIPS": 19.45
+    "meanFullDecodeMs": 11.12,
+    "meanPvm32FrameMs": 0.183,
+    "effectiveFrameRateHeadroomFps": 5464,
+    "pvm32ThroughputMIPS": 12.78
   },
   "survivalCurve": [
     {
@@ -541,7 +549,7 @@
       "rightBytes": 49152,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 25.56
+      "dualDecodeRegenMs": 38.62
     },
     {
       "cutByteOffset": 49153,
@@ -550,7 +558,7 @@
       "rightBytes": 49151,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 21.38
+      "dualDecodeRegenMs": 34.76
     },
     {
       "cutByteOffset": 49177,
@@ -559,7 +567,7 @@
       "rightBytes": 49127,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 23.13
+      "dualDecodeRegenMs": 34.54
     },
     {
       "cutByteOffset": 48701,
@@ -568,7 +576,7 @@
       "rightBytes": 49603,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 30.72
+      "dualDecodeRegenMs": 35.89
     },
     {
       "cutByteOffset": 49597,
@@ -577,7 +585,7 @@
       "rightBytes": 48707,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 33.52
+      "dualDecodeRegenMs": 33.93
     },
     {
       "cutByteOffset": 49000,
@@ -586,7 +594,7 @@
       "rightBytes": 49304,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 33.84
+      "dualDecodeRegenMs": 39.41
     }
   ],
   "xenograftMatrix": [

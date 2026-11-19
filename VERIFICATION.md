@@ -104,6 +104,7 @@ Compiled `.hbin` artifacts in `artifacts/` are 100% deterministic across platfor
 
 | Artifact | Size | Lineage Merkle Root (128-bit) | Full File SHA-256 | Instructions |
 |---|---|---|---|---|
+| [`artifacts/quantum_chronicle.hbin`](artifacts/quantum_chronicle.hbin) | 98,304 B | `60a1bb8748538186e3f4d16fa61e4289` | `299827cdc11ff384` *(see `artifacts/manifest.json`)* | 418 |
 | [`artifacts/aegis_drift.hbin`](artifacts/aegis_drift.hbin) | 98,304 B | `2ce3fb499c8f94c684a3fbfeb38496bf` | `462b56071e0f52b6fb28015d4f409af27f2c6e970b2d096e8a1f19b102c54fd0` | 958 |
 | [`artifacts/synth_reactor.hbin`](artifacts/synth_reactor.hbin) | 98,304 B | `3650bf9e153d0eb1314f64e9eca0c2f0` | `0d7dd32f971a7f979cec418703f7ffa2843205beb2d06efa67e5ae4214a50864` | 621 |
 | [`artifacts/cipher_vault.hbin`](artifacts/cipher_vault.hbin) | 98,304 B | `38731bc0ca687abdce12c6bfa3437e1c` | `fd902cb1ab867dc0c4e1fbebb98f91c52e1f469e41144310a9ae2a1c97f70b56` | 526 |

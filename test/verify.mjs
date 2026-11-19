@@ -31,6 +31,22 @@ import {
 import { compilePlangToHbin } from '../src/compiler/compile.js';
 import { PVM32 } from '../src/vm/pvm32.js';
 import { encodeLinearBinary, decodeLinearBinary } from '../src/vm/linear-twin.js';
+import {
+  QuantumRegister,
+  wkbTunnelingProbability,
+  heisenbergStance,
+  zenoSuppressionFactor,
+  evalWaveInterference,
+} from '../src/quantum/qengine.js';
+import { TemporalEngine } from '../src/quantum/temporal.js';
+import {
+  forgeWeapon,
+  forgeArmor,
+  forgeNPC,
+  buildStageSpec,
+  combinatorialSpaceMetrics,
+} from '../src/world/generator.js';
+import { ChronoQuantumWorld } from '../src/world/game3d.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -52,13 +68,15 @@ function suite(name, fn) {
 }
 
 console.log('========================================================================');
-console.log(' PLANARIA v1.0.0 — 12-SUITE FALSIFIABLE VERIFICATION & TORTURE HARNESS');
+console.log(' PLANARIA v2.0.0 — 16-SUITE FALSIFIABLE VERIFICATION & TORTURE HARNESS');
 console.log('========================================================================');
 
+const qchronSrc = fs.readFileSync(path.join(ROOT, 'programs/quantum_chronicle.plang'), 'utf8');
 const aegisSrc = fs.readFileSync(path.join(ROOT, 'programs/aegis_drift.plang'), 'utf8');
 const synthSrc = fs.readFileSync(path.join(ROOT, 'programs/synth_reactor.plang'), 'utf8');
 const vaultSrc = fs.readFileSync(path.join(ROOT, 'programs/cipher_vault.plang'), 'utf8');
 
+const qchron = compilePlangToHbin(qchronSrc);
 const aegis = compilePlangToHbin(aegisSrc);
 const synth = compilePlangToHbin(synthSrc);
 const vault = compilePlangToHbin(vaultSrc);
@@ -357,6 +375,118 @@ suite('Suite 12: Popperian Falsification Boundaries (1-Bit Linear Death & Sub-S0
   const deadDec = decodeHbin(tiny);
   assert.equal(deadDec.bootable, false);
   assert.equal(deadDec.maxViableStratum, -1);
+});
+
+// SUITE 13: Quantum Register Unitarity, Exact Tsirelson CHSH Violation, WKB Tunneling & Heisenberg Stance
+suite('Suite 13: 4-Qubit Unitarity, Exact CHSH Bell Violation (|S|=2*sqrt(2)), WKB Tunneling & Heisenberg Law', () => {
+  const q = new QuantumRegister(4);
+  q.H(0); q.CNOT(0, 1); q.RX(2, 0.73); q.RY(3, 1.19); q.RZ(1, 0.55); q.CZ(2, 3);
+  assert.ok(Math.abs(q.normSq() - 1.0) < 1e-13, `Unitary norm drift: ${q.normSq()}`);
+
+  // Exact Bell pair CHSH Tsirelson bound: |S| = 2*sqrt(2) ~= 2.828427 > 2.0 (classical bound)
+  q.prepareBellPair(0, 1);
+  const S = Math.abs(q.computeCHSH(0, 1));
+  assert.ok(Math.abs(S - 2 * Math.SQRT2) < 1e-9, `Expected Tsirelson 2*sqrt(2), got ${S}`);
+  // Decoherence strictly reduces Bell visibility below classical bound
+  q.applyDecoherence(1.0);
+  assert.ok(Math.abs(q.computeCHSH(0, 1)) < 2.0);
+
+  // Projective Born measurement collapses norm cleanly to 1.0
+  q.prepareBellPair(0, 1);
+  const m0 = q.measureQubit(0, 0.1);
+  const m1 = q.measureQubit(1, 0.9);
+  assert.equal(m0.outcome, m1.outcome, 'Bell pair |Phi+> measurements MUST be 100% correlated');
+  assert.ok(Math.abs(q.normSq() - 1.0) < 1e-13);
+
+  // WKB Tunneling monotonicity & exact Heisenberg uncertainty product Delta_x * Delta_p = 0.5
+  assert.ok(wkbTunnelingProbability(0.8, 1.0, 0.5) > wkbTunnelingProbability(0.2, 1.0, 0.5));
+  assert.equal(wkbTunnelingProbability(1.2, 1.0, 0.5), 1.0);
+  for (const s of [0, 0.25, 0.5, 0.75, 1.0]) {
+    const h = heisenbergStance(s);
+    assert.ok(Math.abs(h.product - 0.5) < 1e-12);
+  }
+  assert.ok(zenoSuppressionFactor(1.0, 4.0) < 0.1);
+  const wi = evalWaveInterference(0, 0, 0, [{ x: 0, z: 0, amp: 1, k: 1, omega: 1, phase: 0 }]);
+  assert.ok(wi > 0);
+});
+
+// SUITE 14: Temporal Engine Lossless Rewind, Chrono-Wells & Past-Timeline Echo Clones
+suite('Suite 14: Temporal Causality — Exact 360-Frame Rewind, Spherical Chrono-Wells & Past-Timeline Echoes', () => {
+  const world = new ChronoQuantumWorld(2026);
+  for (let f = 0; f < 45; f++) world.step(1 / 60, { moveX: 0.7, moveZ: 0.3, fire: f % 6 === 0 });
+  const savedStep = world.temporal.chronoStep;
+  const savedX = world.player.x;
+  for (let f = 0; f < 25; f++) world.step(1 / 60, { moveX: -0.5, moveZ: 0.8, fire: false });
+  assert.ok(world.temporal.chronoStep > savedStep);
+
+  // Hold Rewind for 25 frames -> restores exact prior chronoStep & player position!
+  for (let f = 0; f < 25; f++) world.step(1 / 60, { rewindHeld: true });
+  assert.equal(world.temporal.chronoStep, savedStep);
+  assert.ok(Math.abs(world.player.x - savedX) < 1e-6);
+
+  // Chrono-Well smooth radial dilation gradient
+  world.temporal.spawnChronoWell(0, 1, 0, 10, 0.15, 5.0);
+  assert.ok(world.temporal.localTimeFactor(0, 1, 0) < 0.2);
+  assert.equal(world.temporal.localTimeFactor(25, 1, 0), 1.0);
+
+  // Chrono-Fork Past-Timeline Echo spawns and advances autonomously
+  const echo = world.temporal.spawnChronoFork();
+  assert.ok(echo && echo.frames.length >= 25);
+});
+
+// SUITE 15: Endless 1/1 Procedural Combinatorial Uniqueness, Adaptive AI & 24-Order Scale Realms
+suite('Suite 15: Endless 1/1 Combinatorial Uniqueness (300 Forged Items/NPCs), Adaptive AI & 6-Order Stages', () => {
+  const cm = combinatorialSpaceMetrics();
+  assert.ok(cm.jointLoadoutCrossProduct > 6.8e12);
+  assert.equal(cm.scaleOrdersOfMagnitude, 24);
+
+  const wIds = new Set();
+  const aIds = new Set();
+  const nIds = new Set();
+  for (let i = 0; i < 100; i++) {
+    wIds.add(forgeWeapon(`TEST:${i}`, (i % 12) + 1).lineageId);
+    aIds.add(forgeArmor(`TEST:${i}`, (i % 12) + 1).lineageId);
+    nIds.add(forgeNPC(`TEST:${i}`, (i % 12) + 1, 1, i % 10 === 0, { beamRatio: 0.8, closeRatio: 0.1, entangleCount: 2 }).lineageId);
+  }
+  assert.equal(wIds.size, 100, 'All 100 forged 1/1 weapons must have unique Lineage IDs');
+  assert.equal(aIds.size, 100, 'All 100 forged 1/1 armors must have unique Lineage IDs');
+  assert.equal(nIds.size, 100, 'All 100 forged 1/1 NPCs must have unique Lineage IDs');
+
+  // Verify endless stage generation across stages 1..50 spanning all 6 scale orders
+  const seenOrders = new Set();
+  for (let st = 1; st <= 50; st++) {
+    const spec = buildStageSpec(st, 2026);
+    seenOrders.add(spec.realm.scaleLabel);
+    assert.ok(spec.pillars.length >= 6 && spec.waveSources.length >= 3);
+  }
+  assert.equal(seenOrders.size, 6);
+});
+
+// SUITE 16: QUANTUM_CHRONICLE.hbin Compilation, Unaligned Mitosis & Live 3D World Integration
+suite('Suite 16: QUANTUM_CHRONICLE.hbin 4th Living Species — Unaligned Mitosis & Live 3D Engine Coupling', () => {
+  assert.equal(qchron.bytes.length, TOTAL_HBIN_BYTES);
+  const { left, right } = bisectBinary(qchron.bytes, 49177);
+  assert.equal(regenerateHbin(decodeHbin(left)).sha256Hex, qchron.sha256Hex);
+  assert.equal(regenerateHbin(decodeHbin(right)).sha256Hex, qchron.sha256Hex);
+
+  const vm = new PVM32();
+  const dec = decodeHbin(qchron.bytes);
+  vm.loadDecoded(dec, true);
+  const world = new ChronoQuantumWorld(2026);
+  world.syncHbinState(dec, { mitosisActive: false });
+  world.entangleWeapons(0, 1);
+  assert.equal(world.upgradeSkill('sup_clones'), true);
+  assert.equal(world.triggerAbility('Q'), true);
+  assert.equal(world.triggerAbility('E'), true);
+  assert.equal(world.triggerAbility('F'), true);
+  assert.equal(world.triggerAbility('V'), true);
+
+  for (let f = 0; f < 60; f++) {
+    vm.stepFrame();
+    world.step(1 / 60, { pvmRam: vm.ram });
+  }
+  assert.equal(vm.traps, 0);
+  assert.ok(world.liveVoices.some((v) => v.vol > 0));
 });
 
 console.log('------------------------------------------------------------------------');

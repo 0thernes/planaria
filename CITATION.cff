@@ -1,8 +1,8 @@
 cff-version: 1.2.0
-title: "PLANARIA — Progressive Holographic Executable Architecture (.hbin), Multi-Stratum Plang Compiler, PVM-32 Anastomosis Virtual Machine, Cryptographic Byzantine Cellular Immune System & Lean 4 Verified Systems Proofs"
+title: "PLANARIA v2.0 — 3D Temporal-Quantum WebGL2 Progressive Holographic Executable Architecture (.hbin), Plang Compiler, PVM-32 Anastomosis VM, 1/1 Endless Universe Forge & 38 Lean 4 Verified Proofs"
 message: "If you reference, verify, or build upon PLANARIA in academic or independent non-commercial research, please cite this software and technical preprint using the metadata below."
 type: software
-version: "1.0.0"
+version: "2.0.0"
 date-released: "2026-11-18"
 authors:
   - family-names: "Donahue"

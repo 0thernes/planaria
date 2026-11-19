@@ -1,14 +1,14 @@
-# PLANARIA
+# PLANARIA v2.0
 
-> **The First Progressive Holographic Executable Architecture (`.hbin`): Cut a compiled binary in half at any unaligned byte offset and BOTH halves boot and regenerate the 100% SHA-256 bit-exact original — shred 88% of it and the surviving 12% ghost still executes live — blast 16-byte radiation bursts into EVERY cell simultaneously and it self-heals — inject forged Byzantine Trojans and its Merkle Immune System quarantines 100% of them — or amputate its graphics/audio organs and splice in another program's bytes to birth a living Cross-Species Chimera.**
+> **3D Temporal-Quantum WebGL2 Engine + Progressive Holographic Executable Architecture (`.hbin`): Fly and fight through an endless 1/1 multi-order 3D quantum-temporal universe (6.8T+ unique weapons, armors, adaptive NPCs, skills & stages across 24 orders of magnitude) physically powered by a living 96 KiB holographic binary — cut the binary in half and BOTH halves boot & regenerate bit-exact, shred 88% to morph the live 3D universe into a Ghost Point-Cloud, heal 16B bursts in every cell, quarantine Byzantine Trojans, splice Cross-Species Chimeras, and audit 38 pure Lean 4 proofs.**
 
 [![License: 0thernes Non-Commercial](https://img.shields.io/badge/License-0thernes_Non--Commercial-0ea5e9)](LICENSE)
-[![Lean 4](https://img.shields.io/badge/Lean_4-v4.35.0_(31_Theorems,_0_sorry)-10b981)](lean/README.md)
-[![Falsification Suites](https://img.shields.io/badge/Falsification_Harness-12%2F12_Passed-10b981)](test/verify.mjs)
+[![Lean 4](https://img.shields.io/badge/Lean_4-v4.35.0_(38_Theorems,_0_sorry)-10b981)](lean/README.md)
+[![Falsification Suites](https://img.shields.io/badge/Falsification_Harness-16%2F16_Passed-10b981)](test/verify.mjs)
 [![Runtime Dependencies](https://img.shields.io/badge/Runtime_Dependencies-0-38bdf8)](NOTICE)
 
 **Author:** Alexander S. Donahue ([0thernes LLC](https://0thernes.art) · `0_0@0thernes.art` · ORCID [0009-0006-8168-9648](https://orcid.org/0009-0006-8168-9648))  
-**Release:** `v1.0.0` (Systems Research Preprint, Standalone CLI & Interactive Surgical Vivisection Studio — Non-Commercial Research & Play; see [LICENSE](LICENSE) and [LEGAL.md](LEGAL.md))
+**Release:** `v2.0.0` (3D Temporal-Quantum WebGL2 Engine, Systems Research Preprint, Standalone CLI & Interactive Surgical Vivisection Studio — Non-Commercial Research & Play; see [LICENSE](LICENSE) and [LEGAL.md](LEGAL.md))
 
 ---
 
@@ -143,7 +143,7 @@ Reproduced verbatim in [results/benchmarks.json](results/benchmarks.json) (40 Mo
 
 ---
 
-## Five Machine-Checked Lean 4 Theorem Families (31 Theorems)
+## Six Machine-Checked Lean 4 Theorem Families (38 Theorems)
 
 Audited under `leanprover/lean4:v4.35.0` with **zero `sorryAx`, zero `native_decide`, zero Mathlib** ([results/lean4-audit.txt](results/lean4-audit.txt)):
 
@@ -152,12 +152,14 @@ Audited under `leanprover/lean4:v4.35.0` with **zero `sorryAx`, zero `native_dec
 3. **Theorem III (`StratumAnastomosis.lean`)** — Anastomosis zero-crash safety (`b0 ≥ 2 → resolveRenderer ≠ deadCrash`), monotonicity under cell recovery, monotone shard fusion dominance, constructive strict super-additive healing (`S1 + S1 → S3`), and constructive zero-cliff separation against single-stratum RS at 12% survival.
 4. **Theorem IV (`ByzantineImmune.lean`)** — `RS(254, 238)` Singleton distance ($d_{\min} = 17$, disjoint decoding balls for $t = 8$), universal proof of 2-way interleaved 16-byte contiguous burst recovery, Merkle quarantine zero-contamination & zero false-rejection, plus explicit counterexample proving 1 Trojan poisons an unauthenticated decoder.
 5. **Theorem V (`XenograftABI.lean`)** — Zero-axiom proof of `PVM-32` `< 4096` RAM confinement, bounded-fuel termination of xenografted organs, Kernel/Genome sovereignty preservation, strict ABI preservation, and therapeutic restoration of amputated hosts.
+6. **Theorem VI (`QuantumTemporal.lean`)** — Unitary norm preservation for discrete quantum gates (`Pauli-X`, `Pauli-Z`, `CNOT`, scaled `Hadamard`), exact bijective temporal step/rewind reversibility (`rewind (advance s) = s`), and zero-axiom proof that the discrete 1/1 Weapon × Armor × NPC forge exceeds **6.8 trillion** unique configurations before continuous stat gradients and $2^{64}$ SHA-256 genome seeds.
 
 ---
 
-## Three Compiled Living Species
+## Four Compiled Living Species & 3D Temporal-Quantum Engine
 
-- **`AEGIS_DRIFT.hbin`** (`programs/aegis_drift.plang`, 958 insns): Playable neon vector starfighter survival arcade with enemies, plasma bolts, energy orbs, particle shrapnel, parallax starfield, shield halo, and 4-voice synthwave soundtrack (WASD/Arrows + Space or Autopilot).
+- **`QUANTUM_CHRONICLE.hbin`** (`programs/quantum_chronicle.plang`, 418 insns): Live 3D Chrono-Quantum holographic driver feeding live phase-entropy registers into the WebGL2 3D Arena (`src/web/renderer3d.js`, `src/quantum/qengine.js`, `src/quantum/temporal.js`, `src/world/generator.js`, `src/world/game3d.js`).
+- **`AEGIS_DRIFT.hbin`** (`programs/aegis_drift.plang`, 958 insns): Playable neon vector starfighter survival arcade with enemies, plasma bolts, energy orbs, particle shrapnel, parallax starfield, shield halo, and 4-voice synthwave soundtrack.
 - **`SYNTH_REACTOR.hbin`** (`programs/synth_reactor.plang`, 621 insns): Interactive 4-voice Lydian polyphonic FM/subtractive synthesizer & phosphor-trailed Lissajous plasma reactor with 8-band spectrum meter.
 - **`CIPHER_VAULT.hbin`** (`programs/cipher_vault.plang`, 526 insns): Live 12-lane 32-bit ARX stream-cipher & cryptographic avalanche bit-matrix workstation with algorithmic keystream sonification.
 

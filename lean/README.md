@@ -1,7 +1,7 @@
 # PLANARIA Pure Lean 4 (`v4.35.0`) Formal Proof Library
 
 **Toolchain:** `leanprover/lean4:v4.35.0` (core Lean 4 only — **zero Mathlib dependency**, **zero `sorryAx`**, **zero `native_decide` / `Lean.trustCompiler`**, **zero custom axioms**).  
-**Audit Log:** [results/lean4-audit.txt](../results/lean4-audit.txt) — 31 audited declarations across 5 modules, clean-building in ~7.4 seconds.
+**Audit Log:** [results/lean4-audit.txt](../results/lean4-audit.txt) — **38 audited declarations** across 6 modules.
 
 ## Quick Verification
 
@@ -50,6 +50,13 @@ Inspect the `#print axioms` output at the end of `PlanariaProofs.lean`: every si
 | 29 | `XenograftABI.lean` | `xenograft_preserves_sovereignty` | Kernel (B0) & Genome (B6) cannot be replaced by foreign donors | `propext` |
 | 30 | `XenograftABI.lean` | `xenograft_abi_safety` | Xenografts preserve ABI signature & reject incompatible donors | `propext, Quot.sound` |
 | 31 | `XenograftABI.lean` | `xenograft_improves_amputated_host` | Valid ABI-matched donor restores viability of an amputated host slot | `propext, Classical.choice, Quot.sound` |
+| 32 | `QuantumTemporal.lean` | `pauliX_preserves_normSq` | **Theorem VI.1:** Discrete Pauli-X strictly preserves probability norm | `propext, Quot.sound` |
+| 33 | `QuantumTemporal.lean` | `pauliZ_preserves_normSq` | **Theorem VI.2:** Discrete Pauli-Z strictly preserves probability norm | `propext` |
+| 34 | `QuantumTemporal.lean` | `cnot_preserves_normSq` | **Theorem VI.3:** Entangling 2-qubit CNOT strictly preserves probability norm | `propext, Quot.sound` |
+| 35 | `QuantumTemporal.lean` | `hadamard_scaled_normSq` | **Theorem VI.4:** Scaled Hadamard satisfies $\|H_2 \psi\|^2 = 2\|\psi\|^2$ | `propext, Quot.sound` |
+| 36 | `QuantumTemporal.lean` | `temporal_rewind_exact_left_inv` | **Theorem VI.5:** `chronoRewind (chronoAdvance s) = s` (zero-drift rewind!) | `propext, Quot.sound` |
+| 37 | `QuantumTemporal.lean` | `temporal_rewind_exact_right_inv` | **Theorem VI.6:** `chronoAdvance (chronoRewind s) = s` (exact bijection!) | `propext, Quot.sound` |
+| 38 | `QuantumTemporal.lean` | `combinatorial_1of1_space_exceeds_6_trillion` | **Theorem VI.7:** Discrete 1/1 Weapon × Armor × NPC space $> 6.8 \times 10^{12}$ | **None (constructive)** |
 
 ## Formal Verification Scope Boundary
 
