@@ -6,7 +6,7 @@ Every technical, algebraic, operational, and security claim in **PLANARIA** is s
 
 ## 1. Provable — Machine-Checked Pure Lean 4 Kernel Audit (`lean/`)
 
-All 31 core algebraic, combinatorial, safety, Byzantine-isolation, and ABI-soundness theorems are formally machine-checked under **`leanprover/lean4:v4.35.0`** using **core Lean 4 only** (zero Mathlib, zero `sorryAx`, zero `native_decide`, zero custom axioms).
+All **38 core algebraic, combinatorial, safety, Byzantine-isolation, ABI-soundness, and quantum-temporal theorems** are formally machine-checked under **`leanprover/lean4:v4.35.0`** using **core Lean 4 only** (zero Mathlib, zero `sorryAx`, zero `native_decide`, zero custom axioms).
 
 ### Reproduce from Scratch
 
@@ -23,19 +23,20 @@ lake build
    - `grep -i sorryAx results/lean4-audit.txt` → **0 matches**
    - `grep -i trustCompiler results/lean4-audit.txt` → **0 matches**
    - `grep -i ofReduceBool results/lean4-audit.txt` → **0 matches**
-3. Constructive zero-axiom theorems verified directly:
+3. Constructive zero-axiom theorems verified directly (7 total):
    - `Planaria.GF256.gf_cauchy2_nonzero_det` (`does not depend on any axioms`)
    - `Planaria.Mitosis.planaria_all_7_bundles_mitosis_safe` (`does not depend on any axioms`)
    - `Planaria.Mitosis.planaria_total_cells_exact` (`does not depend on any axioms`)
    - `Planaria.Anastomosis.fusion_strict_synergy_exists` (`does not depend on any axioms`)
    - `Planaria.Anastomosis.zero_cliff_strict_separation` (`does not depend on any axioms`)
    - `Planaria.Xenograft.pvm32_ram_bounds_invariant` (`does not depend on any axioms`)
+   - `Planaria.QuantumTemporal.combinatorial_1of1_space_exceeds_6_trillion` (`does not depend on any axioms`)
 
 ---
 
 ## 2. Falsifiable — Tight Boundary & Counterexample Harness (`test/verify.mjs`)
 
-True engineering claims must state **precisely where they break** and fail cleanly when pushed past those boundaries. Run the complete 12-suite executable verification & falsification harness:
+True engineering claims must state **precisely where they break** and fail cleanly when pushed past those boundaries. Run the complete **16-suite** executable verification & falsification harness:
 
 ```bash
 npm run build
@@ -58,6 +59,10 @@ npm test
 | **Suite 10** | Cross-species Xenograft (`AEGIS_DRIFT x SYNTH_REACTOR`) boots with 0 traps, active donor audio, and exports a standalone `.hbin` capable of its own 50/50 Mitosis | Host Kernel (`B0`) remains `PRIMARY` (sovereignty invariant) |
 | **Suite 11** | All 3 species (`AEGIS_DRIFT`, `SYNTH_REACTOR`, `CIPHER_VAULT`) execute 100 frames deterministically | Bit-identical framebuffer FNV-1a hash across twin VMs |
 | **Suite 12** | 1-bit flip heals 100% in PLANARIA (`rsTotalByteErrorsFixed === 1`) | Identical 1-bit flip **KILLS** Linear Control Twin; retaining `< 2` cells **MUST** produce clean Cell Death (`bootable === false`) |
+| **Suite 13** | 4-qubit statevector ($\mathbb{C}^{16}$) unitarity, exact CHSH Bell violation ($|S|=2\sqrt{2}\approx 2.8284$), WKB barrier tunneling & Heisenberg $\Delta x\Delta p=0.5$ | Non-unitary norm drift (`|norm - 1| > 1e-9`) or CHSH bound violation fails immediately |
+| **Suite 14** | Lossless 360-frame temporal rewind bijectivity, spherical Chrono-Wells & Past-Timeline Echo replay | Exact bit-level state equality before/after forward-rewind cycle asserted |
+| **Suite 15** | Endless 1/1 combinatorial uniqueness (300 forged items/NPCs with 0 collisions), adaptive AI & 6-order spatial stages | Any genome collision or out-of-range metric fails immediately |
+| **Suite 16** | `QUANTUM_CHRONICLE.hbin` 4th living species — unaligned prime mitosis & live 3D engine coupling | Both disjoint halves must regenerate 100% SHA-256 bit-exact replica |
 
 ---
 
@@ -102,12 +107,14 @@ Outputs full machine-readable tables to [results/benchmarks.json](results/benchm
 
 Compiled `.hbin` artifacts in `artifacts/` are 100% deterministic across platforms and Node versions:
 
-| Artifact | Size | Lineage Merkle Root (128-bit) | Full File SHA-256 | Instructions |
+| Artifact | Size | Lineage Merkle Root (128-bit) | Full File SHA-256 | Instructions / Type |
 |---|---|---|---|---|
-| [`artifacts/quantum_chronicle.hbin`](artifacts/quantum_chronicle.hbin) | 98,304 B | `60a1bb8748538186e3f4d16fa61e4289` | `299827cdc11ff384` *(see `artifacts/manifest.json`)* | 418 |
-| [`artifacts/aegis_drift.hbin`](artifacts/aegis_drift.hbin) | 98,304 B | `2ce3fb499c8f94c684a3fbfeb38496bf` | `462b56071e0f52b6fb28015d4f409af27f2c6e970b2d096e8a1f19b102c54fd0` | 958 |
-| [`artifacts/synth_reactor.hbin`](artifacts/synth_reactor.hbin) | 98,304 B | `3650bf9e153d0eb1314f64e9eca0c2f0` | `0d7dd32f971a7f979cec418703f7ffa2843205beb2d06efa67e5ae4214a50864` | 621 |
-| [`artifacts/cipher_vault.hbin`](artifacts/cipher_vault.hbin) | 98,304 B | `38731bc0ca687abdce12c6bfa3437e1c` | `fd902cb1ab867dc0c4e1fbebb98f91c52e1f469e41144310a9ae2a1c97f70b56` | 526 |
+| [`artifacts/quantum_chronicle.hbin`](artifacts/quantum_chronicle.hbin) | 98,304 B | `60a1bb8748538186e3f4d16fa61e4289` | `299827cdc11ff3848b738d7b47f5941fd6eabac101fafd9a169a227a61bd8af0` | 418 insns |
+| [`artifacts/aegis_drift.hbin`](artifacts/aegis_drift.hbin) | 98,304 B | `2ce3fb499c8f94c684a3fbfeb38496bf` | `462b56071e0f52b6fb28015d4f409af27f2c6e970b2d096e8a1f19b102c54fd0` | 958 insns |
+| [`artifacts/synth_reactor.hbin`](artifacts/synth_reactor.hbin) | 98,304 B | `3650bf9e153d0eb1314f64e9eca0c2f0` | `0d7dd32f971a7f979cec418703f7ffa2843205beb2d06efa67e5ae4214a50864` | 621 insns |
+| [`artifacts/cipher_vault.hbin`](artifacts/cipher_vault.hbin) | 98,304 B | `38731bc0ca687abdce12c6bfa3437e1c` | `fd902cb1ab867dc0c4e1fbebb98f91c52e1f469e41144310a9ae2a1c97f70b56` | 526 insns |
+| [`dist/Donahue_2026_planaria.pdf`](dist/Donahue_2026_planaria.pdf) | 177,475 B | — | `4ace7864d3c5b119691d29ab2507afa22399e3a8a3c86ed3ee8f43e5c09306ae` | Frozen 7-page AMS-LaTeX PDF (`v2.1.0`) |
+| [`dist/arxiv_submission.tar.gz`](dist/arxiv_submission.tar.gz) | 12,762 B | — | `9fdd12b103978c731c4548e73dad2dcc042a9e8b530df9bf1b296f988d651465` | Standalone Tectonic/arXiv LaTeX bundle |
 
 Verify the Ed25519 attestation signature in `results/attestation.json`:
 
@@ -129,6 +136,6 @@ if (!ok) process.exit(1);
 
 | Layer | Verification Authority | Exact Scope |
 |---|---|---|
-| Algebraic $\text{GF}(2^8)$ inverses, universal 2×2 Cauchy nonsingularity, mitosis/unaligned thresholds, anastomosis zero-crash/monotonicity/synergy, RS(254,238) 16B burst bound, Merkle zero-contamination, PVM-32 memory/termination/sovereignty | **Lean 4 `v4.35.0` Kernel** ([lean/](lean/)) | Machine-checked mathematical proof within stated formal models (31 theorems, zero `sorryAx`) |
-| Berlekamp-Massey/Chien/Forney polynomial solver, $k \le 16$ Gauss-Jordan matrix inversion, FIPS 180-4 SHA-256 bit-exactness, Plang compiler codegen, `PVM-32` instruction semantics, Monte Carlo survival curves | **Executable Verification & Benchmark Suite** ([test/verify.mjs](test/verify.mjs), [scripts/benchmark.mjs](scripts/benchmark.mjs)) | Empirically verified & falsification-tested across randomized and adversarial test suites |
-| Interactive 60 FPS Surgical Vivisection Studio & 48 kHz `AudioWorklet` | **Live Browser Verification + Local Studio** ([src/web/](src/web/)) | Verified zero console errors, zero VM traps, real-time live byte surgery |
+| Algebraic $\text{GF}(2^8)$ inverses, universal 2×2 Cauchy nonsingularity, mitosis/unaligned thresholds, anastomosis zero-crash/monotonicity/synergy, RS(254,238) 16B burst bound, Merkle zero-contamination, PVM-32 memory/termination/sovereignty, quantum-temporal unitarity/rewind/combinatorial bounds | **Lean 4 `v4.35.0` Kernel** ([lean/](lean/)) | Machine-checked mathematical proof within stated formal models (**38 theorems**, zero `sorryAx`, zero `native_decide`) |
+| Berlekamp-Massey/Chien/Forney polynomial solver, $k \le 16$ Gauss-Jordan matrix inversion, FIPS 180-4 SHA-256 bit-exactness, Plang compiler codegen, `PVM-32` instruction semantics, 4-qubit CHSH/WKB/rewind runtime, Monte Carlo survival curves | **Executable Verification & Benchmark Suite** ([test/verify.mjs](test/verify.mjs), [scripts/benchmark.mjs](scripts/benchmark.mjs)) | Empirically verified & falsification-tested across **16 randomized and adversarial test suites** |
+| Interactive 60 FPS WebGL2 3D Temporal-Quantum & Surgical Vivisection Studio + 48 kHz `AudioWorklet` | **Live Browser Verification + Local Studio** ([src/web/](src/web/)) | Verified zero console errors, zero WebGL2 errors, zero VM traps, real-time live byte surgery |

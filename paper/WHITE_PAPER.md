@@ -1,8 +1,8 @@
 # PLANARIA: Progressive Holographic Executable Architecture (`.hbin`), Multi-Stratum Compilation, Autonomous Control-Flow Anastomosis, and Cryptographic Cellular Quorum
 
-**Technical Research White Paper (Preprint v1.0.0)**  
-**Author:** Alexander S. Donahue ([0thernes LLC](https://0thernes.art) · `0_0@0thernes.art` · ORCID [0009-0006-8168-9648](https://orcid.org/0009-0006-8168-9648))  
-**Date:** November 18, 2026  
+**Technical Research White Paper (Preprint v2.1.0 — Frozen PDF: [`dist/Donahue_2026_planaria.pdf`](../dist/Donahue_2026_planaria.pdf))**  
+**Author:** Alexander Stephen Donahue ([0thernes LLC](https://0thernes.art) · `0_0@0thernes.art` · ORCID [0009-0006-8168-9648](https://orcid.org/0009-0006-8168-9648))  
+**Date:** November 21, 2026  
 **Repository:** `https://github.com/0thernes/planaria`  
 **License:** Cosmogonic License — Non-Commercial Research & Play ([LICENSE](../LICENSE))
 
@@ -192,7 +192,7 @@ When a host species suffers organ amputation (e.g., `S2_CORTEX_RENDER` and `S2_S
 
 ## 8. Formal Machine-Checked Proofs in Pure Lean 4 (`v4.35.0`)
 
-PLANARIA ships a self-contained Lean 4 proof library (`lean/PlanariaProofs/`, zero Mathlib, zero `sorryAx`, zero `native_decide`, zero warnings) auditing **31 machine-checked declarations** across five theorem families ([results/lean4-audit.txt](../results/lean4-audit.txt)):
+PLANARIA ships a self-contained Lean 4 proof library (`lean/PlanariaProofs/`, zero Mathlib, zero `sorryAx`, zero `native_decide`, zero warnings) auditing **38 machine-checked declarations** across six theorem families ([results/lean4-audit.txt](../results/lean4-audit.txt)):
 
 1. **Theorem I — Exact $\text{GF}(2^8)$ Field & Universal Cauchy 2×2 Nonsingularity (`GF256.lean`)**:
    - `gfMul_inv_exact`: Exhaustively verifies $a \cdot a^{-1} = 1$ in $\text{GF}(2^8)$ modulo `0x11D` for all $a \in \{1..255\}$ inside the Lean kernel.
@@ -213,6 +213,10 @@ PLANARIA ships a self-contained Lean 4 proof library (`lean/PlanariaProofs/`, ze
 5. **Theorem V — `PVM-32` Sandboxing & Xenograft ABI Soundness (`XenograftABI.lean`)**:
    - `pvm32_ram_bounds_invariant` (zero axioms!) & `pvm32_bounded_termination`: Strict `< 4096` RAM confinement and $\le \text{budget}$ step termination.
    - `xenograft_preserves_sovereignty`, `xenograft_abi_safety`, & `xenograft_improves_amputated_host`: Host Kernel/Genome sovereignty and strict ABI preservation.
+6. **Theorem VI — Quantum Unitary Norm Conservation, Bijective Rewind & Combinatorial 1/1 Space (`QuantumTemporal.lean`)**:
+   - `pauliX_preserves_normSq`, `pauliZ_preserves_normSq`, `cnot_preserves_normSq`, `hadamard_scaled_normSq`: Exact unitary probability norm preservation for discrete quantum gates.
+   - `temporal_rewind_exact_left_inv` & `temporal_rewind_exact_right_inv`: Strict bijective step/rewind reversibility (`rewind (advance s) = s` and `advance (rewind s) = s`).
+   - `combinatorial_1of1_space_exceeds_6_trillion`: Zero-axiom constructive proof that the discrete Weapon × Armor × NPC forge exceeds $6.8 \times 10^{12}$ unique builds across 24 spatial orders of magnitude before continuous gradients and $2^{64}$ SHA-256 genome seeds.
 
 ---
 

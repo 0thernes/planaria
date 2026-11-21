@@ -7,19 +7,20 @@ on:
 
 jobs:
   verify-runtime:
-    name: Build .hbin Artifacts, 12-Suite Falsification & CLI Audit
+    name: Build 4 .hbin Artifacts, 16-Suite Falsification & CLI Audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
-      - name: Compile all .plang programs -> .hbin artifacts
+      - name: Compile all 4 .plang living species -> .hbin artifacts
         run: npm run build
-      - name: Run 12-suite falsifiable verification harness
+      - name: Run 16-suite falsifiable verification & quantum-temporal harness
         run: npm test
-      - name: Verify CLI bisect -> heal bit-exact SHA-256 roundtrip
+      - name: Verify CLI unaligned bisect -> heal bit-exact SHA-256 & Xenograft roundtrip
         run: |
+          node bin/planaria.mjs inspect artifacts/quantum_chronicle.hbin
           node bin/planaria.mjs inspect artifacts/aegis_drift.hbin
           node bin/planaria.mjs bisect artifacts/aegis_drift.hbin /tmp/l.hbin /tmp/r.hbin --offset 49177
           node bin/planaria.mjs heal /tmp/r.hbin -o /tmp/healed.hbin
@@ -30,15 +31,15 @@ jobs:
         run: npm run benchmark
 
   verify-lean4:
-    name: Pure Lean 4 v4.35.0 Kernel Proof Audit
+    name: Pure Lean 4 v4.35.0 Kernel Proof Audit (38 Theorems)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install elan & Lean 4 toolchain
+      - uses: actions/checkout@v7
+      - name: Install elan & Lean 4 v4.35.0 toolchain
         run: |
           curl https://elan.lean-lang.org/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
-      - name: Clean-build all 31 Lean 4 theorems and verify zero sorryAx
+      - name: Clean-build all 38 Lean 4 theorems and audit strict axiom allowlist
         working-directory: lean
         run: |
           lake clean
@@ -51,3 +52,25 @@ jobs:
             echo "ERROR: native_decide / trustCompiler detected!"
             exit 1
           fi
+          COUNT=$(grep -c "Planaria\." /tmp/lean-ci.log || true)
+          echo "Audited $COUNT Planaria theorem axiom lines cleanly."
+          test "$COUNT" -ge 38
+
+  verify-paper:
+    name: AMS-LaTeX White Paper & arXiv Bundle Build (Tectonic)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Tectonic TeX engine
+        run: |
+          curl --proto '=https' --tlsv1.2 -fsSL https://drop-sh.fullyjustified.net | sh
+          sudo mv tectonic /usr/local/bin/tectonic
+          tectonic --version
+      - name: Compile paper/main.tex and verify dist/arxiv_submission.tar.gz standalone
+        run: |
+          tectonic -X compile paper/main.tex --outdir /tmp/pdf-out --keep-logs
+          test -s /tmp/pdf-out/main.pdf
+          mkdir -p /tmp/arxiv-check
+          tar -xzf dist/arxiv_submission.tar.gz -C /tmp/arxiv-check
+          tectonic -X compile /tmp/arxiv-check/main.tex --outdir /tmp/arxiv-check/out
+          test -s /tmp/arxiv-check/out/main.pdf

@@ -1,10 +1,10 @@
-✔ [2/9] Built PlanariaProofs.MitosisBounds (3.5s)
-✔ [3/9] Built PlanariaProofs.StratumAnastomosis (3.6s)
-✔ [4/9] Built PlanariaProofs.XenograftABI (3.5s)
-✔ [5/9] Built PlanariaProofs.QuantumTemporal (3.5s)
-✔ [6/9] Built PlanariaProofs.ByzantineImmune (11s)
-✔ [7/9] Built PlanariaProofs.GF256 (11s)
-ℹ [8/9] Built PlanariaProofs (1.2s)
+✔ [2/9] Built PlanariaProofs.MitosisBounds (10s)
+✔ [3/9] Built PlanariaProofs.StratumAnastomosis (10s)
+✔ [4/9] Built PlanariaProofs.ByzantineImmune (10s)
+✔ [5/9] Built PlanariaProofs.XenograftABI (10s)
+✔ [6/9] Built PlanariaProofs.QuantumTemporal (10s)
+✔ [7/9] Built PlanariaProofs.GF256 (10s)
+ℹ [8/9] Built PlanariaProofs (1.6s)
 info: PlanariaProofs.lean:16:0: 'Planaria.GF256.gfAdd_comm' depends on axioms: [propext, Quot.sound]
 info: PlanariaProofs.lean:17:0: 'Planaria.GF256.gfAdd_self' depends on axioms: [propext, Quot.sound]
 info: PlanariaProofs.lean:18:0: 'Planaria.GF256.gfMul_zero_right' depends on axioms: [propext]

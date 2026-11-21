@@ -1,6 +1,6 @@
 {
   "schema": "PLANARIA-ATTESTATION-1.0",
-  "timestamp": "2026-11-19T05:08:25.184Z",
+  "timestamp": "2026-11-21T09:23:48.821Z",
   "digests": {
     "src/core/gf256.js": "dfbd7a79c73e384bdf17fa347797befd78b4ba102f932415494fdbe3a9e29b8c",
     "src/core/rs.js": "1402467d63bbf97d2ca428deb77e45ea82c744f5f39101ccb1fbb0cd081428b5",
@@ -22,9 +22,12 @@
     "artifacts/aegis_drift.hbin": "462b56071e0f52b6fb28015d4f409af27f2c6e970b2d096e8a1f19b102c54fd0",
     "artifacts/synth_reactor.hbin": "0d7dd32f971a7f979cec418703f7ffa2843205beb2d06efa67e5ae4214a50864",
     "artifacts/cipher_vault.hbin": "fd902cb1ab867dc0c4e1fbebb98f91c52e1f469e41144310a9ae2a1c97f70b56",
-    "results/benchmarks.json": "2e79291f634ca1e111f32ff4f67bcbdf0e99c48b4b3435ad9926b0141e3c89d6"
+    "paper/main.tex": "ad9f091c10b39d0ef0db300b935df68a0fbda644ea4a71b205f3799d918308f4",
+    "dist/Donahue_2026_planaria.pdf": "4ace7864d3c5b119691d29ab2507afa22399e3a8a3c86ed3ee8f43e5c09306ae",
+    "dist/arxiv_submission.tar.gz": "9fdd12b103978c731c4548e73dad2dcc042a9e8b530df9bf1b296f988d651465",
+    "results/benchmarks.json": "1d513ae154f8a3e3277525adf0b100835c8ec36157bf6363057d25098d292a0f"
   },
-  "ed25519PublicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAtxkPpvTKttxGIiBcVZcFLAm4Fpflcmxl5bIUlxn0SDA=\n-----END PUBLIC KEY-----\n",
-  "ed25519SignatureHex": "d83d9b35c5ba58d590d3d31b2ad721801824fe0c1e3f896779b87963a3467a1a8fd43d291a2b92d43d295120e1fa86db646f5ca1fca3b0c342bdab8d6c939400",
+  "ed25519PublicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAWgI/bfjzPyzM08pganGhi7X7aMZoA4c4qLDColC1JPM=\n-----END PUBLIC KEY-----\n",
+  "ed25519SignatureHex": "9ddd5badd9c0a80961c95103f6452b8972cd7b833510dd659549a56751e16f4d410a65b51ca80006d6cb294a4a5ee6d7da420d3613c430c1cc37e015ee01ef08",
   "selfVerified": true
 }

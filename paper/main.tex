@@ -1,0 +1,342 @@
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage[margin=0.95in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{microtype}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+
+\definecolor{plnDark}{HTML}{0B1320}
+\definecolor{plnEmerald}{HTML}{059669}
+\definecolor{plnCyan}{HTML}{0284C7}
+\definecolor{plnGold}{HTML}{D97706}
+\definecolor{plnCrimson}{HTML}{DC2626}
+\definecolor{plnViolet}{HTML}{7C3AED}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=plnCyan,
+  citecolor=plnEmerald,
+  urlcolor=plnCyan,
+  pdftitle={PLANARIA: Progressive Holographic Executable Architecture (.hbin), Multi-Stratum Compilation, Autonomous Control-Flow Anastomosis, Cryptographic Cellular Quorum, and 3D Temporal-Quantum Execution},
+  pdfauthor={Alexander Stephen Donahue (0thernes LLC, ORCID 0009-0006-8168-9648)}
+}
+
+\pagestyle{fancy}
+\setlength{\headheight}{14pt}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\textsc{PLANARIA v2.1.0 --- Progressive Holographic Executable Architecture}}
+\fancyhead[R]{\footnotesize\textsc{Donahue (0thernes LLC)}}
+\fancyfoot[C]{\footnotesize\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+\title{\vspace{-1.0em}\textbf{PLANARIA: Progressive Holographic Executable Architecture (\texttt{.hbin}), Multi-Stratum Compilation, Autonomous Control-Flow Anastomosis, and Cryptographic Cellular Quorum}}
+
+\author{%
+  \textbf{Alexander Stephen Donahue}\thanks{%
+    ORCID: \href{https://orcid.org/0009-0006-8168-9648}{\texttt{0009-0006-8168-9648}}.
+    Affiliation: 0thernes LLC, Spokane, WA, USA.
+    Email: \href{mailto:0_0@0thernes.art}{\texttt{0\_0@0thernes.art}}.
+    Web: \href{https://0thernes.art}{\texttt{https://0thernes.art}}.
+    Repository: \href{https://github.com/0thernes/planaria}{\texttt{https://github.com/0thernes/planaria}}.
+    Self-funded independent research; governed by the Cosmogonic License (Non-Commercial Research \& Play).
+  }\\
+  \small 0thernes LLC, Spokane, WA, USA
+}
+
+\date{November 21, 2026 \quad $\cdot$ \quad Technical Research Preprint \texttt{v2.1.0}}
+
+\begin{document}
+\maketitle
+\thispagestyle{plain}
+
+\begin{abstract}
+Classical compiled executables (\texttt{ELF}, \texttt{PE}, \texttt{Mach-O}, \texttt{WebAssembly}) obey a brittle monolithic topology: corrupting byte~0 of a file header, shifting byte alignment, flipping a single bit in active machine code, or slicing a binary in half induces immediate loader rejection or fatal runtime faults. Conventional single-rate $(n, k)$ Maximum Distance Separable (MDS) erasure coding replaces localized fragility with an abrupt \emph{erasure cliff}---100\% recovery at $k$ surviving shards and 0\% execution at $k-1$---while exposing finite-field Gaussian elimination to catastrophic single-cell Byzantine decoder poisoning.
+
+We present \textbf{PLANARIA}, a complete, zero-dependency, end-to-end systems architecture realizing \emph{Progressive Holographic Instruction Stratification (PHIS)}. PLANARIA integrates: (1)~a headerless, self-synchronizing 512-byte cellular executable format (\texttt{.hbin}, 192 cells = 98,304 bytes) combining 2-way interleaved inner $\mathrm{RS}(254, 238)$ Berlekamp--Massey/Chien/Forney byte-error correction, Depth-8 domain-separated SHA-256-128 Merkle cell authentication, and outer Cauchy-matrix MDS erasure coding over $\mathrm{GF}(2^8)$ (\texttt{0x11D}); (2)~a structured multi-stratum systems language and compiler (\texttt{Plang}); (3)~a sandboxed 32-bit register virtual machine (\texttt{PVM-32}) featuring native \texttt{ORGAN\_CALL} \emph{Control-Flow Anastomosis} and an ABI-verified \emph{Cross-Species Executable Xenograft} splicer; (4)~a WebGL2 3D temporal-quantum execution engine driven live by four compiled \texttt{.hbin} species; and (5)~\textbf{38 pure Lean~4 (\texttt{v4.35.0}) machine-checked proofs} with zero \texttt{sorryAx}, zero \texttt{native\_decide}, and zero Mathlib dependency.
+
+Reproducible benchmarks confirm: zero-overlap unaligned 50/50 \emph{Planarian Binary Mitosis} (both halves independently boot at full fidelity and regenerate the 100\% SHA-256 bit-exact 98,304-byte original); \textbf{100.0\% survival at 72\% random erasure, 97.5\% at 80\%, and 70.0\% at 92\%} (versus 0.0\% for both monolithic linear and single-stratum $\mathrm{RS}(40,16)$ cliff controls); \textbf{100.0\% healing of simultaneous 16-byte contiguous burst errors inside all 192 cells} (3,072 corrupted bytes, 3.13\% file-wide rate); and \textbf{100.0\% quarantine of RS-valid Byzantine Trojan cells} (versus 415/416-byte kernel corruption when Merkle quarantine is disabled).
+\end{abstract}
+
+\noindent\textbf{Keywords:} holographic executables, erasure coding, Cauchy MDS, Reed--Solomon, Merkle trees, Byzantine fault tolerance, virtual machines, graceful degradation, Lean~4 formal verification.
+
+\section{Introduction and Problem Formulation}
+\label{sec:intro}
+
+Since the earliest stored-program computers, compiled binary containers have assumed reliable byte-addressed storage in which a fixed header at offset~0 describes linear memory segments (\texttt{.text}, \texttt{.rodata}, \texttt{.data}). While optimal for intact RAM and disks, this layout exhibits four fundamental failure modes under physical decay, truncation, unaligned streaming, or adversarial tampering:
+
+\begin{enumerate}[leftmargin=1.8em, itemsep=2pt]
+  \item \textbf{Header Single Point of Failure:} Destroying bytes \texttt{0..63} or prepending even 1~byte of unaligned noise renders the binary unbootable despite 99.9\% intact machine instructions.
+  \item \textbf{Single-Rate Erasure Cliff:} Wrapping a binary in a flat $(n,k)$ Reed--Solomon code \cite{reed1960} eliminates localized failure above $k/n$ survival, yet creates a sharp discontinuity: at $k-1$ shards, zero instructions decode and availability drops instantaneously from 100\% to 0\%.
+  \item \textbf{Byzantine Poisoning Amplification:} Solving $D = M^{-1} P$ over $\mathrm{GF}(2^8)$ mixes every input shard linearly across every reconstructed output block. Injecting even a single syntactically valid forged shard with a colliding coordinate corrupts virtually the entire recovered code segment.
+  \item \textbf{Rigid Organ Coupling:} Classical executables cannot live-amputate a damaged rendering or audio organ, reroute execution onto a surviving low-resolution stem fallback without halting, or splice compatible subsystems from a second executable at raw byte level.
+\end{enumerate}
+
+Inspired by biological planarian regeneration \cite{reddien2004} and optical holography---and grounded mathematically in Priority Encoding Transmission \cite{albanese1996}, rateless coding concepts \cite{luby2002}, Cauchy MDS matrices \cite{bloemer1995}, algebraic Reed--Solomon decoding \cite{berlekamp1968,massey1969,chien1964,forney1965}, and Merkle authentication trees \cite{merkle1987}---\textbf{PLANARIA} resolves all four pathologies inside a single, zero-dependency executable ecosystem.
+
+\section{Threat Model and Operational Guarantees}
+\label{sec:goals}
+
+PLANARIA enforces five simultaneous properties over arbitrary, untrusted raw byte streams:
+\begin{itemize}[leftmargin=1.6em, itemsep=2pt]
+  \item \textbf{G1 (Zero-Header Framing):} Harvest cells at any unaligned byte offset (\texttt{offset mod 512 $\neq$ 0}), noise-padded streams, shuffled cell permutations, and raw OS concatenations (\texttt{cat A B}).
+  \item \textbf{G2 (Zero-Overlap Unaligned Mitosis):} Any 50/50 physical bisection (even cutting directly through a cell boundary at a prime offset) enables both disjoint halves to boot at Stratum~3 and regenerate a 100\% SHA-256 bit-exact replica of the original \texttt{.hbin}.
+  \item \textbf{G3 (Zero-Cliff Progressive Execution):} Degrade monotonically across four capability strata ($\mathrm{S3}\to\mathrm{S2}\to\mathrm{S1}\to\mathrm{S0}$ Ghost) down to $\sim$8--12\% survival without unhandled VM traps.
+  \item \textbf{G4 (Dual-Layer ECC \& Byzantine Quarantine):} Heal up to 16 contiguous burst bytes inside \emph{every} 512-byte cell simultaneously, and quarantine 100\% of RS-valid forged Byzantine cells prior to Cauchy decoding.
+  \item \textbf{G5 (Sovereign Xenograft Splicing):} Permit ABI-verified organ transplants across distinct \texttt{Plang} species while proving host Kernel/Genome sovereignty, RAM confinement ($<4096$ words), and bounded-step termination.
+\end{itemize}
+
+We assume a computationally bounded Byzantine adversary who knows the complete \texttt{.hbin} format, knows target \texttt{bundleId}/\texttt{evalX} coordinates, constructs valid interleaved $\mathrm{RS}(254,238)$ parity with zero syndrome errors, and prepends forged cells ahead of authentic cells, but cannot invert domain-separated FIPS~180-4 SHA-256 \cite{fips180} truncated to 128~bits ($2^{128}$ second-preimage resistance).
+
+\section{The \texorpdfstring{\texttt{.hbin}}{.hbin} v1.0 Cellular Holographic Binary Specification}
+\label{sec:hbin}
+
+A pristine \texttt{.hbin} executable is exactly \textbf{98,304 bytes (96~KiB)}, composed of \textbf{192 fixed 512-byte Holographic Cells} with no file header, footer, or central table, framed by a fuzzy ($\le 3$-bit Hamming tolerance) 32-bit sync marker \cite{barker1953}. Figure~\ref{fig:cell} depicts the byte-exact 512-byte envelope.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[font=\scriptsize\sffamily, >=stealth]
+  % Cell bar total width 14.4 cm representing 512 bytes (non-linear visual scale with exact labels)
+  \fill[plnGold!25, draw=plnGold, thick] (0,0) rectangle (1.3,1.05);
+  \node[align=center] at (0.65,0.52) {\textbf{Sync}\\4 B\\\texttt{0..3}};
+
+  \fill[plnCyan!22, draw=plnCyan, thick] (1.3,0) rectangle (3.3,1.05);
+  \node[align=center] at (2.3,0.52) {\textbf{Header}\\16 B\\\texttt{4..19}};
+
+  \fill[plnEmerald!22, draw=plnEmerald, thick] (3.3,0) rectangle (8.7,1.05);
+  \node[align=center] at (6.0,0.52) {\textbf{GF($2^8$) Cauchy-Coded Organ Payload}\\332 B \quad (\texttt{20..351})};
+
+  \fill[plnViolet!20, draw=plnViolet, thick] (8.7,0) rectangle (12.1,1.05);
+  \node[align=center] at (10.4,0.52) {\textbf{Depth-8 Merkle Path}\\128 B ($8\times 16$ B)\\\texttt{352..479}};
+
+  \fill[plnCrimson!20, draw=plnCrimson, thick] (12.1,0) rectangle (14.4,1.05);
+  \node[align=center] at (13.25,0.52) {\textbf{RS Parity}\\32 B\\\texttt{480..511}};
+
+  % Merkle commitment bracket
+  \draw[thick, plnViolet, <->] (1.3,-0.25) -- (8.7,-0.25)
+    node[midway, below, text=plnViolet] {348 B Merkle Leaf Commitment: $\mathrm{SHA256}(\texttt{0x00}\parallel\text{Header}\parallel\text{Payload})[0..15]$};
+
+  % Interleaved RS bracket
+  \draw[thick, plnCrimson, <->] (1.3,1.30) -- (14.4,1.30)
+    node[midway, above, text=plnCrimson] {508 B Protected by 2-Way Interleaved $\mathrm{RS}(254,238)$ (Heals $\le 16$ B Contiguous Burst)};
+
+  % Fuzzy sync note
+  \draw[thick, plnGold, ->] (0.65,1.45) -- (0.65,1.10);
+  \node[above, text=plnGold, align=center] at (0.65,1.45) {Fuzzy $\le 3$b};
+\end{tikzpicture}
+\caption{Byte-exact anatomy of a 512-byte PLANARIA Holographic Cell (\texttt{src/core/hbin.js}). Zero bytes are wasted on padding ($4 + 16 + 332 + 128 + 32 = 512$~B exact).}
+\label{fig:cell}
+\end{figure}
+
+Compiled bytecode and self-regenerating genome metadata are partitioned across 7 independent Cauchy MDS bundles (Table~\ref{tab:bundles}). To guarantee uniform spatial survival under arbitrary contiguous cuts, cell $i\in\{0,\dots,n_b-1\}$ of bundle $b\in\{0,\dots,6\}$ is assigned deterministic low-discrepancy position
+\begin{equation}
+  p(b, i) = \frac{i + (b + 0.5)/7}{n_b} \in [0, 1),
+\end{equation}
+and all 192 cells are ordered by $(p(b, i), b, i)$. Every bundle satisfies $n_b \ge 2k_b + 4$ and $\sum_{b=0}^6 n_b = 192 \le 2^8$.
+
+\begin{table}[ht]
+\centering
+\caption{PLANARIA \texttt{.hbin} v1.0 Seven-Bundle Progressive Stratification Specification (192 cells = 98,304 B).}
+\label{tab:bundles}
+\footnotesize
+\begin{tabular}{@{}cllccrrrc@{}}
+\toprule
+\textbf{ID} & \textbf{Bundle Name} & \textbf{Organ} & \textbf{Stratum} & \textbf{ABI Sig} & $k_b$ & $n_b$ & \textbf{Max B} & \textbf{Erasure Tol.} \\
+\midrule
+B0 & \texttt{S0\_STEM\_NUCLEUS}   & \texttt{KERNEL}   & S0 & \texttt{0x0101} &  2 & 24 &   664 & \textbf{91.7\%} \\
+B1 & \texttt{S1\_CORE\_LOGIC}     & \texttt{LOGIC}    & S1 & \texttt{0x0201} &  4 & 24 & 1,328 & 83.3\% \\
+B2 & \texttt{S1\_WIREFRAME}       & \texttt{RENDERER} & S1 & \texttt{0x0301} &  4 & 24 & 1,328 & 83.3\% \\
+B3 & \texttt{S2\_CORTEX\_RENDER}  & \texttt{RENDERER} & S2 & \texttt{0x0302} &  8 & 32 & 2,656 & 75.0\% \\
+B4 & \texttt{S2\_SYNTH\_AUDIO}    & \texttt{AUDIO}    & S2 & \texttt{0x0402} &  6 & 24 & 1,992 & 75.0\% \\
+B5 & \texttt{S3\_ORGANISM\_FX}    & \texttt{FX}       & S3 & \texttt{0x0503} & 16 & 40 & 5,312 & 60.0\% \\
+B6 & \texttt{S3\_GENOME\_LEDGER}  & \texttt{GENOME}   & S3 & \texttt{0x0603} &  8 & 24 & 2,656 & 66.7\% \\
+\midrule
+\textbf{Total} & 7 Bundles & 6 Organs & S0--S3 & --- & \textbf{48} & \textbf{192} & \textbf{15,936} & Progressive \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Dual-Layer Algebraic Coding and Cryptographic Immune System}
+\label{sec:coding}
+
+All finite-field operations execute over $\mathrm{GF}(2^8)$ modulo the primitive polynomial $P(x) = x^8 + x^4 + x^3 + x^2 + 1$ (\texttt{0x11D}) with generator $\alpha = 2$ (\texttt{src/core/gf256.js}).
+
+\subsection{Inner 2-Way Interleaved \texorpdfstring{$\mathrm{RS}(254, 238)$}{RS(254, 238)} Burst Armor}
+Each cell's 476-byte body (\texttt{4..479}) is split into even-index and odd-index lanes of 238~bytes. Each lane is systematically encoded with $g(x) = \prod_{i=0}^{15}(x - \alpha^i)$ (\texttt{fcr} $= 0$), yielding $d_{\min} = 254 - 238 + 1 = 17$ \cite{singleton1964} and unique bounded-distance correction radius $t = 8$~bytes per lane. Decoding (\texttt{src/core/rs.js}) executes exact 16-syndrome evaluation, Berlekamp--Massey minimal error-locator synthesis $\Lambda(x)$ \cite{berlekamp1968,massey1969}, exhaustive Chien root search \cite{chien1964}, Forney error evaluation \cite{forney1965}
+\begin{equation}
+  e_k = \frac{X_k \cdot \Omega(X_k^{-1})}{\Lambda'(X_k^{-1})}, \qquad \Omega(x) = \bigl(S(x)\Lambda(x)\bigr)\bmod x^{16},
+\end{equation}
+and a mandatory post-correction zero-syndrome recheck that rejects uncorrectable ($>8$-error) codewords with zero silent miscorrections. Interleaving guarantees that any contiguous burst of length $L \le 16$ deposits at most 8 errors in each lane.
+
+\subsection{Outer Cauchy-Matrix MDS Erasure Layer}
+Unlike systematic Vandermonde matrices over $\mathrm{GF}(2^8)$ (which can encounter singular submatrices for $k\ge 4$), PLANARIA uses pure Cauchy matrices \cite{bloemer1995,plank2006} $C_{i,j} = (x_i \oplus y_j)^{-1}$ with disjoint sets $Y=\{0,\dots,k-1\}$ and $X=\{k,\dots,k+n-1\}$ ($\max(k+n)=56\ll 256$). Every $k\times k$ submatrix has strictly nonzero Cauchy determinant
+\begin{equation}
+  \det(C_{I,Y}) = \frac{\prod_{a<b}(x_{i_b}\oplus x_{i_a})(y_b\oplus y_a)}{\prod_{a,b}(x_{i_a}\oplus y_b)} \neq 0,
+\end{equation}
+ensuring unique recovery via exact $\mathrm{GF}(2^8)$ Gauss--Jordan inversion (\texttt{src/core/cauchy.js}) from \emph{any} $k$ authentic cells.
+
+\subsection{Depth-8 SHA-256-128 Merkle Byzantine Quarantine}
+Every cell embeds an 8-level sibling Merkle proof (128~bytes) committing its 348-byte $(\text{Header}\parallel\text{Payload})$ using domain-separated leaves (\texttt{0x00}) and internal nodes (\texttt{0x01}) \cite{merkle1987,fips180}. During decoding, every RS-validated cell recomputes its implied Lineage Root $\hat{R}_c$ \emph{before} Cauchy inversion. In \emph{Pinned-Root Mode}, any cell with $\hat{R}_c \neq R_{\text{pinned}}$ is quarantined immediately; in \emph{Unpinned Quorum Mode}, the largest coherent distinct-coordinate cluster is elected primary lineage while forged singletons are isolated and coherent secondary clusters may serve as ABI-matched Xenograft donors.
+
+\section{Compiler, Anastomosis VM, and 3D Temporal-Quantum Engine}
+\label{sec:vm}
+
+\texttt{Plang} (\texttt{src/compiler/}) is a structured multi-stratum language compiling \texttt{bundle} blocks into fixed 32-bit \texttt{PVM-32} RISC machine code with lexical block register reclamation, direct-to-ABI call emission, immediate/memory folding, and conditional branch lowering.
+
+\texttt{PVM-32} (\texttt{src/vm/pvm32.js}) executes over 32 integer registers, strictly bounds-masked 4,096-word RAM (\texttt{addr \& 0xFFF}), a 160$\times$120 RGBA32 framebuffer, a 4-voice synth register bank driving a lock-free 48~kHz \texttt{AudioWorklet}, and a native \texttt{ORGAN\_CALL} instruction dispatching dynamically through the live \emph{Anastomosis Dispatch Table}. Hot-swapping decoded bundles (\texttt{loadDecoded(dec, false)}) preserves live RAM state across mid-flight amputations, regeneration, and Cross-Species Xenografting over a standardized Shared-Memory World-State ABI (\texttt{MEM[0..511]}).
+
+In \textbf{PLANARIA v2.0/v2.1}, four compiled living \texttt{.hbin} species---\texttt{QUANTUM\_\allowbreak CHRONICLE} (418~insns), \texttt{AEGIS\_\allowbreak DRIFT} (958~insns), \texttt{SYNTH\_\allowbreak REACTOR} (621~insns), and \texttt{CIPHER\_\allowbreak VAULT} (526~insns)---couple directly to a zero-dependency WebGL2 (\texttt{GLSL 300 es}) 3D Temporal-Quantum Engine (\texttt{src/web/\allowbreak renderer3d.js}, \texttt{src/quantum/}, \texttt{src/world/}). The engine executes an exact 4-qubit complex statevector ($\mathbb{C}^{16}$, achieving exact Tsirelson CHSH $|S|=2\sqrt{2}\approx 2.828$), WKB barrier tunneling, Heisenberg minimum-uncertainty stance ($\Delta x\Delta p = 0.5$), Quantum Zeno observation suppression, 360-frame lossless temporal rewind, Chrono-Fork Past-Timeline Echo Clones, and an endless 1/1 procedural combinatorial forge ($>6.8\times 10^{12}$ discrete builds $\times 2^{64}$ SHA-256 genomes across 24 spatial orders of magnitude, $10^{-15}\text{ m}\to 10^9\text{ m}$), visually morphing the live 3D geometry across \texttt{.hbin} strata ($\mathrm{S3/S2}$ polygons $\to\mathrm{S1}$ 3D wireframe $\to\mathrm{S0}$ stem point-cloud) alongside all 192 orbiting 3D cell crystals.
+
+\section{Formal Verification in Pure Lean~4 (\texorpdfstring{\texttt{v4.35.0}}{v4.35.0})}
+\label{sec:lean}
+
+All six theorem families (\textbf{38 audited declarations} across 6~modules plus audit entrypoint \texttt{lean/\allowbreak PlanariaProofs.lean}) compile cleanly under \texttt{leanprover/\allowbreak lean4:v4.35.0} \cite{demoura2021} using core Lean~4 only---with \textbf{zero Mathlib}, \textbf{zero \texttt{sorryAx}}, \textbf{zero \texttt{native\_decide}/\texttt{trustCompiler}}, and strict adherence to the standard kernel axiom allowlist $\{\texttt{propext},\allowbreak \texttt{Classical.choice},\allowbreak \texttt{Quot.sound}\}$ (with 7 theorems purely constructive / zero axioms). Table~\ref{tab:lean} summarizes the verified theorem suites.
+
+\begin{table}[ht]
+\centering
+\caption{Summary of the 38 Pure Lean~4 (\texttt{v4.35.0}) machine-checked theorems audited in \texttt{results/lean4-audit.txt}.}
+\label{tab:lean}
+\footnotesize
+\begin{tabular}{@{}llc>{\raggedright\arraybackslash}p{8.2cm}@{}}
+\toprule
+\textbf{Family} & \textbf{Module} & \textbf{\#} & \textbf{Machine-Checked Formal Guarantees} \\
+\midrule
+I & \texttt{GF256.lean} & 8 & Exhaustive $\forall a\in\{1..255\},\, a\cdot a^{-1}=1$ mod \texttt{0x11D}; zero-axiom universal 2$\times$2 Cauchy nonsingularity over any char-2 field; Stratum-0 roundtrip. \\
+II & \texttt{MitosisBounds.lean} & 7 & Tight iff Mitosis bounds ($N\ge 2k$ sufficient; $N<2k$ impossible); unaligned cut bound ($N\ge 2k+2$); all 7 \texttt{.hbin} bundles $n_b\ge 2k_b+4$; Bundle-5 trisection synergy. \\
+III & \texttt{StratumAnastomosis.lean} & 5 & Zero-crash safety ($b_0\ge 2\Rightarrow\text{no crash}$); stratum monotonicity; fusion dominance; constructive strict synergy ($\mathrm{S1}+\mathrm{S1}\to\mathrm{S3}$) \& zero-cliff separation. \\
+IV & \texttt{ByzantineImmune.lean} & 6 & $\mathrm{RS}(254,238)$ $d_{\min}=17$, $t=8$ disjoint balls; universal 16~B interleaved burst bound; Merkle zero-contamination \& authentic preservation; 1-Trojan poisoning counterexample. \\
+V & \texttt{XenograftABI.lean} & 5 & Zero-axiom \texttt{PVM-32} RAM $<4096$ invariant; bounded-fuel termination; Kernel/Genome sovereignty; ABI preservation \& amputated-host restoration. \\
+VI & \texttt{QuantumTemporal.lean} & 7 & Unitary norm conservation (\texttt{Pauli-X/Z}, \texttt{CNOT}, scaled \texttt{Hadamard}); exact bijective rewind left/right inverse; zero-axiom $>6.8\times 10^{12}$ discrete 1/1 space bound. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Empirical Benchmarks and Popperian Falsification}
+\label{sec:bench}
+
+All executable measurements are reproduced deterministically via \texttt{npm test} (16/16 falsification suites) and \texttt{npm run benchmark}, emitting \texttt{results/\allowbreak benchmarks.json} and the Ed25519-signed \cite{bernstein2012} manifest \texttt{results/\allowbreak attestation.json}. The suite compares \texttt{AEGIS\_\allowbreak DRIFT.hbin} against its exact monolithic Linear Control Twin (\texttt{LINBIN01}) and a single-stratum $\mathrm{RS}(40,16)$ cliff control across 40 Monte Carlo trials per erasure level.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.92\textwidth,
+  height=5.5cm,
+  xlabel={Total Random Binary Erasure / File Obliteration (\%)},
+  ylabel={Bootable Survival Rate (\%)},
+  xmin=0, xmax=96,
+  ymin=0, ymax=105,
+  xtick={0,12,24,36,48,60,72,80,88,96},
+  ytick={0,20,40,60,80,100},
+  grid=major,
+  grid style={dashed, gray!30},
+  legend columns=2,
+  legend style={at={(0.5,1.03)}, anchor=south, font=\scriptsize, fill=white, draw=gray!50, column sep=8pt},
+  tick label style={font=\scriptsize},
+  label style={font=\footnotesize\bfseries}
+]
+  % PLANARIA 4-Stratum Bootable
+  \addplot[color=plnEmerald, very thick, mark=*, mark size=1.4pt] coordinates {
+    (0,100) (4,100) (8,100) (12,100) (16,100) (20,100) (24,100) (28,100)
+    (32,100) (36,100) (40,100) (44,100) (48,100) (52,100) (56,100) (60,100)
+    (64,100) (68,100) (72,100) (76,100) (80,97.5) (84,97.5) (88,82.5) (92,70.0) (96,37.5)
+  };
+  \addlegendentry{PLANARIA 4-Stratum Bootable (\%)}
+
+  % PLANARIA Mean Capability Score
+  \addplot[color=plnCyan, thick, densely dashed] coordinates {
+    (0,100) (4,100) (8,100) (12,100) (16,100) (20,100) (24,100) (28,100)
+    (32,100) (36,100) (40,100) (44,100) (48,100) (52,98.8) (56,96.3) (60,87.5)
+    (64,83.1) (68,76.9) (72,70.0) (76,63.1) (80,54.4) (84,43.8) (88,30.6) (92,21.9) (96,9.4)
+  };
+  \addlegendentry{PLANARIA Mean Stratum Score (\%)}
+
+  % Single-Stratum RS(40,16) Cliff
+  \addplot[color=plnGold, very thick, dashed, mark=triangle*, mark size=1.5pt] coordinates {
+    (0,100) (4,100) (8,100) (12,100) (16,100) (20,100) (24,100) (28,100)
+    (32,100) (36,100) (40,100) (44,100) (48,100) (52,95.0) (56,87.5) (60,52.5)
+    (64,37.5) (68,20.0) (72,0) (76,0) (80,0) (84,0) (88,0) (92,0) (96,0)
+  };
+  \addlegendentry{Single-Stratum $\mathrm{RS}(40,16)$ Cliff (\%)}
+
+  % Monolithic Linear Binary Control
+  \addplot[color=plnCrimson, very thick, mark=square*, mark size=1.3pt] coordinates {
+    (0,100) (4,82.5) (8,60.0) (12,32.5) (16,7.5) (20,20.0) (24,10.0) (28,7.5)
+    (32,2.5) (36,5.0) (40,2.5) (44,0) (48,0) (52,0) (56,0) (60,0)
+    (64,0) (68,0) (72,0) (76,0) (80,0) (84,0) (88,0) (92,0) (96,0)
+  };
+  \addlegendentry{Linear Binary Control (\texttt{LINBIN01})}
+\end{axis}
+\end{tikzpicture}
+\caption{Empirical survival phase-transition curve (40 Monte Carlo trials per point, from \texttt{results/\allowbreak benchmarks.json}). While \texttt{LINBIN01} reaches 0\% at 44\% erasure and $\mathrm{RS}(40,16)$ drops off an all-or-nothing cliff at 72\%, PLANARIA stays 100.0\% bootable at 72\%, 97.5\% at 80\%, and 70.0\% at 92\% erasure.}
+\label{fig:survival}
+\end{figure}
+
+Table~\ref{tab:torture} consolidates the radiation burst sweep, Byzantine Trojan flood audit (Immune ON vs.\ OFF), and unaligned bisection matrix from \texttt{results/benchmarks.json}. Notice the razor-sharp Popperian confirmation of Theorem~IV.3: 192/192 cells repair at 16~B contiguous burst in every cell simultaneously (3,072 corrupted bytes), and 0/192 cells miscorrect at 18~B. Likewise, toggling the Merkle Immune System OFF confirms that even \textbf{1 single RS-valid Trojan} poisons 415/416 bytes (99.8\%) of \texttt{S0\_STEM\_NUCLEUS}, whereas with Merkle quarantine ON, 192/192 prepended Trojans are isolated with 0\% poisoning.
+
+\begin{table}[ht]
+\centering
+\caption{Consolidated torture, radiation burst, Byzantine flood, and unaligned mitosis benchmarks (\texttt{results/benchmarks.json}).}
+\label{tab:torture}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{} >{\raggedright\arraybackslash}p{5.5cm} >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}p{4.3cm} @{}}
+\toprule
+\textbf{Torture / Falsification Experiment} & \textbf{Linear Twin} & \textbf{RS Cliff / Unsafe} & \textbf{PLANARIA (\texttt{.hbin})} \\
+\midrule
+1-Bit Flip in Active Code & 0.0\% (\texttt{SIGSEGV}) & 100.0\% & \textbf{100.0\% (RS Healed)} \\
+Unaligned 50/50 Bisection (\texttt{49153, 49177, 48701, 49597}) & 0.0\% (Right Dead) & N/A & \textbf{100\% Both Halves SHA-256 Exact} \\
+16~B Contiguous Burst in ALL 192 Cells (3,072~B, 3.13\%) & 0.0\% (Dead at 2~B) & 0.0\% & \textbf{100.0\% (192/192 Repaired)} \\
+18~B Contiguous Burst (Negative Bound Test) & 0.0\% & 0.0\% & \textbf{0.0\% (0 Silent Miscorrections)} \\
+60\% / 72\% / 80\% / 92\% Random Erasure & 0 / 0 / 0 / 0\% & 52.5 / 0 / 0 / 0\% & \textbf{100 / 100 / 97.5 / 70.0\%} \\
+1--192 RS-Valid Byzantine Trojans Prepended & N/A & 99.8\% Poisoned (415/416~B) & \textbf{100\% Quarantined, 0\% Poisoned} \\
+Cross-Species Xenograft (\texttt{AEGIS} $\times$ \texttt{SYNTH/VAULT}) & Impossible & Impossible & \textbf{Bootable S3, 0 Traps, Exportable} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Honest Epistemic Boundaries, Limitations, and AI Disclosure}
+\label{sec:honesty}
+
+\begin{enumerate}[leftmargin=1.6em, itemsep=2pt]
+  \item \textbf{Established Primitives vs.\ Original Architecture:} Finite-field arithmetic, Reed--Solomon coding, Berlekamp--Massey/Chien/Forney decoding, Cauchy MDS matrices, Priority Encoding Transmission, SHA-256 Merkle trees, and Ed25519 signatures belong to established literature cited below. PLANARIA claims zero discovery of new physical laws or open pure-mathematics conjectures; its contribution is a complete, compiled, formally verified systems architecture uniting these primitives into Progressive Holographic Executables with Control-Flow Anastomosis, unaligned Binary Mitosis, per-cell Merkle quarantine, and Xenografting.
+  \item \textbf{Formal-vs-Runtime Boundary:} The Lean~4 kernel verifies all 38 algebraic, combinatorial, safety, isolation, and termination theorems over formal specifications. JavaScript runtime equivalence, V8 execution, and Monte Carlo benchmarks are separately tested by the 16-suite executable harness (\texttt{test/verify.mjs}) and lie outside the Lean~4 kernel boundary.
+  \item \textbf{Known Engineering Trade-Offs:} Dual-layer protection and 128-byte per-cell Merkle proofs expand raw bytecode by $\sim$25$\times$ (3.8~KiB $\to$ 96~KiB). In \emph{Unpinned Quorum Mode}, a majority Sybil adversary injecting a coherent fake tree can outvote a sparse shard; high-assurance deployments must pin the 128-bit Lineage Root or verify Ed25519 signatures.
+  \item \textbf{AI Tool Disclosure:} Substantive AI engineering assistance (Google DeepMind / Antigravity agent under the author's direction) was used in implementation, Lean~4 formalization, testing, and manuscript drafting. AI systems are disclosed as tools and are not listed as authors; mathematical and operational correctness is independently certified by the Lean~4 kernel, GitHub Actions CI, and executable falsification tests.
+\end{enumerate}
+
+\begin{thebibliography}{16}
+\footnotesize
+\setlength{\itemsep}{1.5pt}
+\setlength{\parskip}{0pt}
+\bibitem{reed1960} I.~S. Reed and G.~Solomon, ``Polynomial codes over certain finite fields,'' \emph{J. SIAM}, vol.~8, no.~2, pp.~300--304, 1960.
+\bibitem{chien1964} R.~T. Chien, ``Cyclic decoding procedures for Bose--Chaudhuri--Hocquenghem codes,'' \emph{IEEE Trans. Inf. Theory}, vol.~10, no.~4, pp.~357--363, 1964.
+\bibitem{singleton1964} R.~C. Singleton, ``Maximum distance $q$-nary codes,'' \emph{IEEE Trans. Inf. Theory}, vol.~10, no.~2, pp.~116--118, 1964.
+\bibitem{forney1965} G.~D. Forney, ``On decoding BCH codes,'' \emph{IEEE Trans. Inf. Theory}, vol.~11, no.~4, pp.~549--557, 1965.
+\bibitem{berlekamp1968} E.~R. Berlekamp, \emph{Algebraic Coding Theory}. McGraw-Hill, 1968.
+\bibitem{massey1969} J.~L. Massey, ``Shift-register synthesis and BCH decoding,'' \emph{IEEE Trans. Inf. Theory}, vol.~15, no.~1, pp.~122--127, 1969.
+\bibitem{merkle1987} R.~C. Merkle, ``A digital signature based on a conventional encryption function,'' in \emph{CRYPTO '87}, LNCS 293, pp.~369--378, 1987.
+\bibitem{bloemer1995} J.~Bloemer, M.~Kalfane, R.~Karp, M.~Karpinski, M.~Luby, and D.~Zuckerman, ``An XOR-based erasure-resilient coding scheme,'' ICSI Tech. Rep. TR-95-048, UC Berkeley, 1995.
+\bibitem{albanese1996} A.~Albanese, J.~Bl\"omer, J.~Edmonds, M.~Luby, and M.~Sudan, ``Priority encoding transmission,'' \emph{IEEE Trans. Inf. Theory}, vol.~42, no.~6, pp.~1737--1744, 1996.
+\bibitem{luby2002} M.~Luby, ``LT codes,'' in \emph{Proc. 43rd IEEE FOCS}, pp.~271--280, 2002.
+\bibitem{reddien2004} P.~W. Reddien and A.~S\'anchez Alvarado, ``Fundamentals of planarian regeneration,'' \emph{Annu. Rev. Cell Dev. Biol.}, vol.~20, pp.~725--757, 2004.
+\bibitem{plank2006} J.~S. Plank and L.~Xu, ``Optimizing Cauchy Reed--Solomon codes for fault-tolerant network storage applications,'' in \emph{Proc. 5th IEEE NCA}, pp.~173--180, 2006.
+\bibitem{bernstein2012} D.~J. Bernstein, N.~Duif, T.~Lange, P.~Schwabe, and B.-Y. Yang, ``High-speed high-security signatures,'' \emph{J. Cryptogr. Eng.}, vol.~2, no.~2, pp.~77--89, 2012.
+\bibitem{fips180} NIST, \emph{Secure Hash Standard (SHS)}, FIPS PUB 180-4, U.S. Dept. of Commerce, 2015.
+\bibitem{demoura2021} L.~de~Moura and S.~Ullrich, ``The Lean~4 theorem prover and programming language,'' in \emph{CADE 28}, LNCS 12699, pp.~625--635, 2021.
+\bibitem{barker1953} R.~H. Barker, ``Group synchronizing of binary digital systems,'' in \emph{Communication Theory}, Butterworths, pp.~273--287, 1953.
+\end{thebibliography}
+
+\end{document}

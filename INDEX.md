@@ -11,6 +11,9 @@ Cross-referenced directory of every research document, source module, compiled `
 | [`README.md`](README.md) | Flagship Overview | Architecture diagram, 5 phenomena, 5 theorems, quickstart, CLI & Studio guide |
 | [`SUMMARY.md`](SUMMARY.md) | Executive Summary Paper | Standalone 2-page technical overview, headline comparison table & novelty verdict |
 | [`paper/WHITE_PAPER.md`](paper/WHITE_PAPER.md) | Publication-Grade White Paper | 12-section formal systems paper, byte-exact `.hbin` spec, benchmarks & 16 primary citations |
+| [`paper/main.tex`](paper/main.tex) | AMS-LaTeX Source Manuscript | Standalone Tectonic 0.17.0 LaTeX source with native TikZ/PGFPlots vector figures |
+| [`dist/Donahue_2026_planaria.pdf`](dist/Donahue_2026_planaria.pdf) | Frozen Release PDF | Compiled publication-grade white paper PDF archived in `0thernes-research-archive` |
+| [`dist/arxiv_submission.tar.gz`](dist/arxiv_submission.tar.gz) | Standalone LaTeX Bundle | Verified self-contained compilation bundle (`main.tex`) |
 | [`docs/MASTER_REPORT.md`](docs/MASTER_REPORT.md) | Comprehensive Master Report | Byte-level engineering audit, compiler/VM deep dive, failure modes, operations manual |
 | [`VERIFICATION.md`](VERIFICATION.md) | Verification & Authentication Protocol | Provable / Falsifiable / Verifiable / Authenticated checklist, exact SHA-256 & Ed25519 checks |
 | [`GLOSSARY.md`](GLOSSARY.md) | A–Z Technical Glossary | 50+ rigorous definitions across binary formats, coding theory, crypto, VM & Lean 4 |

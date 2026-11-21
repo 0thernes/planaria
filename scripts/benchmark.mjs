@@ -258,6 +258,9 @@ const filesToAttest = [
   'artifacts/aegis_drift.hbin',
   'artifacts/synth_reactor.hbin',
   'artifacts/cipher_vault.hbin',
+  'paper/main.tex',
+  'dist/Donahue_2026_planaria.pdf',
+  'dist/arxiv_submission.tar.gz',
   'results/benchmarks.json',
 ];
 

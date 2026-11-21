@@ -1,10 +1,10 @@
 # PLANARIA — Comprehensive Technical, Scientific, Computational, Functional & Operational Master Report
 
 **Document Type:** Master Engineering & Research Analysis Report  
-**System:** PLANARIA v1.0.0 — Progressive Holographic Executable Architecture (`.hbin`)  
-**Author:** Alexander S. Donahue ([0thernes LLC](https://0thernes.art) · `0_0@0thernes.art` · ORCID [0009-0006-8168-9648](https://orcid.org/0009-0006-8168-9648))  
-**Date:** November 18, 2026  
-**Verification Status:** 12/12 Falsification Suites Passed · 31/31 Pure Lean 4 (`v4.35.0`) Kernel Theorems Audited (0 `sorryAx`) · Ed25519-Attested Benchmarks
+**System:** PLANARIA v2.1.0 — 3D Temporal-Quantum WebGL2 Engine & Progressive Holographic Executable Architecture (`.hbin`)  
+**Author:** Alexander Stephen Donahue ([0thernes LLC](https://0thernes.art) · `0_0@0thernes.art` · ORCID [0009-0006-8168-9648](https://orcid.org/0009-0006-8168-9648))  
+**Date:** November 21, 2026  
+**Verification Status:** 16/16 Falsification Suites Passed · 38/38 Pure Lean 4 (`v4.35.0`) Kernel Theorems Audited (0 `sorryAx`) · Frozen Tectonic PDF ([`dist/Donahue_2026_planaria.pdf`](../dist/Donahue_2026_planaria.pdf)) · Ed25519-Attested Benchmarks
 
 ---
 

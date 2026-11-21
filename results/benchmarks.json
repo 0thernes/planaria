@@ -1,7 +1,7 @@
 {
   "schema": "PLANARIA-BENCHMARKS-1.0",
-  "generatedAt": "2026-11-19T05:08:25.146Z",
-  "nodeVersion": "v25.9.0",
+  "generatedAt": "2026-11-21T09:23:48.809Z",
+  "nodeVersion": "v25.8.2",
   "artifacts": [
     {
       "name": "QUANTUM_CHRONICLE",
@@ -37,10 +37,10 @@
     }
   ],
   "performance": {
-    "meanFullDecodeMs": 11.12,
-    "meanPvm32FrameMs": 0.183,
-    "effectiveFrameRateHeadroomFps": 5464,
-    "pvm32ThroughputMIPS": 12.78
+    "meanFullDecodeMs": 8.62,
+    "meanPvm32FrameMs": 0.083,
+    "effectiveFrameRateHeadroomFps": 12048,
+    "pvm32ThroughputMIPS": 28.35
   },
   "survivalCurve": [
     {
@@ -549,7 +549,7 @@
       "rightBytes": 49152,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 38.62
+      "dualDecodeRegenMs": 23.98
     },
     {
       "cutByteOffset": 49153,
@@ -558,7 +558,7 @@
       "rightBytes": 49151,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 34.76
+      "dualDecodeRegenMs": 27.25
     },
     {
       "cutByteOffset": 49177,
@@ -567,7 +567,7 @@
       "rightBytes": 49127,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 34.54
+      "dualDecodeRegenMs": 19.15
     },
     {
       "cutByteOffset": 48701,
@@ -576,7 +576,7 @@
       "rightBytes": 49603,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 35.89
+      "dualDecodeRegenMs": 21.59
     },
     {
       "cutByteOffset": 49597,
@@ -585,7 +585,7 @@
       "rightBytes": 48707,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 33.93
+      "dualDecodeRegenMs": 33.72
     },
     {
       "cutByteOffset": 49000,
@@ -594,7 +594,7 @@
       "rightBytes": 49304,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 39.41
+      "dualDecodeRegenMs": 21.26
     }
   ],
   "xenograftMatrix": [

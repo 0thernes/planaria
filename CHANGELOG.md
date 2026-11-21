@@ -2,6 +2,13 @@
 
 All notable changes to **PLANARIA** are documented in this file.
 
+## [2.1.0] — 2026-11-21
+
+### Added & Polished
+- **Publication-Grade AMS-LaTeX White Paper & Release Bundle**: Added [`paper/main.tex`](paper/main.tex) with native TikZ/PGFPlots vector figures (512-byte Holographic Cell schematic & empirical Monte Carlo Survival Phase-Transition Curve), compiled via Tectonic `0.17.0` into frozen [`dist/Donahue_2026_planaria.pdf`](dist/Donahue_2026_planaria.pdf) and standalone [`dist/arxiv_submission.tar.gz`](dist/arxiv_submission.tar.gz).
+- **CI & Governance Hardening**: Upgraded `.github/workflows/ci.yml` to `actions/checkout@v5` and `actions/setup-node@v5` (eliminating Node 20 runner deprecation annotations), updated audit counts to `4 .hbin artifacts`, `16-suite falsification`, and `38 Lean 4 theorems` with explicit theorem-count & strict axiom-allowlist enforcement.
+- **Documentation Parity & Master Archive Registration**: Synchronized `SUMMARY.md`, `paper/WHITE_PAPER.md`, `docs/MASTER_REPORT.md`, `VERIFICATION.md`, `INDEX.md`, and `0thernes-research-archive` (`0TH-BUILD-002_planaria`) with frozen PDF SHA-256 digests, GitHub Release `v2.1.0`, and Software Heritage preservation.
+
 ## [2.0.0] — 2026-11-18
 
 ### Added

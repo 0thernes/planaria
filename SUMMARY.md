@@ -2,8 +2,8 @@
 
 **Title:** PLANARIA: Progressive Holographic Executable Architecture (`.hbin`), Multi-Stratum Compilation, Autonomous Control-Flow Anastomosis, and Cryptographic Cellular Quorum  
 **Author:** Alexander S. Donahue ([0thernes LLC](https://0thernes.art) · `0_0@0thernes.art` · ORCID [0009-0006-8168-9648](https://orcid.org/0009-0006-8168-9648))  
-**Release:** `v1.0.0` · **License:** Cosmogonic Non-Commercial Research & Play ([LICENSE](LICENSE))  
-**Full Manuscript:** [paper/WHITE_PAPER.md](paper/WHITE_PAPER.md) · **Master Report:** [docs/MASTER_REPORT.md](docs/MASTER_REPORT.md)
+**Release:** `v2.1.0` · **License:** Cosmogonic Non-Commercial Research & Play ([LICENSE](LICENSE))  
+**Full Manuscript:** [paper/WHITE_PAPER.md](paper/WHITE_PAPER.md) · **Frozen PDF:** [dist/Donahue_2026_planaria.pdf](dist/Donahue_2026_planaria.pdf) · **Master Report:** [docs/MASTER_REPORT.md](docs/MASTER_REPORT.md)
 
 ---
 
@@ -43,7 +43,7 @@ Naive remedies fail in two distinct ways:
 | **92% Random File Obliteration (8% Left)** | **0.0%** | **0.0%** | **70.0%** (7 S1, 21 S0 Ghost / 40 trials) |
 | **1–192 RS-Valid Byzantine Trojans Prepended** | N/A | **100% Poisoned (415/416B)** | **100% Quarantined · 0% Poisoned** |
 | **Full 96 KiB Decode / `PVM-32` Throughput** | < 1 ms | ~5 ms | **10.5 ms decode · 19.45 MIPS (`0.12 ms/f`)** |
-| **Machine-Checked Formal Proofs** | — | — | **31 Lean 4 (`v4.35.0`) Theorems · 0 `sorryAx`** |
+| **Machine-Checked Formal Proofs** | — | — | **38 Lean 4 (`v4.35.0`) Theorems · 0 `sorryAx` · 16/16 Suites** |
 
 ---
 

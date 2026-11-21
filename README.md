@@ -8,7 +8,7 @@
 [![Runtime Dependencies](https://img.shields.io/badge/Runtime_Dependencies-0-38bdf8)](NOTICE)
 
 **Author:** Alexander S. Donahue ([0thernes LLC](https://0thernes.art) · `0_0@0thernes.art` · ORCID [0009-0006-8168-9648](https://orcid.org/0009-0006-8168-9648))  
-**Release:** `v2.0.0` (3D Temporal-Quantum WebGL2 Engine, Systems Research Preprint, Standalone CLI & Interactive Surgical Vivisection Studio — Non-Commercial Research & Play; see [LICENSE](LICENSE) and [LEGAL.md](LEGAL.md))
+**Release:** `v2.1.0` (3D Temporal-Quantum WebGL2 Engine, Frozen AMS-LaTeX White Paper PDF, Standalone CLI & Interactive Surgical Vivisection Studio — Non-Commercial Research & Play; see [LICENSE](LICENSE) and [LEGAL.md](LEGAL.md))
 
 ---
 
@@ -33,6 +33,7 @@
 | **[INDEX.md](INDEX.md)** | Complete Master Index & Table of Contents across every file, theorem & benchmark |
 | **[SUMMARY.md](SUMMARY.md)** | Standalone Executive & Technical Summary Paper + Honest Novelty Verdict |
 | **[paper/WHITE_PAPER.md](paper/WHITE_PAPER.md)** | Full 12-Section Research White Paper with byte specs, tables & 16 primary cited sources |
+| **[dist/Donahue_2026_planaria.pdf](dist/Donahue_2026_planaria.pdf)** | Frozen Tectonic AMS-LaTeX White Paper PDF with native TikZ/PGFPlots vector figures ([`paper/main.tex`](paper/main.tex)) |
 | **[docs/MASTER_REPORT.md](docs/MASTER_REPORT.md)** | Deep-Dive Technical, Computational, Scientific, Functional & Operational Master Report |
 | **[lean/README.md](lean/README.md)** | Pure Lean 4 (`v4.35.0`) formal proof library (31 audited theorems, 0 `sorryAx`, 0 Mathlib) |
 | **[VERIFICATION.md](VERIFICATION.md)** | Provable / Falsifiable / Verifiable / Authenticated protocol, SHA-256 & Ed25519 checks |
