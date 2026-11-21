@@ -155,8 +155,9 @@ export function parsePlang(tokens) {
       return { type: 'ReturnStmt', value };
     }
 
-    // mem[idx] = expr; or mem[idx] += expr;
+    // mem[idx] = expr; or mem[idx] += expr; or mem[idx] expression statement
     if (t.type === 'KEYWORD' && t.value === 'mem') {
+      const savedPos = pos;
       advance();
       expect('PUNCT', '[');
       const index = parseExpr();
@@ -173,13 +174,11 @@ export function parsePlang(tokens) {
         const rhs = parseExpr();
         expect('PUNCT', ';');
         const binOp = opTok.value === '+=' ? '+' : '-';
-        return {
-          type: 'MemStore',
-          index,
-          value: { type: 'Binary', op: binOp, left: { type: 'MemLoad', index }, right: rhs },
-        };
+        // Dedicated MemCompoundAssign guarantees `index` is evaluated strictly once!
+        return { type: 'MemCompoundAssign', op: binOp, index, rhs };
       }
-      throw new SyntaxError(`Expected assignment to mem[...] at ${opTok.line}:${opTok.col}`);
+      // Rewind and parse as general expression statement (e.g., mem[0] ? f() : g();)
+      pos = savedPos;
     }
 
     // Variable assignment: x = expr; or x += expr; or x -= expr;
@@ -318,6 +317,11 @@ export function parsePlang(tokens) {
     }
     if (match('PUNCT', '!')) {
       return { type: 'Binary', op: '==', left: parseUnary(), right: { type: 'Number', value: 0 } };
+    }
+    if (match('PUNCT', '~')) {
+      const operand = parseUnary();
+      if (operand.type === 'Number') return { type: 'Number', value: (~operand.value) | 0 };
+      return { type: 'Binary', op: '^', left: operand, right: { type: 'Number', value: -1 } };
     }
     return parsePrimary();
   }

@@ -7,7 +7,7 @@ on:
 
 jobs:
   verify-runtime:
-    name: Build 4 .hbin Artifacts, 16-Suite Falsification & CLI Audit
+    name: Build 4 .hbin Artifacts, 24-Suite Falsification & Security Audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -16,13 +16,15 @@ jobs:
           node-version: "22"
       - name: Compile all 4 .plang living species -> .hbin artifacts
         run: npm run build
-      - name: Run 16-suite falsifiable verification & quantum-temporal harness
+      - name: Run 24-suite falsifiable verification, security & quantum-temporal harness
         run: npm test
-      - name: Verify CLI unaligned bisect -> heal bit-exact SHA-256 & Xenograft roundtrip
+      - name: Verify CLI unaligned bisect -> fuse -> heal bit-exact SHA-256 & Xenograft roundtrip
         run: |
+          node bin/planaria.mjs --version
           node bin/planaria.mjs inspect artifacts/quantum_chronicle.hbin
           node bin/planaria.mjs inspect artifacts/aegis_drift.hbin
           node bin/planaria.mjs bisect artifacts/aegis_drift.hbin /tmp/l.hbin /tmp/r.hbin --offset 49177
+          node bin/planaria.mjs fuse /tmp/l.hbin /tmp/r.hbin -o /tmp/fused.hbin --gap 53
           node bin/planaria.mjs heal /tmp/r.hbin -o /tmp/healed.hbin
           cmp artifacts/aegis_drift.hbin /tmp/healed.hbin
           node bin/planaria.mjs xenograft artifacts/aegis_drift.hbin artifacts/synth_reactor.hbin -o /tmp/chimera.hbin
@@ -31,7 +33,7 @@ jobs:
         run: npm run benchmark
 
   verify-lean4:
-    name: Pure Lean 4 v4.35.0 Kernel Proof Audit (38 Theorems)
+    name: Pure Lean 4 v4.35.0 Kernel Proof Audit (62 Theorems — Strict Allowlist)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -39,22 +41,37 @@ jobs:
         run: |
           curl https://elan.lean-lang.org/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
-      - name: Clean-build all 38 Lean 4 theorems and audit strict axiom allowlist
+      - name: Clean-build all 62 Lean 4 theorems and enforce strict axiom allowlist
         working-directory: lean
         run: |
           lake clean
           lake build 2>&1 | tee /tmp/lean-ci.log
-          if grep -q "sorryAx" /tmp/lean-ci.log; then
-            echo "ERROR: sorryAx detected in Lean 4 proof audit!"
-            exit 1
-          fi
-          if grep -q "ofReduceBool\|trustCompiler" /tmp/lean-ci.log; then
-            echo "ERROR: native_decide / trustCompiler detected!"
-            exit 1
-          fi
-          COUNT=$(grep -c "Planaria\." /tmp/lean-ci.log || true)
-          echo "Audited $COUNT Planaria theorem axiom lines cleanly."
-          test "$COUNT" -ge 38
+          python3 - <<'PY'
+          import re, sys
+          ALLOWED = {"propext", "Classical.choice", "Quot.sound"}
+          with open("/tmp/lean-ci.log", "r", encoding="utf-8") as f:
+              text = f.read()
+          if "sorryAx" in text or "ofReduceBool" in text or "trustCompiler" in text:
+              print("ERROR: Forbidden axiom (sorryAx / ofReduceBool / trustCompiler) detected!")
+              sys.exit(1)
+          audited = 0
+          for line in text.splitlines():
+              m_none = re.search(r"'(Planaria\.[^']+)' does not depend on any axioms", line)
+              m_deps = re.search(r"'(Planaria\.[^']+)' depends on axioms: \[([^\]]*)\]", line)
+              if m_none:
+                  audited += 1
+              elif m_deps:
+                  audited += 1
+                  axioms = {a.strip() for a in m_deps.group(2).split(",") if a.strip()}
+                  bad = axioms - ALLOWED
+                  if bad:
+                      print(f"ERROR: Disallowed axioms {bad} in {m_deps.group(1)}")
+                      sys.exit(1)
+          print(f"STRICT AXIOM ALLOWLIST PASSED: {audited} Planaria theorems audited (all strictly within {sorted(ALLOWED)}).")
+          if audited < 62:
+              print(f"ERROR: Expected >= 62 audited theorems, found {audited}")
+              sys.exit(1)
+          PY
 
   verify-paper:
     name: AMS-LaTeX White Paper & arXiv Bundle Build (Tectonic)

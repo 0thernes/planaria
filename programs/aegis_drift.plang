@@ -1,24 +1,9 @@
 program AEGIS_DRIFT;
 
 // Standardized Xenograft Shared-Memory ABI Offsets
-const M_FRAME     = 0;
-const M_SCORE     = 1;
-const M_ENERGY    = 2;
-const M_PX        = 3;
-const M_PY        = 4;
-const M_PANG      = 5;
-const M_COMBO     = 6;
-const M_EVENTS    = 7;   // bit0=fire, bit1=hit, bit2=shield, bit3=damage
-const M_ROOTNOTE  = 8;
-const M_TEMPO     = 9;
-const M_PALETTE   = 10;
-const M_ENTROPY   = 11;
-const M_ENT_CNT   = 12;
-const M_PART_CNT  = 13;
-const M_INPUT     = 14;
-const M_INIT      = 15;
-const ENT_BASE    = 64;  // 12 entities * 8 words: [type, x, y, vx, vy, hp, phase, color]
-const PART_BASE   = 256; // 20 particles * 4 words: [x, y, vx, life]
+const ENT_BASE      = 64;     // 12 entities * 8 words: [type, x, y, vx, vy, hp, phase, color]
+const PART_BASE     = 256;    // 20 particles * 4 words: [x, y, vx, life]
+const SPECIES_MAGIC = 0x4147; // "AG" — per-species init sentinel prevents Xenograft mem[15] collision!
 
 // ============================================================================
 // STRATUM 0: STEM NUCLEUS (k=2, n=24 — survives 91.7% binary destruction!)
@@ -42,8 +27,8 @@ bundle S0_STEM_NUCLEUS {
     clear(0);
     let px = mem[3];
     let py = mem[4];
-    if (px < 10) { px = 80; }
-    if (py < 10) { py = 92; }
+    if (px < 10 || px > 149) { px = 80; }
+    if (py < 10 || py > 110) { py = 92; }
     let r = 8 + ((f >> 2) & 15);
     circle(px, py, r, 4, 0);
     tri(px, py - 6, px - 5, py + 5, px + 5, py + 5, 4);
@@ -77,11 +62,16 @@ bundle S1_CORE_LOGIC {
   let inp = mem[14];
   mem[7] = 0;
 
-  if (mem[15] == 0) {
-    mem[15] = 1;
+  if (mem[15] != SPECIES_MAGIC) {
+    mem[15] = SPECIES_MAGIC;
     mem[3] = 80;
     mem[4] = 98;
     mem[2] = 100;
+    let z = ENT_BASE;
+    while (z < 160) {
+      mem[z] = 0;
+      z += 8;
+    }
   }
 
   let px = mem[3];
@@ -101,63 +91,67 @@ bundle S1_CORE_LOGIC {
   if (py > 110) { py = 110; }
   mem[3] = px;
   mem[4] = py;
+  mem[11] = (f * 31 + px + mem[1]) & 0x7fff;
 
-  // Fire plasma bolts (slots 0..4)
+  // Fire plasma bolts (slots 0..4, base 64..96)
   let wantFire = ((inp & 48) != 0) && ((f % 9) == 0);
-  let i = 0;
-  while (i < 5) {
-    let base = ENT_BASE + i * 8;
+  let base = ENT_BASE;
+  while (base < 104) {
     let ty = mem[base];
-    if (ty == 0 && wantFire) {
+    if (ty == 2) {
+      let by = mem[base + 2] - 5;
+      mem[base + 2] = by;
+      if (by < 4) { mem[base] = 0; }
+    } else if (wantFire) {
       mem[base] = 2;
       mem[base + 1] = px;
       mem[base + 2] = py - 7;
       mem[7] = mem[7] | 1;
       wantFire = 0;
-    } else if (ty == 2) {
-      let by = mem[base + 2] - 5;
-      mem[base + 2] = by;
-      if (by < 4) { mem[base] = 0; }
+    } else if (ty != 0) {
+      mem[base] = 0;
     }
-    i += 1;
+    base += 8;
   }
 
-  // Hostiles & energy orbs (slots 5..11)
-  while (i < 12) {
-    let base = ENT_BASE + i * 8;
+  // Hostiles & energy orbs (slots 5..11, base 104..152)
+  while (base < 160) {
     let ty = mem[base];
-    if (ty == 0 && ((f + i * 17) % 23) == 0) {
+    if (ty == 0 && ((f + base) % 23) == 0) {
       mem[base] = (rand(7) == 0) ? 3 : 1;
       mem[base + 1] = 14 + rand(132);
       mem[base + 2] = 6;
       mem[base + 3] = rand(3) - 1;
-      mem[base + 4] = 1 + (i & 1);
+      mem[base + 4] = 1 + ((base >> 3) & 1);
       mem[base + 6] = rand(360);
     } else if (ty != 0) {
-      let ex = mem[base + 1] + mem[base + 3];
+      let vx = mem[base + 3];
+      let ex = mem[base + 1] + vx;
       let ey = mem[base + 2] + mem[base + 4];
-      if (ex < 10 || ex > 149) { mem[base + 3] = 0 - mem[base + 3]; }
+      if (ex < 10) { ex = 10; if (vx < 0) { mem[base + 3] = 0 - vx; } }
+      if (ex > 149) { ex = 149; if (vx > 0) { mem[base + 3] = 0 - vx; } }
       mem[base + 1] = ex;
       mem[base + 2] = ey;
-      if (ey > 118) { mem[base] = 0; }
+      if (ey > 118) { mem[base] = 0; ty = 0; }
 
       if (ty == 1) {
-        let b = 0;
-        while (b < 5) {
-          let bb = ENT_BASE + b * 8;
+        let bb = ENT_BASE;
+        while (bb < 104) {
           if (mem[bb] == 2 && abs(mem[bb + 1] - ex) < 8 && abs(mem[bb + 2] - ey) < 8) {
             mem[bb] = 0;
             mem[base] = 0;
+            ty = 0;
             mem[1] += 25;
             mem[7] = mem[7] | 2;
             mem[250] = ex;
             mem[251] = ey;
+            bb = 104;
           }
-          b += 1;
+          bb += 8;
         }
       }
 
-      if (abs(ex - px) < 9 && abs(ey - py) < 9) {
+      if (ty != 0 && abs(ex - px) < 9 && abs(ey - py) < 9) {
         mem[base] = 0;
         if (ty == 3) {
           mem[2] += 15;
@@ -171,7 +165,7 @@ bundle S1_CORE_LOGIC {
         }
       }
     }
-    i += 1;
+    base += 8;
   }
 }
 
@@ -266,9 +260,10 @@ bundle S2_CORTEX_RENDER {
   line(0, 11, 159, 11, 15);
   label(3, 2, "AEGI", "S", 2);
   number(44, 2, mem[1], 7);
-  // Energy gauge
+  // Energy gauge (strictly clamped to [0, 44] against cross-species grafts)
   rect(108, 3, 46, 5, 15, 0);
   let barW = (mem[2] * 44) / 100;
+  if (barW > 44) { barW = 44; }
   if (barW > 0) { rect(109, 4, barW, 3, 3, 1); }
 }
 

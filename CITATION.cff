@@ -1,8 +1,8 @@
 cff-version: 1.2.0
-title: "PLANARIA v2.0 — 3D Temporal-Quantum WebGL2 Progressive Holographic Executable Architecture (.hbin), Plang Compiler, PVM-32 Anastomosis VM, 1/1 Endless Universe Forge & 38 Lean 4 Verified Proofs"
+title: "PLANARIA v2.2 — 3D Temporal-Quantum WebGL2 Progressive Holographic Executable Architecture (.hbin), Plang Compiler, PVM-32 Anastomosis VM, 1/1 Endless Universe Forge & 62 Pure Lean 4 Verified Proofs"
 message: "If you reference, verify, or build upon PLANARIA in academic or independent non-commercial research, please cite this software and technical preprint using the metadata below."
 type: software
-version: "2.1.0"
+version: "2.2.0"
 date-released: "2026-11-21"
 authors:
   - family-names: "Donahue"
@@ -32,3 +32,4 @@ keywords:
   - lean4
   - formal-verification
   - audioworklet
+  - webgl2

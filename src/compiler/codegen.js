@@ -4,10 +4,8 @@
  * Register Convention:
  *   r0       : hardwired zero
  *   r1..r7   : syscall / function arguments & return value (r1)
- *   r8..r15  : expression evaluation scratch stack (8-deep spill-free!)
- *   r16..r29 : local variables (14 registers per function/bundle scope)
- *   r30      : constant temp / scratch
- *   r31      : frame / saved temp
+ *   r8..r17  : expression evaluation scratch stack (10 registers)
+ *   r18..r31 : local variables (14 registers per function/bundle scope; windowed by PVM-32 CALL/RET)
  */
 
 import {
@@ -19,11 +17,11 @@ import {
   encodeJ,
   pack4,
 } from './isa.js';
-import { BUNDLE_SPECS, ORGAN_IDS } from '../core/hbin.js';
+import { BUNDLE_SPECS, ORGAN_IDS, CELL_PAYLOAD_SIZE } from '../core/hbin.js';
 
 const BUNDLE_ID_BY_NAME = Object.fromEntries(BUNDLE_SPECS.map((b) => [b.name, b.id]));
 
-/** Evaluate compile-time constant expression. */
+/** Evaluate compile-time constant expression (strict division/modulo by zero check). */
 function evalConstExpr(node, constEnv) {
   if (node.type === 'Number') return node.value | 0;
   if (node.type === 'String') return pack4(node.value);
@@ -32,20 +30,41 @@ function evalConstExpr(node, constEnv) {
     if (ORGAN_IDS[node.name] !== undefined) return ORGAN_IDS[node.name];
     throw new Error(`Unknown constant '${node.name}'`);
   }
+  if (node.type === 'Ternary') {
+    return evalConstExpr(node.cond, constEnv) !== 0
+      ? evalConstExpr(node.thenExpr, constEnv)
+      : evalConstExpr(node.elseExpr, constEnv);
+  }
   if (node.type === 'Binary') {
+    if (node.op === '&&') {
+      return evalConstExpr(node.left, constEnv) !== 0 && evalConstExpr(node.right, constEnv) !== 0 ? 1 : 0;
+    }
+    if (node.op === '||') {
+      return evalConstExpr(node.left, constEnv) !== 0 || evalConstExpr(node.right, constEnv) !== 0 ? 1 : 0;
+    }
     const l = evalConstExpr(node.left, constEnv);
     const r = evalConstExpr(node.right, constEnv);
     switch (node.op) {
       case '+': return (l + r) | 0;
       case '-': return (l - r) | 0;
       case '*': return Math.imul(l, r) | 0;
-      case '/': return r === 0 ? 0 : (l / r) | 0;
-      case '%': return r === 0 ? 0 : (l % r) | 0;
+      case '/':
+        if (r === 0) throw new RangeError('Compile-time division by zero in const expression');
+        return (l / r) | 0;
+      case '%':
+        if (r === 0) throw new RangeError('Compile-time modulo by zero in const expression');
+        return (l % r) | 0;
       case '&': return (l & r) | 0;
       case '|': return (l | r) | 0;
       case '^': return (l ^ r) | 0;
       case '<<': return (l << r) | 0;
       case '>>': return (l >> r) | 0;
+      case '==': return l === r ? 1 : 0;
+      case '!=': return l !== r ? 1 : 0;
+      case '<': return l < r ? 1 : 0;
+      case '>': return l > r ? 1 : 0;
+      case '<=': return l <= r ? 1 : 0;
+      case '>=': return l >= r ? 1 : 0;
       default: throw new Error(`Unsupported const op '${node.op}'`);
     }
   }
@@ -56,9 +75,31 @@ function evalConstExpr(node, constEnv) {
 function compileBundle(bundleNode, constEnv) {
   const words = [];
   const fnAddrs = new Map();
+  const fnArities = new Map();
   const fixups = []; // { wordIdx, kind: 'JMP'|'CALL'|'B', op, rs1, rs2, targetLabel }
   const labels = new Map();
   let labelSeq = 0;
+
+  // Pre-validate all local fn declarations (no duplicates, no syscall shadowing, <= 7 unique params)
+  for (const fn of bundleNode.funcs) {
+    if (SYSCALL_BY_NAME[fn.name]) {
+      throw new Error(`Function '${fn.name}' in bundle ${bundleNode.name} collides with built-in syscall`);
+    }
+    if (fnArities.has(fn.name)) {
+      throw new Error(`Duplicate function '${fn.name}' in bundle ${bundleNode.name}`);
+    }
+    if (fn.params.length > 7) {
+      throw new Error(`Function '${fn.name}' in bundle ${bundleNode.name} has ${fn.params.length} params (max 7)`);
+    }
+    const seenParams = new Set();
+    for (const p of fn.params) {
+      if (seenParams.has(p)) {
+        throw new Error(`Duplicate parameter '${p}' in function '${fn.name}' (${bundleNode.name})`);
+      }
+      seenParams.add(p);
+    }
+    fnArities.set(fn.name, fn.params.length);
+  }
 
   function newLabel(prefix = 'L') {
     return `${prefix}_${labelSeq++}`;
@@ -79,12 +120,9 @@ function compileBundle(bundleNode, constEnv) {
     } else {
       const lo = val & 0xffff;
       const hi = (val >>> 16) & 0xffff;
-      // Load unsigned lo into rd via LI/ADDI or LUI trick:
-      // LUI rd, rs1, hi sets rd = (hi << 16) | (rs1 & 0xFFFF)
       if (lo <= 32767) {
         emit(encodeI(OP.LI, rd, 0, lo));
       } else {
-        // lo in 32768..65535 -> sign-extended -32768..-1 has exact same lower 16 bits!
         emit(encodeI(OP.LI, rd, 0, lo - 65536));
       }
       emit(encodeI(OP.LUI, rd, rd, hi));
@@ -95,23 +133,39 @@ function compileBundle(bundleNode, constEnv) {
   // r0 = zero, r1..r7 = call args/ret, r8..r17 = expr scratch (10 regs), r18..r31 = locals (14 regs)
   function compileScope(stmts, paramNames = [], isFunction = false) {
     const locals = new Map();
+    let blockDeclared = new Set();
     let nextLocalReg = 18;
 
     // Copy function params from r1..rN into local registers r18..
     for (let i = 0; i < paramNames.length; i++) {
+      if (nextLocalReg > 31) {
+        throw new Error(`Exceeded 14 local variable registers in bundle ${bundleNode.name} (param '${paramNames[i]}')`);
+      }
       const reg = nextLocalReg++;
       locals.set(paramNames[i], reg);
+      blockDeclared.add(paramNames[i]);
       emit(encodeR(OP.ADD, reg, i + 1, 0));
     }
 
-    function allocLocal(name) {
-      if (locals.has(name)) return locals.get(name);
+    function allocNewLocal(name) {
+      if (blockDeclared.has(name)) {
+        throw new Error(`Variable '${name}' already declared in this block of bundle ${bundleNode.name}`);
+      }
       if (nextLocalReg > 31) {
         throw new Error(`Exceeded 14 local variable registers in bundle ${bundleNode.name} (var '${name}')`);
       }
       const reg = nextLocalReg++;
       locals.set(name, reg);
+      blockDeclared.add(name);
       return reg;
+    }
+
+    function resolveConstImm(node) {
+      if (node.type === 'Number') return node.value | 0;
+      if (node.type === 'Ident' && !locals.has(node.name) && constEnv.has(node.name)) {
+        return constEnv.get(node.name) | 0;
+      }
+      return null;
     }
 
     function containsCall(n) {
@@ -124,10 +178,6 @@ function compileBundle(bundleNode, constEnv) {
     }
 
     function compileExpr(node, targetReg, tempBase = 8) {
-      if (tempBase > 17) {
-        throw new Error(`Expression nesting too deep in bundle ${bundleNode.name}`);
-      }
-
       if (node.type === 'Number') {
         emitLoadImm(targetReg, node.value);
         return;
@@ -155,24 +205,29 @@ function compileBundle(bundleNode, constEnv) {
         throw new Error(`Undefined identifier '${node.name}' in bundle ${bundleNode.name}`);
       }
 
+      if (tempBase > 17) {
+        throw new Error(`Expression nesting too deep in bundle ${bundleNode.name}`);
+      }
+
       if (node.type === 'MemLoad') {
-        if (node.index.type === 'Number' && node.index.value >= 0 && node.index.value < 4096) {
-          emit(encodeI(OP.LDW, targetReg, 0, node.index.value));
+        const immIdx = resolveConstImm(node.index);
+        if (immIdx !== null && immIdx >= 0 && immIdx < 4096) {
+          emit(encodeI(OP.LDW, targetReg, 0, immIdx));
         } else if (node.index.type === 'Ident' && locals.has(node.index.name)) {
           emit(encodeI(OP.LDW, targetReg, locals.get(node.index.name), 0));
-        } else if (
-          node.index.type === 'Binary' &&
-          node.index.op === '+' &&
-          node.index.right.type === 'Number' &&
-          node.index.right.value >= -32768 &&
-          node.index.right.value <= 32767
-        ) {
-          if (node.index.left.type === 'Ident' && locals.has(node.index.left.name)) {
-            emit(encodeI(OP.LDW, targetReg, locals.get(node.index.left.name), node.index.right.value));
-          } else {
-            compileExpr(node.index.left, tempBase, tempBase + 1);
-            emit(encodeI(OP.LDW, targetReg, tempBase, node.index.right.value));
+        } else if (node.index.type === 'Binary' && node.index.op === '+') {
+          const rOff = resolveConstImm(node.index.right);
+          if (rOff !== null && rOff >= -32768 && rOff <= 32767) {
+            if (node.index.left.type === 'Ident' && locals.has(node.index.left.name)) {
+              emit(encodeI(OP.LDW, targetReg, locals.get(node.index.left.name), rOff));
+            } else {
+              compileExpr(node.index.left, tempBase, tempBase + 1);
+              emit(encodeI(OP.LDW, targetReg, tempBase, rOff));
+            }
+            return;
           }
+          compileExpr(node.index, tempBase, tempBase + 1);
+          emit(encodeI(OP.LDW, targetReg, tempBase, 0));
         } else {
           compileExpr(node.index, tempBase, tempBase + 1);
           emit(encodeI(OP.LDW, targetReg, tempBase, 0));
@@ -186,6 +241,9 @@ function compileBundle(bundleNode, constEnv) {
           throw new Error(`Unknown organ '${node.organName}' in organ_call`);
         }
         const maxS = evalConstExpr(node.maxStratum, constEnv);
+        if (!Number.isInteger(maxS) || maxS < 0 || maxS > 3) {
+          throw new RangeError(`organ_call maxStratum must be in 0..3, got ${maxS}`);
+        }
         emit(encodeI(OP.ORGAN_CALL, targetReg, organId, maxS));
         return;
       }
@@ -198,11 +256,13 @@ function compileBundle(bundleNode, constEnv) {
             throw new Error(`Syscall '${node.name}' expects ${sc.args} args, got ${node.args.length}`);
           }
           if (!anyNestedCall) {
-            // Direct-to-ABI register emission: zero redundant arg moves!
             for (let i = 0; i < node.args.length; i++) {
               compileExpr(node.args[i], i + 1, tempBase);
             }
           } else {
+            if (tempBase + node.args.length - 1 > 17) {
+              throw new Error(`Expression nesting too deep for nested syscall '${node.name}' in ${bundleNode.name}`);
+            }
             for (let i = 0; i < node.args.length; i++) {
               compileExpr(node.args[i], tempBase + i, tempBase + i + 1);
             }
@@ -214,13 +274,22 @@ function compileBundle(bundleNode, constEnv) {
           return;
         }
 
-        // Local bundle function call
-        if (node.args.length > 7) throw new Error(`Max 7 args for fn '${node.name}'`);
+        // Local bundle function call — enforce exact declared arity!
+        if (!fnArities.has(node.name)) {
+          throw new Error(`Undefined function '${node.name}' in bundle ${bundleNode.name}`);
+        }
+        const expectedArgs = fnArities.get(node.name);
+        if (node.args.length !== expectedArgs) {
+          throw new Error(`Function '${node.name}' expects ${expectedArgs} args, got ${node.args.length}`);
+        }
         if (!anyNestedCall) {
           for (let i = 0; i < node.args.length; i++) {
             compileExpr(node.args[i], i + 1, tempBase);
           }
         } else {
+          if (tempBase + node.args.length - 1 > 17) {
+            throw new Error(`Expression nesting too deep for nested call '${node.name}' in ${bundleNode.name}`);
+          }
           for (let i = 0; i < node.args.length; i++) {
             compileExpr(node.args[i], tempBase + i, tempBase + i + 1);
           }
@@ -352,16 +421,30 @@ function compileBundle(bundleNode, constEnv) {
       switch (stmt.type) {
         case 'Block': {
           const savedLocals = new Map(locals);
+          const savedDeclared = blockDeclared;
           const savedNext = nextLocalReg;
+          blockDeclared = new Set();
           for (const s of stmt.stmts) compileStmt(s);
           locals.clear();
           for (const [k, v] of savedLocals) locals.set(k, v);
+          blockDeclared = savedDeclared;
           nextLocalReg = savedNext;
           break;
         }
         case 'LetStmt': {
-          const reg = allocLocal(stmt.name);
+          // Validate & reserve nextLocalReg, compile initializer BEFORE binding stmt.name
+          // (zero extra move instruction, blocks self-ref stale-reg reads & preserves outer shadowing!)
+          if (blockDeclared.has(stmt.name)) {
+            throw new Error(`Variable '${stmt.name}' already declared in this block of bundle ${bundleNode.name}`);
+          }
+          if (nextLocalReg > 31) {
+            throw new Error(`Exceeded 14 local variable registers in bundle ${bundleNode.name} (var '${stmt.name}')`);
+          }
+          const reg = nextLocalReg;
           compileExpr(stmt.init, reg, 8);
+          locals.set(stmt.name, reg);
+          blockDeclared.add(stmt.name);
+          nextLocalReg = reg + 1;
           break;
         }
         case 'AssignStmt': {
@@ -372,26 +455,54 @@ function compileBundle(bundleNode, constEnv) {
           break;
         }
         case 'MemStore': {
-          if (stmt.index.type === 'Number' && stmt.index.value >= 0 && stmt.index.value < 4096) {
+          const immIdx = resolveConstImm(stmt.index);
+          if (immIdx !== null && immIdx >= 0 && immIdx < 4096) {
             compileExpr(stmt.value, 8, 9);
-            emit(encodeI(OP.STW, 8, 0, stmt.index.value));
+            emit(encodeI(OP.STW, 8, 0, immIdx));
           } else if (stmt.index.type === 'Ident' && locals.has(stmt.index.name)) {
             compileExpr(stmt.value, 8, 9);
             emit(encodeI(OP.STW, 8, locals.get(stmt.index.name), 0));
-          } else if (
-            stmt.index.type === 'Binary' &&
-            stmt.index.op === '+' &&
-            stmt.index.left.type === 'Ident' &&
-            locals.has(stmt.index.left.name) &&
-            stmt.index.right.type === 'Number' &&
-            stmt.index.right.value >= -32768 &&
-            stmt.index.right.value <= 32767
-          ) {
-            compileExpr(stmt.value, 8, 9);
-            emit(encodeI(OP.STW, 8, locals.get(stmt.index.left.name), stmt.index.right.value));
+          } else if (stmt.index.type === 'Binary' && stmt.index.op === '+' && stmt.index.left.type === 'Ident' && locals.has(stmt.index.left.name)) {
+            const rOff = resolveConstImm(stmt.index.right);
+            if (rOff !== null && rOff >= -32768 && rOff <= 32767) {
+              compileExpr(stmt.value, 8, 9);
+              emit(encodeI(OP.STW, 8, locals.get(stmt.index.left.name), rOff));
+            } else {
+              compileExpr(stmt.index, 8, 9);
+              compileExpr(stmt.value, 9, 10);
+              emit(encodeI(OP.STW, 9, 8, 0));
+            }
           } else {
             compileExpr(stmt.index, 8, 9);
             compileExpr(stmt.value, 9, 10);
+            emit(encodeI(OP.STW, 9, 8, 0));
+          }
+          break;
+        }
+        case 'MemCompoundAssign': {
+          // Single-evaluation of stmt.index (fixes side-effect double-evaluation bug!)
+          const opc = stmt.op === '+' ? OP.ADD : OP.SUB;
+          const immIdx = resolveConstImm(stmt.index);
+          const rhsImm = resolveConstImm(stmt.rhs);
+          const signedDelta = rhsImm !== null ? (stmt.op === '+' ? rhsImm : -rhsImm) : null;
+          if (immIdx !== null && immIdx >= 0 && immIdx < 4096) {
+            emit(encodeI(OP.LDW, 8, 0, immIdx));
+            if (signedDelta !== null && signedDelta >= -32768 && signedDelta <= 32767) {
+              emit(encodeI(OP.ADDI, 8, 8, signedDelta));
+            } else {
+              compileExpr(stmt.rhs, 9, 10);
+              emit(encodeR(opc, 8, 8, 9));
+            }
+            emit(encodeI(OP.STW, 8, 0, immIdx));
+          } else {
+            compileExpr(stmt.index, 8, 9);
+            emit(encodeI(OP.LDW, 9, 8, 0));
+            if (signedDelta !== null && signedDelta >= -32768 && signedDelta <= 32767) {
+              emit(encodeI(OP.ADDI, 9, 9, signedDelta));
+            } else {
+              compileExpr(stmt.rhs, 10, 11);
+              emit(encodeR(opc, 9, 9, 10));
+            }
             emit(encodeI(OP.STW, 9, 8, 0));
           }
           break;
@@ -437,7 +548,10 @@ function compileBundle(bundleNode, constEnv) {
     }
 
     for (const s of stmts) compileStmt(s);
-    emit(encodeR(isFunction ? OP.RET : OP.HALT, 0, 0, 0));
+    const lastStmt = stmts.length > 0 ? stmts[stmts.length - 1] : null;
+    if (!lastStmt || lastStmt.type !== 'ReturnStmt') {
+      emit(encodeR(isFunction ? OP.RET : OP.HALT, 0, 0, 0));
+    }
   }
 
   // Entry point starts at PC = 0 (main bundle body)
@@ -494,10 +608,16 @@ export function generateCode(ast) {
   for (const bNode of ast.bundles) {
     const bid = BUNDLE_ID_BY_NAME[bNode.name];
     if (bid === undefined) {
-      throw new Error(`Unknown bundle name '${bNode.name}'. Valid: ${BUNDLE_SPECS.map((b) => b.name).join(', ')}`);
+      throw new Error(`Unknown bundle name '${bNode.name}'. Valid: ${BUNDLE_SPECS.slice(0, 6).map((b) => b.name).join(', ')}`);
+    }
+    if (bid === 6) {
+      throw new Error(`Bundle '${bNode.name}' is reserved for the JSON Genome Ledger and cannot hold executable code`);
+    }
+    if (bundles.has(bid)) {
+      throw new Error(`Duplicate bundle declaration '${bNode.name}'`);
     }
     const compiled = compileBundle(bNode, constEnv);
-    const maxCap = BUNDLE_SPECS[bid].k * 332;
+    const maxCap = BUNDLE_SPECS[bid].k * CELL_PAYLOAD_SIZE;
     if (compiled.bytes.length > maxCap) {
       throw new Error(
         `Bundle ${bNode.name} compiled to ${compiled.bytes.length}B (${compiled.instructionCount} insns), exceeding capacity ${maxCap}B`
@@ -512,6 +632,10 @@ export function generateCode(ast) {
       capacityBytes: maxCap,
       utilizationPct: Number(((compiled.bytes.length / maxCap) * 100).toFixed(1)),
     });
+  }
+
+  if (!bundles.has(0)) {
+    throw new Error(`Program '${ast.name}' is missing mandatory S0_STEM_NUCLEUS bundle`);
   }
 
   return {

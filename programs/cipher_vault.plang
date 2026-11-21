@@ -1,8 +1,9 @@
 program CIPHER_VAULT;
 
 // Standardized Xenograft Shared-Memory ABI Offsets
-const ENT_BASE  = 64;
-const CIPH_BASE = 512;
+const ENT_BASE      = 64;
+const CIPH_BASE     = 512;
+const SPECIES_MAGIC = 0x4356; // "CV" — per-species init sentinel prevents Xenograft mem[15] collision!
 
 // ============================================================================
 // STRATUM 0: STEM NUCLEUS (k=2, n=24 — survives 91.7% binary destruction!)
@@ -23,8 +24,8 @@ bundle S0_STEM_NUCLEUS {
   if (drew == 0) {
     clear(0);
     rect(50, 34, 60, 52, 4, 0);
-    line(50, 34, 110, 86, 4);
-    line(110, 34, 50, 86, 4);
+    line(50, 34, 109, 85, 4);
+    line(109, 34, 50, 85, 4);
     label(4, 4, "S0:L", "OCK ", 4);
     number(60, 96, mem[11] & 0xfff, 4);
   }
@@ -49,8 +50,8 @@ bundle S1_CORE_LOGIC {
   let inp = mem[14];
   mem[7] = 0;
 
-  if (mem[15] == 0) {
-    mem[15] = 1;
+  if (mem[15] != SPECIES_MAGIC) {
+    mem[15] = SPECIES_MAGIC;
     mem[3] = 80;
     mem[4] = 60;
     mem[2] = 100;
@@ -101,9 +102,12 @@ bundle S1_WIREFRAME {
   let i = 0;
   while (i < 12) {
     let base = ENT_BASE + i * 8;
-    let h = mem[base + 2] - 18;
-    if (h < 4) { h = 4; }
-    rect(12 + i * 11, 108 - h, 8, h, 8, 0);
+    if (mem[base] != 0) {
+      let h = mem[base + 2] - 18;
+      if (h < 4) { h = 4; }
+      if (h > 94) { h = 94; }
+      rect(12 + i * 11, 108 - h, 8, h, 8, 0);
+    }
     i += 1;
   }
   label(4, 2, "S1:C", "IPH ", 8);
@@ -114,25 +118,26 @@ bundle S1_WIREFRAME {
 // STRATUM 2: CRYPTOGRAPHIC AVALANCHE MATRIX RENDERER (k=8, n=32 — Xenograftable!)
 // ============================================================================
 bundle S2_CORTEX_RENDER {
-  let f = mem[0];
   glow(180);
 
-  // Draw 12x8 live bit-avalanche matrix driven by ABI entity coordinates/phases
+  // Draw 12x8 live bit-avalanche matrix driven by active ABI entity coordinates/phases
   let i = 0;
   while (i < 12) {
     let base = ENT_BASE + i * 8;
-    let word = (mem[base + 1] * 131 + mem[base + 2] * 17 + mem[base + 6]);
-    let bit = 0;
-    while (bit < 8) {
-      let on = (word >> bit) & 1;
-      let bx = 18 + i * 10;
-      let by = 22 + bit * 9;
-      if (on == 1) {
-        rect(bx, by, 7, 6, ((i + bit) & 1) ? 8 : 2, 1);
-      } else {
-        rect(bx, by, 7, 6, 15, 0);
+    if (mem[base] != 0) {
+      let word = (mem[base + 1] * 131 + mem[base + 2] * 17 + mem[base + 6]);
+      let bit = 0;
+      while (bit < 8) {
+        let on = (word >> bit) & 1;
+        let bx = 18 + i * 10;
+        let by = 22 + bit * 9;
+        if (on == 1) {
+          rect(bx, by, 7, 6, ((i + bit) & 1) ? 8 : 2, 1);
+        } else {
+          rect(bx, by, 7, 6, 15, 0);
+        }
+        bit += 1;
       }
-      bit += 1;
     }
     i += 1;
   }

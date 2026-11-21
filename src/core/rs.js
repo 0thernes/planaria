@@ -17,19 +17,22 @@
  *   2. Berlekamp-Massey minimal error-locator synthesis Lambda(x)
  *   3. Exhaustive Chien search over all 254 positions + degree/root count check
  *   4. Forney error-evaluator Omega(x) = (S(x) * Lambda(x)) mod x^16 & exact error magnitudes
- *   5. Post-correction full-syndrome zero verification (eliminates silent miscorrection)
+ *   5. Post-correction full-syndrome zero verification (rejects uncorrectable patterns except the
+ *      unavoidable bounded-distance ball overlap P_miscorrect ~ V(254,8)/256^16 ~ 2.0e-5 on >=9
+ *      errors, which is cryptographically caught by the outer Depth-8 SHA-256 Merkle proof).
  */
 
 import {
   GF_EXP,
+  GF_MUL_TABLE,
   gfMul,
   gfDiv,
-  gfInv,
   gfPolyEval,
   gfPolyEvalAsc,
   gfPolyMulDesc,
   gfPolyMulAsc,
 } from './gf256.js';
+import { toBytes } from './sha256.js';
 
 export const RS_N = 254;
 export const RS_K = 238;
@@ -53,27 +56,29 @@ export const RS_GENERATOR = buildGenerator(RS_PARITY);
  * do not change the polynomial remainder), returning codeword of length data.length + RS_PARITY.
  */
 export function rsEncode(data) {
-  if (data.length > RS_K) {
-    throw new RangeError(`RS(${RS_N},${RS_K}) data length ${data.length} exceeds ${RS_K}`);
+  const bytes = toBytes(data);
+  if (bytes.length < 1 || bytes.length > RS_K) {
+    throw new RangeError(`RS(${RS_N},${RS_K}) data length ${bytes.length} must be in 1..${RS_K}`);
   }
-  const out = new Uint8Array(data.length + RS_PARITY);
-  out.set(data, 0);
+  const out = new Uint8Array(bytes.length + RS_PARITY);
+  out.set(bytes, 0);
   const rem = new Uint8Array(RS_PARITY);
 
-  for (let i = 0; i < data.length; i++) {
-    const feedback = data[i] ^ rem[0];
+  for (let i = 0; i < bytes.length; i++) {
+    const feedback = bytes[i] ^ rem[0];
     // Shift LFSR left by 1
     for (let j = 0; j < RS_PARITY - 1; j++) {
       rem[j] = rem[j + 1];
     }
     rem[RS_PARITY - 1] = 0;
     if (feedback !== 0) {
+      const fbRow = feedback << 8;
       for (let j = 0; j < RS_PARITY; j++) {
-        rem[j] ^= gfMul(RS_GENERATOR[j + 1], feedback);
+        rem[j] ^= GF_MUL_TABLE[fbRow | RS_GENERATOR[j + 1]];
       }
     }
   }
-  out.set(rem, data.length);
+  out.set(rem, bytes.length);
   return out;
 }
 
@@ -144,17 +149,18 @@ function berlekampMassey(synd) {
  *   { ok: false, reason: string, errorsCorrected: 0, positions: [] }
  */
 export function rsDecode(codeword) {
-  const len = codeword.length;
+  const cw = toBytes(codeword);
+  const len = cw.length;
   if (len <= RS_PARITY || len > RS_N) {
     return { ok: false, reason: 'invalid_length', errorsCorrected: 0, positions: [] };
   }
 
-  const out = new Uint8Array(codeword);
+  const out = new Uint8Array(cw);
   const { synd, hasError } = rsSyndromes(out);
   if (!hasError) {
     return {
       ok: true,
-      data: out.subarray(0, len - RS_PARITY),
+      data: out.slice(0, len - RS_PARITY),
       codeword: out,
       errorsCorrected: 0,
       positions: [],
@@ -205,6 +211,9 @@ export function rsDecode(codeword) {
       return { ok: false, reason: 'forney_zero_derivative', errorsCorrected: 0, positions: [] };
     }
     const errMag = gfDiv(num, den);
+    if (errMag === 0) {
+      return { ok: false, reason: 'forney_zero_magnitude', errorsCorrected: 0, positions: [] };
+    }
     out[positions[k]] ^= errMag;
   }
 
@@ -216,7 +225,7 @@ export function rsDecode(codeword) {
 
   return {
     ok: true,
-    data: out.subarray(0, len - RS_PARITY),
+    data: out.slice(0, len - RS_PARITY),
     codeword: out,
     errorsCorrected: positions.length,
     positions,

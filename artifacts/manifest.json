@@ -6,10 +6,10 @@
       "source": "programs/quantum_chronicle.plang",
       "name": "QUANTUM_CHRONICLE",
       "bytes": 98304,
-      "lineageRootHex": "60a1bb8748538186e3f4d16fa61e4289",
-      "sha256Hex": "299827cdc11ff3848b738d7b47f5941fd6eabac101fafd9a169a227a61bd8af0",
-      "totalInstructions": 418,
-      "totalCodeBytes": 1672,
+      "lineageRootHex": "09b9ce24a0a181f485406f2d5ad5324c",
+      "sha256Hex": "14844a15539ee678a35bb2c09ef6bf726c2c7a50f1ec16f4ed886b515c0a19ab",
+      "totalInstructions": 426,
+      "totalCodeBytes": 1704,
       "bundles": [
         {
           "bundleId": 0,
@@ -22,10 +22,10 @@
         {
           "bundleId": 1,
           "name": "S1_CORE_LOGIC",
-          "instructions": 122,
-          "bytes": 488,
+          "instructions": 129,
+          "bytes": 516,
           "capacityBytes": 1328,
-          "utilizationPct": 36.7
+          "utilizationPct": 38.9
         },
         {
           "bundleId": 2,
@@ -38,10 +38,10 @@
         {
           "bundleId": 3,
           "name": "S2_CORTEX_RENDER",
-          "instructions": 92,
-          "bytes": 368,
+          "instructions": 93,
+          "bytes": 372,
           "capacityBytes": 2656,
-          "utilizationPct": 13.9
+          "utilizationPct": 14
         },
         {
           "bundleId": 4,
@@ -66,26 +66,26 @@
       "source": "programs/aegis_drift.plang",
       "name": "AEGIS_DRIFT",
       "bytes": 98304,
-      "lineageRootHex": "2ce3fb499c8f94c684a3fbfeb38496bf",
-      "sha256Hex": "462b56071e0f52b6fb28015d4f409af27f2c6e970b2d096e8a1f19b102c54fd0",
-      "totalInstructions": 958,
-      "totalCodeBytes": 3832,
+      "lineageRootHex": "b0b2f1e397e21270977a2a5b7bfad758",
+      "sha256Hex": "011f93b8a735e6019d36a21225bc5711cc3304a69062fb32c48292f0b3b29a1f",
+      "totalInstructions": 991,
+      "totalCodeBytes": 3964,
       "bundles": [
         {
           "bundleId": 0,
           "name": "S0_STEM_NUCLEUS",
-          "instructions": 104,
-          "bytes": 416,
+          "instructions": 118,
+          "bytes": 472,
           "capacityBytes": 664,
-          "utilizationPct": 62.7
+          "utilizationPct": 71.1
         },
         {
           "bundleId": 1,
           "name": "S1_CORE_LOGIC",
-          "instructions": 317,
-          "bytes": 1268,
+          "instructions": 332,
+          "bytes": 1328,
           "capacityBytes": 1328,
-          "utilizationPct": 95.5
+          "utilizationPct": 100
         },
         {
           "bundleId": 2,
@@ -98,10 +98,10 @@
         {
           "bundleId": 3,
           "name": "S2_CORTEX_RENDER",
-          "instructions": 172,
-          "bytes": 688,
+          "instructions": 176,
+          "bytes": 704,
           "capacityBytes": 2656,
-          "utilizationPct": 25.9
+          "utilizationPct": 26.5
         },
         {
           "bundleId": 4,
@@ -126,10 +126,10 @@
       "source": "programs/synth_reactor.plang",
       "name": "SYNTH_REACTOR",
       "bytes": 98304,
-      "lineageRootHex": "3650bf9e153d0eb1314f64e9eca0c2f0",
-      "sha256Hex": "0d7dd32f971a7f979cec418703f7ffa2843205beb2d06efa67e5ae4214a50864",
-      "totalInstructions": 621,
-      "totalCodeBytes": 2484,
+      "lineageRootHex": "c61ac049c1e5fa34eec90c7fec7f4b35",
+      "sha256Hex": "987d159ec31814398d2591a59b13f52363a8464d6602f82cb01762b3fbd60ab0",
+      "totalInstructions": 645,
+      "totalCodeBytes": 2580,
       "bundles": [
         {
           "bundleId": 0,
@@ -142,10 +142,10 @@
         {
           "bundleId": 1,
           "name": "S1_CORE_LOGIC",
-          "instructions": 169,
-          "bytes": 676,
+          "instructions": 193,
+          "bytes": 772,
           "capacityBytes": 1328,
-          "utilizationPct": 50.9
+          "utilizationPct": 58.1
         },
         {
           "bundleId": 2,
@@ -186,10 +186,10 @@
       "source": "programs/cipher_vault.plang",
       "name": "CIPHER_VAULT",
       "bytes": 98304,
-      "lineageRootHex": "38731bc0ca687abdce12c6bfa3437e1c",
-      "sha256Hex": "fd902cb1ab867dc0c4e1fbebb98f91c52e1f469e41144310a9ae2a1c97f70b56",
-      "totalInstructions": 526,
-      "totalCodeBytes": 2104,
+      "lineageRootHex": "1abcda703778272dd61f7704b83844a4",
+      "sha256Hex": "09916c53c472866375a4bc3bca806fabbb97a53100845a39937eb0996a89f7bd",
+      "totalInstructions": 534,
+      "totalCodeBytes": 2136,
       "bundles": [
         {
           "bundleId": 0,
@@ -202,26 +202,26 @@
         {
           "bundleId": 1,
           "name": "S1_CORE_LOGIC",
-          "instructions": 138,
-          "bytes": 552,
+          "instructions": 139,
+          "bytes": 556,
           "capacityBytes": 1328,
-          "utilizationPct": 41.6
+          "utilizationPct": 41.9
         },
         {
           "bundleId": 2,
           "name": "S1_WIREFRAME",
-          "instructions": 41,
-          "bytes": 164,
+          "instructions": 47,
+          "bytes": 188,
           "capacityBytes": 1328,
-          "utilizationPct": 12.3
+          "utilizationPct": 14.2
         },
         {
           "bundleId": 3,
           "name": "S2_CORTEX_RENDER",
-          "instructions": 107,
-          "bytes": 428,
+          "instructions": 108,
+          "bytes": 432,
           "capacityBytes": 2656,
-          "utilizationPct": 16.1
+          "utilizationPct": 16.3
         },
         {
           "bundleId": 4,

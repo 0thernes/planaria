@@ -1,5 +1,5 @@
 /**
- * PLANARIA Interactive Visualizations:
+ * PLANARIA v2.2 Interactive Visualizations:
  *   1. 192-Cell Holographic Tissue Map Canvas (clickable & draggable live surgery!)
  *   2. Live Organ Vascular Anastomosis Call-Graph Canvas
  *   3. Empirical Survival Phase-Transition Curve (Linear vs RS-Cliff vs PLANARIA 4-Stratum)
@@ -14,14 +14,37 @@ const STRATUM_COLORS = [
   '#a855f7', // S3 Full Organism & Genome (Violet)
 ];
 
+function prepareHiDpiCanvas(canvas) {
+  if (!canvas || typeof canvas.getContext !== 'function') return null;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  if (!canvas._planariaLogicalW) {
+    canvas._planariaLogicalW = canvas.width || 600;
+    canvas._planariaLogicalH = canvas.height || 200;
+  }
+  const W = canvas._planariaLogicalW;
+  const H = canvas._planariaLogicalH;
+  const dpr = Math.min(typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1, 2);
+  const targetW = Math.round(W * dpr);
+  const targetH = Math.round(H * dpr);
+  if (canvas.width !== targetW || canvas.height !== targetH) {
+    canvas.width = targetW;
+    canvas.height = targetH;
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, W, H, dpr };
+}
+
 /**
  * Draw the 24x8 (192-cell) Holographic Cellular Tissue Map.
- * Returns layout metrics for pointer hit-testing.
+ * Returns logical layout metrics for pointer hit-testing.
  */
 export function drawTissueMap(canvas, decoded, selectedSlot = -1, cutSlot = -1) {
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width;
-  const H = canvas.height;
+  const prep = prepareHiDpiCanvas(canvas);
+  if (!prep) return null;
+  const { ctx, W, H } = prep;
+
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#070c11';
   ctx.fillRect(0, 0, W, H);
@@ -47,13 +70,11 @@ export function drawTissueMap(canvas, decoded, selectedSlot = -1, cutSlot = -1) 
     const entry = slotMap[slot];
 
     if (!entry) {
-      // Destroyed / missing necrotic cell
       ctx.fillStyle = '#10161e';
       ctx.fillRect(x, y, w, h);
       ctx.strokeStyle = '#1e293b';
       ctx.lineWidth = 1;
       ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
-      // Faint diagonal scar
       ctx.strokeStyle = 'rgba(244, 63, 94, 0.25)';
       ctx.beginPath();
       ctx.moveTo(x + 2, y + 2);
@@ -107,7 +128,6 @@ export function drawTissueMap(canvas, decoded, selectedSlot = -1, cutSlot = -1) 
     }
   }
 
-  // Optional vertical mitosis cut line
   if (cutSlot >= 0 && cutSlot < 192) {
     const cutY = padY + Math.floor(cutSlot / cols) * cellH;
     ctx.strokeStyle = '#f43f5e';
@@ -120,7 +140,7 @@ export function drawTissueMap(canvas, decoded, selectedSlot = -1, cutSlot = -1) 
     ctx.setLineDash([]);
   }
 
-  return { cols, rows, padX, padY, cellW, cellH };
+  return { cols, rows, padX, padY, cellW, cellH, logicalWidth: W, logicalHeight: H };
 }
 
 /**
@@ -128,9 +148,10 @@ export function drawTissueMap(canvas, decoded, selectedSlot = -1, cutSlot = -1) 
  * from KERNEL (S0) through all 7 bundles and fallback stubs.
  */
 export function drawAnastomosisGraph(canvas, decoded, routes = [], tick = 0) {
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width;
-  const H = canvas.height;
+  const prep = prepareHiDpiCanvas(canvas);
+  if (!prep) return;
+  const { ctx, W, H } = prep;
+
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#070c11';
   ctx.fillRect(0, 0, W, H);
@@ -148,22 +169,25 @@ export function drawAnastomosisGraph(canvas, decoded, routes = [], tick = 0) {
   const bundles = decoded?.bundles || [];
   const activeBundleSet = new Set(routes.map((r) => r.resolvedBundle));
 
-  // Draw vascular pathways from S0 Kernel to every organ bundle
+  // True vascular routing topology: S0 Kernel dispatches directly to each organ bundle
+  // (S2 Cortex anastomoses down to S1 Wireframe if amputated — S1 Wireframe never calls S2!)
   const edges = [
-    [0, 1], [0, 2], [2, 3], [0, 3], [0, 4], [0, 5], [0, 6],
+    [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6],
   ];
 
   for (const [a, b] of edges) {
     const na = nodes[a];
     const nb = nodes[b];
+    const bunA = bundles[a];
     const bunB = bundles[b];
-    const isActive = activeBundleSet.has(b);
+    const bothViable = Boolean(bunA?.viable && bunB?.viable);
+    const isActive = bothViable && activeBundleSet.has(b);
     const isXeno = bunB?.source === 'XENOGRAFT';
 
     ctx.beginPath();
     ctx.moveTo(na.x, na.y);
     ctx.lineTo(nb.x, nb.y);
-    if (!bunB?.viable) {
+    if (!bothViable) {
       ctx.strokeStyle = 'rgba(244, 63, 94, 0.22)';
       ctx.setLineDash([4, 4]);
       ctx.lineWidth = 1.2;
@@ -183,8 +207,7 @@ export function drawAnastomosisGraph(canvas, decoded, routes = [], tick = 0) {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Animated pulse dot on active executed vascular routes!
-    if (isActive && bunB?.viable) {
+    if (isActive) {
       const t = ((tick * 0.03 + b * 0.17) % 1);
       const px = na.x + (nb.x - na.x) * t;
       const py = na.y + (nb.y - na.y) * t;
@@ -195,12 +218,11 @@ export function drawAnastomosisGraph(canvas, decoded, routes = [], tick = 0) {
     }
   }
 
-  // Draw Organ Nodes
   for (const node of nodes) {
     const bun = bundles[node.id];
     const alive = Boolean(bun?.viable);
     const xeno = bun?.source === 'XENOGRAFT';
-    const active = activeBundleSet.has(node.id);
+    const active = alive && activeBundleSet.has(node.id);
     const col = !alive ? '#f43f5e' : xeno ? '#e879f9' : STRATUM_COLORS[node.stratum];
 
     const bw = 128;
@@ -208,7 +230,6 @@ export function drawAnastomosisGraph(canvas, decoded, routes = [], tick = 0) {
     const x = node.x - bw / 2;
     const y = node.y - bh / 2;
 
-    // Solid opaque backing first so underlying vascular edges never bleed through node text
     ctx.fillStyle = '#091018';
     ctx.fillRect(x, y, bw, bh);
     ctx.fillStyle = alive ? (active ? `${col}26` : '#0d151f') : 'rgba(244, 63, 94, 0.14)';
@@ -237,9 +258,10 @@ export function drawAnastomosisGraph(canvas, decoded, routes = [], tick = 0) {
  *   - PLANARIA 4-Stratum Progressive Holographic Binary (emerald)
  */
 export function drawSurvivalCurve(canvas, curveData, currentDropPct = 0) {
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width;
-  const H = canvas.height;
+  const prep = prepareHiDpiCanvas(canvas);
+  if (!prep) return;
+  const { ctx, W, H } = prep;
+
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#070c11';
   ctx.fillRect(0, 0, W, H);
@@ -247,8 +269,8 @@ export function drawSurvivalCurve(canvas, curveData, currentDropPct = 0) {
   const mL = 46, mR = 18, mT = 30, mB = 34;
   const pW = W - mL - mR;
   const pH = H - mT - mB;
+  const clampPct = (v) => Math.max(0, Math.min(100, Number.isFinite(v) ? v : 0));
 
-  // Grid
   ctx.strokeStyle = '#182433';
   ctx.lineWidth = 1;
   for (let p = 0; p <= 100; p += 20) {
@@ -282,8 +304,8 @@ export function drawSurvivalCurve(canvas, curveData, currentDropPct = 0) {
   function plotSeries(key, color, dash = [], fillAlpha = 0) {
     ctx.beginPath();
     curveData.forEach((pt, idx) => {
-      const x = mL + (pt.dropPct / 100) * pW;
-      const y = mT + pH - (pt[key] / 100) * pH;
+      const x = mL + (clampPct(pt.dropPct) / 100) * pW;
+      const y = mT + pH - (clampPct(pt[key]) / 100) * pH;
       if (idx === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
@@ -294,9 +316,10 @@ export function drawSurvivalCurve(canvas, curveData, currentDropPct = 0) {
     ctx.setLineDash([]);
 
     if (fillAlpha > 0) {
+      const first = curveData[0];
       const last = curveData[curveData.length - 1];
-      ctx.lineTo(mL + (last.dropPct / 100) * pW, mT + pH);
-      ctx.lineTo(mL, mT + pH);
+      ctx.lineTo(mL + (clampPct(last.dropPct) / 100) * pW, mT + pH);
+      ctx.lineTo(mL + (clampPct(first.dropPct) / 100) * pW, mT + pH);
       ctx.closePath();
       ctx.fillStyle = color + Math.round(fillAlpha * 255).toString(16).padStart(2, '0');
       ctx.fill();
@@ -308,8 +331,7 @@ export function drawSurvivalCurve(canvas, curveData, currentDropPct = 0) {
   plotSeries('rsCliffSurvivalPct', '#fbbf24', [6, 4], 0);
   plotSeries('linearSurvivalPct', '#f43f5e', [], 0);
 
-  // Live current damage vertical crosshair
-  const cx = mL + (Math.min(100, Math.max(0, currentDropPct)) / 100) * pW;
+  const cx = mL + (clampPct(currentDropPct) / 100) * pW;
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
   ctx.lineWidth = 1.2;
   ctx.setLineDash([2, 2]);
@@ -319,7 +341,6 @@ export function drawSurvivalCurve(canvas, curveData, currentDropPct = 0) {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Legend placed cleanly ABOVE the 100% plateau line (no overlap!)
   const items = [
     ['PLANARIA Bootable', '#10f5a8'],
     ['PLANARIA Mean Stratum', '#22d3ee'],

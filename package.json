@@ -1,19 +1,58 @@
 {
   "name": "planaria",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "type": "module",
-  "description": "PLANARIA v2.0 — 3D Temporal-Quantum WebGL2 Holographic Executable Architecture (.hbin), Plang Compiler, PVM-32 Anastomosis VM, 1/1 Endless Forge, Byzantine Immune System & 38 Pure Lean 4 Proofs",
+  "description": "PLANARIA v2.2 — 3D Temporal-Quantum WebGL2 Holographic Executable Architecture (.hbin), Plang Compiler, PVM-32 Anastomosis VM, 1/1 Endless Forge, Byzantine Immune System & Pure Lean 4 Proofs",
   "author": "Alexander S. Donahue <0_0@0thernes.art> (0thernes LLC)",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/0thernes/planaria",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0thernes/planaria.git"
+  },
+  "bugs": {
+    "url": "https://github.com/0thernes/planaria/issues"
+  },
   "bin": {
     "planaria": "./bin/planaria.mjs"
   },
+  "exports": {
+    ".": "./src/core/hbin.js",
+    "./hbin": "./src/core/hbin.js",
+    "./torture": "./src/core/torture.js",
+    "./compile": "./src/compiler/compile.js",
+    "./pvm32": "./src/vm/pvm32.js",
+    "./quantum": "./src/quantum/qengine.js",
+    "./temporal": "./src/quantum/temporal.js",
+    "./world": "./src/world/game3d.js",
+    "./server": "./server.mjs"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "programs/",
+    "artifacts/",
+    "results/",
+    "lean/",
+    "paper/",
+    "docs/",
+    "server.mjs",
+    "LICENSE",
+    "LEGAL.md",
+    "NOTICE",
+    "README.md",
+    "SUMMARY.md",
+    "VERSION"
+  ],
   "scripts": {
     "start": "node server.mjs",
     "build": "node scripts/build-artifacts.mjs",
     "test": "node test/verify.mjs",
     "benchmark": "node scripts/benchmark.mjs",
-    "cli": "node bin/planaria.mjs"
+    "cli": "node bin/planaria.mjs",
+    "verify:lean": "cd lean && lake build",
+    "verify:all": "npm run build && npm test && npm run benchmark",
+    "paper": "tectonic -X compile paper/main.tex --outdir dist"
   },
   "engines": {
     "node": ">=20.0.0"

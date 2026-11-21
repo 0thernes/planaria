@@ -2,6 +2,7 @@ program QUANTUM_CHRONICLE;
 
 // Standardized Xenograft Shared-Memory ABI Offsets
 const ENT_BASE = 64;
+const SPECIES_MAGIC = 0x5143; // "QC" — per-species init sentinel prevents Xenograft mem[15] collision!
 
 // ============================================================================
 // STRATUM 0: STEM NUCLEUS (k=2, n=24 — survives 91.7% binary destruction!)
@@ -51,8 +52,8 @@ bundle S1_CORE_LOGIC {
   let inp = mem[14];
   mem[7] = 0;
 
-  if (mem[15] == 0) {
-    mem[15] = 1;
+  if (mem[15] != SPECIES_MAGIC) {
+    mem[15] = SPECIES_MAGIC;
     mem[3] = 80;
     mem[4] = 60;
     mem[2] = 100;
@@ -78,6 +79,9 @@ bundle S1_CORE_LOGIC {
     mem[base] = (i % 3) + 1;
     mem[base + 1] = 80 + ((cos(a) * rad) >> 8);
     mem[base + 2] = 62 + ((sin(a) * rad) >> 8);
+    mem[base + 3] = 0;
+    mem[base + 4] = 0;
+    mem[base + 5] = 1;
     mem[base + 6] = a;
     mem[base + 7] = (i & 1) ? 13 : 3;
     i += 1;
@@ -95,14 +99,13 @@ bundle S1_WIREFRAME {
   line(80, 62, mem[3], mem[4], 2);
   circle(mem[3], mem[4], 3, 4, 0);
   label(4, 2, "S1:Q", "WIRE", 3);
-  number(112, 2, mem[1], 2);
+  number(112, 2, mem[11], 2);
 }
 
 // ============================================================================
 // STRATUM 2: QUANTUM INTERFERENCE & BELL-STATE SCOPE RENDERER (k=8, n=32)
 // ============================================================================
 bundle S2_CORTEX_RENDER {
-  let f = mem[0];
   glow(205);
 
   let px = mem[3];
@@ -118,7 +121,9 @@ bundle S2_CORTEX_RENDER {
       let x = mem[base + 1];
       let y = mem[base + 2];
       let nb = ENT_BASE + ((i + 3) % 12) * 8;
-      line(x, y, mem[nb + 1], mem[nb + 2], (i & 1) ? 6 : 3);
+      if (mem[nb] != 0) {
+        line(x, y, mem[nb + 1], mem[nb + 2], (i & 1) ? 6 : 3);
+      }
       circle(x, y, 2, (i & 1) ? 13 : 2, 1);
     }
     i += 1;

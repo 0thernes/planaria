@@ -12,20 +12,36 @@
 
 import { sha256, toHex } from '../core/sha256.js';
 
-/** Fast deterministic 64-bit-style PRNG seeded from any integer or string genome. */
+const TEXT_ENCODER = new TextEncoder();
+
+/**
+ * Deterministic 128-bit sfc32 PRNG seeded directly from FIPS 180-4 SHA-256(seed)
+ * — genuine 128-bit cryptographic state space (> 2^64 distinct genomes, zero 32-bit FNV collisions!).
+ */
 export function seededRng(seed) {
-  let h = 0x811c9dc5;
-  const str = String(seed);
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 0x01000193) >>> 0;
+  const digest = sha256(TEXT_ENCODER.encode(String(seed)));
+  const dv = new DataView(digest.buffer, digest.byteOffset, digest.byteLength);
+  let a = dv.getUint32(0, true);
+  let b = dv.getUint32(4, true);
+  let c = dv.getUint32(8, true);
+  let d = dv.getUint32(12, true);
+  // Warm up 12 rounds for full avalanche
+  for (let i = 0; i < 12; i++) {
+    const t = (a + b + d) >>> 0;
+    d = (d + 1) >>> 0;
+    a = b ^ (b >>> 9);
+    b = (c + (c << 3)) >>> 0;
+    c = ((c << 21) | (c >>> 11)) >>> 0;
+    c = (c + t) >>> 0;
   }
-  let a = h >>> 0;
   return function next() {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    const t = (a + b + d) >>> 0;
+    d = (d + 1) >>> 0;
+    a = b ^ (b >>> 9);
+    b = (c + (c << 3)) >>> 0;
+    c = ((c << 21) | (c >>> 11)) >>> 0;
+    c = (c + t) >>> 0;
+    return t / 4294967296;
   };
 }
 
@@ -33,11 +49,11 @@ function pick(rng, arr) {
   return arr[Math.floor(rng() * arr.length)];
 }
 
-/** Deterministic 1/1 Cryptographic Lineage Tag (unique per seed+category). */
+/** Deterministic 64-bit (16 hex char = 2^64 space) 1/1 Cryptographic Lineage Tag. */
 export function computeLineageId(category, seed) {
-  const bytes = new TextEncoder().encode(`PLANARIA-1OF1:${category}:${seed}`);
+  const bytes = TEXT_ENCODER.encode(`PLANARIA-1OF1:${category}:${seed}`);
   const h = toHex(sha256(bytes)).toUpperCase();
-  return `${h.slice(0, 4)}-${h.slice(4, 8)}-${h.slice(8, 12)}`;
+  return `${h.slice(0, 4)}-${h.slice(4, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}`;
 }
 
 // ============================================================================
@@ -158,20 +174,21 @@ export const RARITY_TIERS = [
 ];
 
 function rollRarity(rng, luckBoost = 0) {
-  const total = RARITY_TIERS.reduce((s, r) => s + r.weight, 0);
-  let r = rng() * total;
-  // Higher stage / luck biases toward rare 1/1 tiers
-  r = Math.max(0, r - luckBoost * 8);
+  // Smooth multiplicative luck curve (monotonic across tiers; avoids bimodal pile-up at tier 5!)
+  const luck = Math.max(0, Number.isFinite(luckBoost) ? luckBoost : 0);
+  const weights = RARITY_TIERS.map((tier) => tier.weight * Math.pow(1 + luck * 0.25, tier.id));
+  const total = weights.reduce((s, w) => s + w, 0);
+  const r = rng() * total;
   let acc = 0;
-  for (let i = RARITY_TIERS.length - 1; i >= 0; i--) {
-    acc += RARITY_TIERS[i].weight;
+  for (let i = 0; i < RARITY_TIERS.length; i++) {
+    acc += weights[i];
     if (r <= acc) return RARITY_TIERS[i];
   }
-  return RARITY_TIERS[0];
+  return RARITY_TIERS[RARITY_TIERS.length - 1];
 }
 
 // ============================================================================
-// 2. ENDLESS 1/1 WEAPON FORGE (10 Frames x 16 Quantum x 12 Temporal x 14 Prefixes x Continuous Gradients)
+// 2. ENDLESS 1/1 WEAPON FORGE (14 Prefixes x 10 Frames x 12 Quantum x 8 Temporal x 6 Rarities)
 // ============================================================================
 const WEAPON_PREFIXES = [
   'Hilbert', 'Tachyon', 'Planarian', 'Non-Local', 'Eigenstate', 'Decoherent', 'Causal',
@@ -215,16 +232,18 @@ const TEMPORAL_MODS = [
 ];
 
 export function forgeWeapon(seed, stage = 1, guaranteedMinRarity = 0) {
-  const rng = seededRng(`WPN:${seed}:${stage}`);
-  let rarity = rollRarity(rng, Math.min(2.5, stage * 0.25));
-  if (rarity.id < guaranteedMinRarity) rarity = RARITY_TIERS[guaranteedMinRarity];
+  const s = Math.max(1, Math.floor(stage) || 1);
+  const minR = Math.max(0, Math.min(RARITY_TIERS.length - 1, Math.floor(guaranteedMinRarity) || 0));
+  const rng = seededRng(`WPN:${seed}:${s}`);
+  let rarity = rollRarity(rng, Math.min(2.5, s * 0.25));
+  if (rarity.id < minR) rarity = RARITY_TIERS[minR];
 
   const prefix = pick(rng, WEAPON_PREFIXES);
   const frame = pick(rng, WEAPON_FRAMES);
   const qMod = pick(rng, QUANTUM_MODS);
   const tMod = pick(rng, TEMPORAL_MODS);
 
-  const stageScale = 1 + (stage - 1) * 0.22;
+  const stageScale = 1 + (s - 1) * 0.22;
   const variance = 0.88 + rng() * 0.28;
   const damage = Math.round(frame.baseDmg * rarity.mult * stageScale * variance);
   const fireRate = Number((frame.fireRate * (tMod.id === 'HASTE' ? 1.35 : 1) * (0.9 + rng() * 0.25)).toFixed(2));
@@ -235,28 +254,28 @@ export function forgeWeapon(seed, stage = 1, guaranteedMinRarity = 0) {
 
   return {
     seed,
-    lineageId: computeLineageId('WPN', `${seed}:${stage}`),
+    lineageId: computeLineageId('WPN', `${seed}:${s}`),
     name: `${prefix} ${frame.name} ${qMod.name}`,
     shortName: `${prefix} ${frame.name.split(' ').pop()}`,
     rarity,
     frame,
     qMod,
     tMod,
-    stageFound: stage,
+    stageFound: s,
     damage,
     fireRate,
     speed,
     projectileCount,
     spread: frame.spread,
     tunnelFactor: Number(tunnelFactor.toFixed(2)),
-    color: rarity.rgb,
+    color: [...rarity.rgb],
     hue,
     entangledPartner: null,
   };
 }
 
 // ============================================================================
-// 3. ENDLESS 1/1 ARMOR FORGE (8 Chassis x 14 Barrier Layers x 10 Phase Gradients)
+// 3. ENDLESS 1/1 ARMOR FORGE (8 Chassis x 8 Barrier Layers x 8 Phase Gradients x 6 Rarities)
 // ============================================================================
 const ARMOR_CHASSIS = [
   { id: 'CARAPACE', name: 'Holographic Carapace',  baseShield: 110, speedMult: 1.00, plates: 6 },
@@ -284,21 +303,23 @@ const ARMOR_GRADIENTS = [
 ];
 
 export function forgeArmor(seed, stage = 1, guaranteedMinRarity = 0) {
-  const rng = seededRng(`ARM:${seed}:${stage}`);
-  let rarity = rollRarity(rng, Math.min(2.5, stage * 0.25));
-  if (rarity.id < guaranteedMinRarity) rarity = RARITY_TIERS[guaranteedMinRarity];
+  const s = Math.max(1, Math.floor(stage) || 1);
+  const minR = Math.max(0, Math.min(RARITY_TIERS.length - 1, Math.floor(guaranteedMinRarity) || 0));
+  const rng = seededRng(`ARM:${seed}:${s}`);
+  let rarity = rollRarity(rng, Math.min(2.5, s * 0.25));
+  if (rarity.id < minR) rarity = RARITY_TIERS[minR];
 
   const chassis = pick(rng, ARMOR_CHASSIS);
   const layer = pick(rng, ARMOR_LAYERS);
   const gradient = pick(rng, ARMOR_GRADIENTS);
-  const stageScale = 1 + (stage - 1) * 0.20;
+  const stageScale = 1 + (s - 1) * 0.20;
   const maxShield = Math.round(chassis.baseShield * rarity.mult * stageScale * (0.9 + rng() * 0.22));
   const regenRate = Number(((layer.id === 'RS_HEAL' ? 6.5 : 2.2) * rarity.mult).toFixed(1));
   const phaseDodge = Number(((layer.id === 'TUNNEL_EV' ? 0.24 : 0.05) + rarity.id * 0.03).toFixed(2));
 
   return {
     seed,
-    lineageId: computeLineageId('ARM', `${seed}:${stage}`),
+    lineageId: computeLineageId('ARM', `${seed}:${s}`),
     name: `${gradient} ${chassis.name} [${layer.name}]`,
     shortName: `${gradient.split('-')[0]} ${chassis.name.split(' ').pop()}`,
     rarity,
@@ -310,14 +331,14 @@ export function forgeArmor(seed, stage = 1, guaranteedMinRarity = 0) {
     phaseDodge,
     speedMult: chassis.speedMult,
     plates: chassis.plates,
-    color: rarity.rgb,
+    color: [...rarity.rgb],
   };
 }
 
 // ============================================================================
 // 4. ENDLESS 1/1 NPC & BOSS FORGE (Adaptive Reactive AI + Quantum/Temporal Affixes)
 // ============================================================================
-const NPC_ARCHETYPES = [
+export const NPC_ARCHETYPES = [
   { id: 'WEAVER',      name: 'Phase Weaver',       mesh: 'OCTA',    baseHp: 65,  speed: 6.8, radius: 1.05, range: 14, fireCd: 1.7 },
   { id: 'STALKER',     name: 'Tunnel Stalker',     mesh: 'PYRAMID', baseHp: 52,  speed: 9.2, radius: 0.90, range: 6,  fireCd: 1.2 },
   { id: 'CHRONOPHAGE', name: 'Chronophage',        mesh: 'TORUS',   baseHp: 95,  speed: 5.4, radius: 1.30, range: 16, fireCd: 2.1 },
@@ -353,11 +374,13 @@ const NPC_TITLES = [
  * Forge a unique 1/1 NPC (or Stage Boss) with real reactive adaptation to player behavior!
  * playerProfile: { beamRatio, closeRatio, entangleCount, rewindCount }
  */
-export function forgeNPC(seed, stage, wave, isBoss = false, playerProfile = null) {
-  const rng = seededRng(`NPC:${seed}:${stage}:${wave}:${isBoss ? 'B' : 'N'}`);
+export function forgeNPC(seed, stage = 1, wave = 1, isBoss = false, playerProfile = null, forcedId = null) {
+  const s = Math.max(1, Math.floor(stage) || 1);
+  const w = Math.max(1, Math.floor(wave) || 1);
+  const rng = seededRng(`NPC:${seed}:${s}:${w}:${isBoss ? 'B' : 'N'}`);
   const rarity = isBoss
-    ? RARITY_TIERS[Math.min(5, 3 + Math.floor(stage / 2))]
-    : rollRarity(rng, Math.min(2.0, stage * 0.22));
+    ? RARITY_TIERS[Math.min(5, 3 + Math.floor(s / 2))]
+    : rollRarity(rng, Math.min(2.0, s * 0.22));
 
   const arch = isBoss ? NPC_ARCHETYPES[7] : NPC_ARCHETYPES[Math.floor(rng() * 7)];
   let mutation = pick(rng, NPC_MUTATIONS);
@@ -387,18 +410,20 @@ export function forgeNPC(seed, stage, wave, isBoss = false, playerProfile = null
     }
   }
 
-  const stageScale = 1 + (stage - 1) * 0.34 + (wave - 1) * 0.12;
+  const stageScale = 1 + (s - 1) * 0.34 + (w - 1) * 0.12;
   const maxHp = Math.round(arch.baseHp * rarity.mult * stageScale * (0.9 + rng() * 0.25));
   const title = pick(rng, NPC_TITLES);
-  const lineageId = computeLineageId(isBoss ? 'BOSS' : 'NPC', `${seed}:${stage}:${wave}`);
+  const lineageId = computeLineageId(isBoss ? 'BOSS' : 'NPC', `${seed}:${s}:${w}`);
 
   // Spawn around arena perimeter at varied heights/depths
   const ang = rng() * Math.PI * 2;
   const dist = isBoss ? 22 : 16 + rng() * 14;
   const elevation = isBoss ? 3.2 : 1.0 + rng() * 3.5;
+  // Asymptotic speed cap prevents high-stage NPCs from tunneling past arena/projectiles
+  const speedScale = 1 + 1.2 * (1 - Math.exp(-s * 0.04));
 
   return {
-    id: Math.floor(rng() * 1e9),
+    id: forcedId ?? Math.floor(rng() * 1e9),
     seed,
     lineageId,
     name: isBoss
@@ -418,14 +443,15 @@ export function forgeNPC(seed, stage, wave, isBoss = false, playerProfile = null
     hp: maxHp,
     maxHp,
     radius: arch.radius * (isBoss ? 1.15 : 0.92 + rng() * 0.22),
-    speed: arch.speed * (temporalAffix === 'HASTENED' ? 1.38 : 1.0) * (1 + stage * 0.03),
+    speed: arch.speed * (temporalAffix === 'HASTENED' ? 1.38 : 1.0) * speedScale,
     phase: rng() * Math.PI * 2,
     superposeAngle: rng() * Math.PI * 2,
     entangledWith: null,
     zenoFreeze: 0,
+    stasisTimer: 0,
     mitosisDone: false,
     cooldown: 0.6 + rng() * 1.2,
-    color: rarity.rgb,
+    color: [...rarity.rgb],
     adaptation,
   };
 }
@@ -463,15 +489,16 @@ export const ABILITIES = [
   { key: 'C', name: 'FORGE 1/1 LOOT',    cd: 2.0,  cost: 0,  desc: 'Synthesize a brand-new 1/1 Quantum Weapon & Armor from current SHA-256 entropy!' },
 ];
 
-/** Compute deterministic stage specification for ANY stage number 1..∞. */
+/** Compute deterministic stage specification for ANY stage number 1..infinity (clamped >= 1). */
 export function buildStageSpec(stageNum, seed = 2026) {
-  const realm = SCALE_REALMS[(stageNum - 1) % SCALE_REALMS.length];
-  const cycle = Math.floor((stageNum - 1) / SCALE_REALMS.length) + 1;
-  const rng = seededRng(`STAGE:${seed}:${stageNum}`);
+  const s = Math.max(1, Math.floor(stageNum) || 1);
+  const realm = SCALE_REALMS[(s - 1) % SCALE_REALMS.length];
+  const cycle = Math.floor((s - 1) / SCALE_REALMS.length) + 1;
+  const rng = seededRng(`STAGE:${seed}:${s}`);
 
   // Procedural 3D pillars / monoliths around arena with height & width gradients
   const pillars = [];
-  const count = realm.pillarCount + Math.min(8, Math.floor(stageNum / 2));
+  const count = realm.pillarCount + Math.min(8, Math.floor(s / 2));
   for (let i = 0; i < count; i++) {
     const ang = (i / count) * Math.PI * 2 + rng() * 0.25;
     const dist = 11 + rng() * 17;
@@ -487,9 +514,9 @@ export function buildStageSpec(stageNum, seed = 2026) {
 
   // Coherent multi-slit wave interference emitters embedded in stage floor
   const waveSources = [];
-  const numSources = 3 + (stageNum % 3);
+  const numSources = 3 + (s % 3);
   for (let i = 0; i < numSources; i++) {
-    const ang = (i / numSources) * Math.PI * 2 + stageNum * 0.7;
+    const ang = (i / numSources) * Math.PI * 2 + s * 0.7;
     const r = 9 + (i % 2) * 7;
     waveSources.push({
       x: Math.cos(ang) * r,
@@ -502,11 +529,11 @@ export function buildStageSpec(stageNum, seed = 2026) {
   }
 
   return {
-    stageNum,
+    stageNum: s,
     cycle,
-    lineageId: computeLineageId('STAGE', `${seed}:${stageNum}`),
+    lineageId: computeLineageId('STAGE', `${seed}:${s}`),
     realm,
-    title: `STAGE ${stageNum} · ${realm.name} ${cycle > 1 ? `(TIER ${cycle})` : ''}`.trim(),
+    title: `STAGE ${s} · ${realm.name} ${cycle > 1 ? `(TIER ${cycle})` : ''}`.trim(),
     arenaRadius: 34,
     pillars,
     waveSources,
@@ -514,17 +541,19 @@ export function buildStageSpec(stageNum, seed = 2026) {
   };
 }
 
-/** Exact lower bound on combinatorial 1/1 distinct build/entity space. */
+/** Exact reachable lower bound on combinatorial 1/1 distinct build/entity space (matches Lean 4!). */
 export function combinatorialSpaceMetrics() {
   const weaponDiscrete = WEAPON_PREFIXES.length * WEAPON_FRAMES.length * QUANTUM_MODS.length * TEMPORAL_MODS.length * RARITY_TIERS.length;
   const armorDiscrete = ARMOR_CHASSIS.length * ARMOR_LAYERS.length * ARMOR_GRADIENTS.length * RARITY_TIERS.length;
-  const npcDiscrete = NPC_ARCHETYPES.length * NPC_MUTATIONS.length * NPC_TEMPORAL.length * NPC_TITLES.length * RARITY_TIERS.length;
+  // Reachable (archetype, rarity) pairs: 7 standard archetypes x 6 rarities + 1 Archon boss x 3 high rarities = 45
+  const reachableArchRarityPairs = (NPC_ARCHETYPES.length - 1) * RARITY_TIERS.length + 3;
+  const npcDiscrete = reachableArchRarityPairs * NPC_MUTATIONS.length * NPC_TEMPORAL.length * NPC_TITLES.length;
   return {
-    weaponArchetypeCombos: weaponDiscrete,       // 14 * 10 * 12 * 8 * 6 = 80,640 discrete * continuous gradients * 2^64 seeds
-    armorArchetypeCombos: armorDiscrete,         // 8 * 8 * 8 * 6 = 3,072 discrete * continuous gradients * 2^64 seeds
-    npcArchetypeCombos: npcDiscrete,             // 8 * 8 * 6 * 12 * 6 = 27,648 discrete * adaptive AI * 2^64 seeds
-    jointLoadoutCrossProduct: weaponDiscrete * armorDiscrete * npcDiscrete, // > 6.8 x 10^12 before continuous stats/seeds!
-    scaleOrdersOfMagnitude: 24,                  // 10^-15 m to 10^9 m = 24 orders of magnitude!
+    weaponArchetypeCombos: weaponDiscrete,       // 14 * 10 * 12 * 8 * 6 = 80,640 discrete * continuous gradients * 2^64 lineage
+    armorArchetypeCombos: armorDiscrete,         // 8 * 8 * 8 * 6 = 3,072 discrete * continuous gradients * 2^64 lineage
+    npcArchetypeCombos: npcDiscrete,             // 45 * 8 * 6 * 12 = 25,920 reachable discrete * adaptive AI * 2^64 lineage
+    jointLoadoutCrossProduct: weaponDiscrete * armorDiscrete * npcDiscrete, // 6,421,059,993,600 (> 6.42 x 10^12) exact reachable!
+    scaleOrdersOfMagnitude: 24,                  // 10^-15 m to 10^9 m = 24 orders of magnitude (label span)
     realmBiomes: SCALE_REALMS.length,
     skillNodes: SKILL_TREE.length,
     activeAbilities: ABILITIES.length,

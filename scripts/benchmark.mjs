@@ -1,13 +1,14 @@
 /**
- * PLANARIA Reproducible Experimental Benchmark & Cryptographic Attestation Suite
+ * PLANARIA v2.2 Reproducible Experimental Benchmark & Cryptographic Attestation Suite
  *
  * Generates:
  *   1. results/benchmarks.json  — Empirical Survival Phase-Transition Curve (Linear vs
  *      Single-Stratum RS Cliff vs PLANARIA 4-Stratum), Radiation Burst Sweep (0..22B/cell),
  *      Byzantine Trojan Flood Audit (Immune ON vs OFF), Unaligned Mitosis Matrix, and
- *      Execution/Decode Latency Profiles.
- *   2. results/attestation.json — SHA-256 + Ed25519 cryptographically signed attestation
- *      covering all compiled .hbin artifacts, source files, and benchmark digests.
+ *      Warm-JIT Compilation / Decode / PVM-32 Execution Latency Profiles.
+ *   2. results/attestation.json — SHA-256 digest manifest + Ed25519 self-consistency seal
+ *      (or persistent-key signature when PLANARIA_SIGNING_KEY_PEM is provided) covering
+ *      code, programs, compiled .hbin artifacts, Lean 4 proofs, paper, and benchmark outputs.
  */
 
 import crypto from 'node:crypto';
@@ -24,7 +25,6 @@ import {
   injectByzantineTrojans,
   amputateBundles,
   concatShards,
-  shiftAndShuffle,
 } from '../src/core/torture.js';
 import { encodeLinearBinary, decodeLinearBinary } from '../src/vm/linear-twin.js';
 import { PVM32 } from '../src/vm/pvm32.js';
@@ -34,13 +34,40 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const RESULTS_DIR = path.join(ROOT, 'results');
 fs.mkdirSync(RESULTS_DIR, { recursive: true });
+const ATTEST_ONLY = process.argv.includes('--attest-only');
 
+let totalCompileMs = null;
+let meanDecodeMs = null;
+let meanFrameMs = null;
+let mips = null;
+let survivalCurve = [];
+
+if (!ATTEST_ONLY) {
 console.log('[BENCH] Compiling QUANTUM_CHRONICLE, AEGIS_DRIFT, SYNTH_REACTOR, CIPHER_VAULT...');
+const tCompileStart = performance.now();
 const qchron = compilePlangToHbin(fs.readFileSync(path.join(ROOT, 'programs/quantum_chronicle.plang'), 'utf8'));
 const aegis = compilePlangToHbin(fs.readFileSync(path.join(ROOT, 'programs/aegis_drift.plang'), 'utf8'));
 const synth = compilePlangToHbin(fs.readFileSync(path.join(ROOT, 'programs/synth_reactor.plang'), 'utf8'));
 const vault = compilePlangToHbin(fs.readFileSync(path.join(ROOT, 'programs/cipher_vault.plang'), 'utf8'));
+totalCompileMs = Number((performance.now() - tCompileStart).toFixed(2));
 const linTwin = encodeLinearBinary(aegis.rawBundles, 'AEGIS_LINEAR');
+
+// Assert on-disk artifacts/*.hbin match freshly compiled SHA-256 digests
+for (const [slug, comp] of [
+  ['quantum_chronicle', qchron],
+  ['aegis_drift', aegis],
+  ['synth_reactor', synth],
+  ['cipher_vault', vault],
+]) {
+  const artPath = path.join(ROOT, 'artifacts', `${slug}.hbin`);
+  if (!fs.existsSync(artPath)) {
+    throw new Error(`Missing built artifact ${artPath} — run "npm run build" first.`);
+  }
+  const diskHash = toHex(sha256(new Uint8Array(fs.readFileSync(artPath))));
+  if (diskHash !== comp.sha256Hex) {
+    throw new Error(`Stale artifact ${artPath}: on-disk SHA-256 ${diskHash} != compiled ${comp.sha256Hex}. Run "npm run build".`);
+  }
+}
 
 // ----------------------------------------------------------------------------
 // EXPERIMENT 1: Survival Phase-Transition Curve (0%..96% Erasure, 40 trials/pt)
@@ -48,7 +75,7 @@ const linTwin = encodeLinearBinary(aegis.rawBundles, 'AEGIS_LINEAR');
 // ----------------------------------------------------------------------------
 console.log('[BENCH] Experiment 1: Monte Carlo Survival Phase-Transition Curve (0%..96% erasure)...');
 const TRIALS_PER_POINT = 40;
-const survivalCurve = [];
+survivalCurve = [];
 
 for (let dropPct = 0; dropPct <= 96; dropPct += 4) {
   const dropRate = dropPct / 100;
@@ -61,20 +88,17 @@ for (let dropPct = 0; dropPct <= 96; dropPct += 4) {
   for (let t = 0; t < TRIALS_PER_POINT; t++) {
     const seed = 10000 + dropPct * 100 + t;
 
-    // 1. Traditional Linear Binary Control
     const linShred = shredCells(linTwin.bytes, dropRate, seed, false).bytes;
     if (decodeLinearBinary(linShred).bootable) linearAlive++;
 
-    // 2. PLANARIA 4-Stratum Holographic Binary
     const plnShred = shredCells(aegis.bytes, dropRate, seed, false).bytes;
     const dec = decodeHbin(plnShred, { pinnedRootHex: aegis.lineageRootHex });
 
-    // Single-stratum RS(40, 16) Cliff control: equivalent to requiring Bundle 5 (k=16, n=40) alone
     if (dec.bundles[5].viable) rsCliffAlive++;
 
     if (dec.bootable) {
       planariaBootable++;
-      stratumSum += dec.maxViableStratum + 1; // 1=S0, 2=S1, 3=S2, 4=S3
+      stratumSum += dec.maxViableStratum + 1;
       if (dec.maxViableStratum === 3) s3Count++;
       else if (dec.maxViableStratum === 2) s2Count++;
       else if (dec.maxViableStratum === 1) s1Count++;
@@ -116,7 +140,7 @@ for (let burstBytes = 0; burstBytes <= 22; burstBytes += 2) {
 }
 
 // ----------------------------------------------------------------------------
-// EXPERIMENT 3: Byzantine Trojan Flood (0..192 RS-valid malicious cells, Immune ON vs OFF)
+// EXPERIMENT 3: Byzantine Trojan Flood (1..192 RS-valid malicious cells, Immune ON vs OFF)
 // ----------------------------------------------------------------------------
 console.log('[BENCH] Experiment 3: Byzantine Trojan Injection Audit (Immune ON vs OFF)...');
 const byzantineAudit = [];
@@ -142,9 +166,9 @@ for (const trojans of [1, 5, 20, 60, 192]) {
 }
 
 // ----------------------------------------------------------------------------
-// EXPERIMENT 4: Unaligned Planarian Mitosis & Performance Latency Profile
+// EXPERIMENT 4: Unaligned Planarian Mitosis & Warm-JIT Latency Profile
 // ----------------------------------------------------------------------------
-console.log('[BENCH] Experiment 4: Unaligned Bisection Matrix & Latency Benchmarks...');
+console.log('[BENCH] Experiment 4: Unaligned Bisection Matrix & Warm-JIT Latency Benchmarks...');
 const mitosisOffsets = [49152, 49153, 49177, 48701, 49597, 49000];
 const mitosisResults = [];
 for (const off of mitosisOffsets) {
@@ -166,20 +190,24 @@ for (const off of mitosisOffsets) {
   });
 }
 
-// Measure decode & PVM-32 execution throughput
+// Warmup V8 JIT before timing decode & PVM-32 execution
+for (let i = 0; i < 5; i++) decodeHbin(aegis.bytes, { pinnedRootHex: aegis.lineageRootHex });
 const tDecStart = performance.now();
-const DEC_ITERS = 25;
+const DEC_ITERS = 30;
 for (let i = 0; i < DEC_ITERS; i++) decodeHbin(aegis.bytes, { pinnedRootHex: aegis.lineageRootHex });
-const meanDecodeMs = Number(((performance.now() - tDecStart) / DEC_ITERS).toFixed(2));
+meanDecodeMs = Number(((performance.now() - tDecStart) / DEC_ITERS).toFixed(2));
 
 const vm = new PVM32();
 vm.loadDecoded(decodeHbin(aegis.bytes), true);
+for (let f = 0; f < 30; f++) vm.stepFrame();
+const insnsBefore = vm.totalInsns;
 const tVmStart = performance.now();
-const VM_FRAMES = 300;
+const VM_FRAMES = 400;
 for (let f = 0; f < VM_FRAMES; f++) vm.stepFrame();
-const vmTotalMs = performance.now() - tVmStart;
-const meanFrameMs = Number((vmTotalMs / VM_FRAMES).toFixed(3));
-const mips = Number(((vm.totalInsns / (vmTotalMs / 1000)) / 1e6).toFixed(2));
+const vmTotalMs = Math.max(0.001, performance.now() - tVmStart);
+const measuredInsns = vm.totalInsns - insnsBefore;
+meanFrameMs = Number((vmTotalMs / VM_FRAMES).toFixed(3));
+mips = Number(((measuredInsns / (vmTotalMs / 1000)) / 1e6).toFixed(2));
 
 // Experiment 5: Cross-Species Xenograft Matrix
 const ampAegis = amputateBundles(aegis.bytes, [3, 4]).bytes;
@@ -193,7 +221,7 @@ const xenoVault = decodeHbin(concatShards(ampAegis, vault.bytes, 73), {
 });
 
 const benchmarks = {
-  schema: 'PLANARIA-BENCHMARKS-1.0',
+  schema: 'PLANARIA-BENCHMARKS-1.1',
   generatedAt: new Date().toISOString(),
   nodeVersion: process.version,
   artifacts: [qchron, aegis, synth, vault].map((p) => ({
@@ -205,6 +233,7 @@ const benchmarks = {
     codeBytes: p.codegen.totalCodeBytes,
   })),
   performance: {
+    compileAll4SpeciesMs: totalCompileMs,
     meanFullDecodeMs: meanDecodeMs,
     meanPvm32FrameMs: meanFrameMs,
     effectiveFrameRateHeadroomFps: Math.round(1000 / Math.max(0.001, meanFrameMs)),
@@ -232,24 +261,53 @@ const benchmarks = {
 
 const benchJson = JSON.stringify(benchmarks, null, 2) + '\n';
 fs.writeFileSync(path.join(RESULTS_DIR, 'benchmarks.json'), benchJson);
+} else {
+  console.log('[BENCH] --attest-only: preserving existing results/benchmarks.json and re-sealing attestation.json...');
+}
 
 // ----------------------------------------------------------------------------
-// CRYPTOGRAPHIC ATTESTATION (SHA-256 + Deterministic Ed25519 Signature)
+// CRYPTOGRAPHIC ATTESTATION (SHA-256 Digest Manifest + Ed25519 Seal)
+// Supports persistent private key via PLANARIA_SIGNING_KEY_PEM; otherwise emits
+// an explicitly labeled ephemeral self-consistency Ed25519 seal.
 // ----------------------------------------------------------------------------
-const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
+let publicKey;
+let privateKey;
+let signatureMode;
+if (process.env.PLANARIA_SIGNING_KEY_PEM) {
+  privateKey = crypto.createPrivateKey(process.env.PLANARIA_SIGNING_KEY_PEM);
+  publicKey = crypto.createPublicKey(privateKey);
+  signatureMode = 'persistent-key';
+} else {
+  ({ publicKey, privateKey } = crypto.generateKeyPairSync('ed25519'));
+  signatureMode = 'ephemeral-self-consistency-seal';
+}
+
 const filesToAttest = [
   'src/core/gf256.js',
   'src/core/rs.js',
   'src/core/cauchy.js',
   'src/core/sha256.js',
   'src/core/hbin.js',
+  'src/core/torture.js',
+  'src/compiler/isa.js',
+  'src/compiler/lexer.js',
+  'src/compiler/parser.js',
   'src/compiler/codegen.js',
+  'src/compiler/compile.js',
   'src/vm/pvm32.js',
+  'src/vm/linear-twin.js',
   'src/quantum/qengine.js',
   'src/quantum/temporal.js',
   'src/world/generator.js',
   'src/world/game3d.js',
   'src/web/renderer3d.js',
+  'src/web/visuals.js',
+  'src/web/audio.js',
+  'src/web/audio-worklet.js',
+  'src/web/app.js',
+  'server.mjs',
+  'bin/planaria.mjs',
+  'test/verify.mjs',
   'programs/quantum_chronicle.plang',
   'programs/aegis_drift.plang',
   'programs/synth_reactor.plang',
@@ -258,6 +316,13 @@ const filesToAttest = [
   'artifacts/aegis_drift.hbin',
   'artifacts/synth_reactor.hbin',
   'artifacts/cipher_vault.hbin',
+  'lean/PlanariaProofs.lean',
+  'lean/PlanariaProofs/GF256.lean',
+  'lean/PlanariaProofs/MitosisBounds.lean',
+  'lean/PlanariaProofs/StratumAnastomosis.lean',
+  'lean/PlanariaProofs/ByzantineImmune.lean',
+  'lean/PlanariaProofs/XenograftABI.lean',
+  'lean/PlanariaProofs/QuantumTemporal.lean',
   'paper/main.tex',
   'dist/Donahue_2026_planaria.pdf',
   'dist/arxiv_submission.tar.gz',
@@ -273,7 +338,12 @@ for (const rel of filesToAttest) {
 }
 
 const payloadObj = {
-  schema: 'PLANARIA-ATTESTATION-1.0',
+  schema: 'PLANARIA-ATTESTATION-1.1',
+  signatureMode,
+  trustBoundary:
+    signatureMode === 'persistent-key'
+      ? 'Signed with persistent caller-supplied Ed25519 private key (PLANARIA_SIGNING_KEY_PEM).'
+      : 'Ephemeral session Ed25519 key: proves internal bundle self-consistency against the embedded public key; external authenticity comes from git commit / GitHub release / Software Heritage archival.',
   timestamp: new Date().toISOString(),
   digests,
 };
@@ -289,6 +359,8 @@ const attestation = {
 };
 fs.writeFileSync(path.join(RESULTS_DIR, 'attestation.json'), JSON.stringify(attestation, null, 2) + '\n');
 
-console.log(`[BENCH] Done! Mean full decode = ${meanDecodeMs} ms | PVM-32 frame = ${meanFrameMs} ms (${mips} MIPS)`);
-console.log(`[BENCH] Survival @ 80% erasure: Linear=${survivalCurve.find((x) => x.dropPct === 80).linearSurvivalPct}% | RS-Cliff=${survivalCurve.find((x) => x.dropPct === 80).rsCliffSurvivalPct}% | PLANARIA=${survivalCurve.find((x) => x.dropPct === 80).planariaSurvivalPct}%`);
-console.log(`[BENCH] Wrote results/benchmarks.json & Ed25519-signed results/attestation.json (verified=${verified}).`);
+if (!ATTEST_ONLY) {
+  console.log(`[BENCH] Done! Compile(4) = ${totalCompileMs} ms | Mean decode = ${meanDecodeMs} ms | PVM-32 frame = ${meanFrameMs} ms (${mips} MIPS)`);
+  console.log(`[BENCH] Survival @ 80% erasure: Linear=${survivalCurve.find((x) => x.dropPct === 80).linearSurvivalPct}% | RS-Cliff=${survivalCurve.find((x) => x.dropPct === 80).rsCliffSurvivalPct}% | PLANARIA=${survivalCurve.find((x) => x.dropPct === 80).planariaSurvivalPct}%`);
+}
+console.log(`[BENCH] Wrote results/attestation.json (${Object.keys(digests).length} files attested, mode=${signatureMode}, verified=${verified}).`);

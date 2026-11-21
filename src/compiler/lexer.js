@@ -40,9 +40,14 @@ export function tokenize(source) {
 
     // Block comment /* ... */
     if (ch === '/' && peek(1) === '*') {
+      const cLine = line;
+      const cCol = col;
       advance(); advance();
       while (i < len && !(peek() === '*' && peek(1) === '/')) advance();
-      if (i < len) { advance(); advance(); }
+      if (i >= len) {
+        throw new SyntaxError(`Unterminated block comment starting at ${cLine}:${cCol}`);
+      }
+      advance(); advance();
       continue;
     }
 
@@ -56,8 +61,12 @@ export function tokenize(source) {
       while (i < len && peek() !== '"') {
         if (peek() === '\\') {
           advance();
+          if (i >= len) {
+            throw new SyntaxError(`Unterminated string escape at ${startLine}:${startCol}`);
+          }
           const esc = advance();
-          str += esc === 'n' ? '\n' : esc;
+          const escMap = { n: '\n', t: '\t', r: '\r', '0': '\0', '\\': '\\', '"': '"' };
+          str += Object.prototype.hasOwnProperty.call(escMap, esc) ? escMap[esc] : esc;
         } else {
           str += advance();
         }
@@ -73,11 +82,29 @@ export function tokenize(source) {
       let numStr = '';
       if (ch === '0' && (peek(1) === 'x' || peek(1) === 'X')) {
         numStr += advance() + advance();
+        const hexStart = numStr.length;
         while (i < len && /[0-9a-fA-F]/.test(peek())) numStr += advance();
-        tokens.push({ type: 'NUMBER', value: parseInt(numStr, 16) | 0, line: startLine, col: startCol });
+        if (numStr.length === hexStart) {
+          throw new SyntaxError(`Invalid hexadecimal literal '${numStr}' at ${startLine}:${startCol}`);
+        }
+        if (i < len && /[a-zA-Z_]/.test(peek())) {
+          throw new SyntaxError(`Invalid trailing identifier after hex literal '${numStr}' at ${startLine}:${startCol}`);
+        }
+        const parsed = parseInt(numStr, 16);
+        if (!Number.isSafeInteger(parsed) || parsed > 0xffffffff) {
+          throw new SyntaxError(`Hex literal '${numStr}' exceeds 32-bit integer range at ${startLine}:${startCol}`);
+        }
+        tokens.push({ type: 'NUMBER', value: parsed | 0, line: startLine, col: startCol });
       } else {
         while (i < len && peek() >= '0' && peek() <= '9') numStr += advance();
-        tokens.push({ type: 'NUMBER', value: parseInt(numStr, 10) | 0, line: startLine, col: startCol });
+        if (i < len && /[a-zA-Z_]/.test(peek())) {
+          throw new SyntaxError(`Invalid trailing identifier after numeric literal '${numStr}' at ${startLine}:${startCol}`);
+        }
+        const parsed = parseInt(numStr, 10);
+        if (!Number.isSafeInteger(parsed) || parsed > 0xffffffff) {
+          throw new SyntaxError(`Numeric literal '${numStr}' exceeds 32-bit integer range at ${startLine}:${startCol}`);
+        }
+        tokens.push({ type: 'NUMBER', value: parsed | 0, line: startLine, col: startCol });
       }
       continue;
     }

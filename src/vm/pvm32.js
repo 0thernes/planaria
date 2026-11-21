@@ -22,7 +22,7 @@ import {
   signExt16,
   signExt21,
 } from '../compiler/isa.js';
-import { BUNDLE_SPECS, ORGAN_NAMES } from '../core/hbin.js';
+import { BUNDLE_SPECS, ORGAN_IDS, ORGAN_NAMES } from '../core/hbin.js';
 
 /** Minimal crisp 5x7 uppercase + digit + symbol bitmap font for HUD labels & numbers. */
 const FONT_5X7 = {
@@ -130,6 +130,7 @@ function bytesToWords(bytes) {
 
 export class PVM32 {
   constructor(seed = 0x1337c0de) {
+    this.initialSeed = seed >>> 0;
     this.ram = new Int32Array(RAM_WORDS);
     this.fb = new Uint32Array(FB_PIXELS); // RGBA32 little-endian for zero-copy ImageData!
     this.fbBytes = new Uint8ClampedArray(this.fb.buffer);
@@ -143,24 +144,25 @@ export class PVM32 {
 
     this.frameCount = 0;
     this.inputMask = 0x20; // bit 5 = autopilot enabled by default for instant live motion!
-    this.rngState = seed >>> 0;
+    this.rngState = this.initialSeed;
 
     this.decoded = null;
     this.bundleCode = new Array(BUNDLE_SPECS.length).fill(null);
+    this.bundleViable = new Array(BUNDLE_SPECS.length).fill(false);
     this.bundleSources = new Array(BUNDLE_SPECS.length).fill('MISSING');
 
     // Live execution & anastomosis telemetry
     this.lastFrameInsns = 0;
     this.totalInsns = 0;
-    this.lastFrameRoutes = []; // [{ organId, organName, requestedMaxS, resolvedBundle, resolvedStratum, source, insns }]
+    this.lastFrameRoutes = [];
     this.traps = 0;
     this.lastTrap = null;
     this.lastRegisters = new Int32Array(32);
     this.alive = false;
   }
 
-  /** Reset RAM, framebuffer, audio, and frame counter. */
-  resetState(seed = 0x1337c0de) {
+  /** Reset RAM, framebuffer, audio, and frame counter (preserving constructor seed by default). */
+  resetState(seed = this.initialSeed) {
     this.ram.fill(0);
     this.fb.fill(PALETTE_RGBA[0]);
     this.silenceVoices();
@@ -169,6 +171,9 @@ export class PVM32 {
     this.traps = 0;
     this.lastTrap = null;
     this.totalInsns = 0;
+    this.lastFrameInsns = 0;
+    this.lastFrameRoutes = [];
+    this.lastRegisters.fill(0);
   }
 
   silenceVoices() {
@@ -176,6 +181,8 @@ export class PVM32 {
       v.wave = 0;
       v.freqHz = 0;
       v.vol = 0;
+      v.detune = 0;
+      v.filter = 1800;
     }
   }
 
@@ -184,23 +191,33 @@ export class PVM32 {
    * WITHOUT clearing RAM or restarting execution!
    */
   loadDecoded(decoded, resetRam = false) {
+    const wasAlive = this.alive;
     if (resetRam) this.resetState();
     this.decoded = decoded;
-    this.alive = Boolean(decoded && decoded.bootable);
 
     for (let b = 0; b < BUNDLE_SPECS.length; b++) {
+      const spec = BUNDLE_SPECS[b];
       const bun = decoded?.bundles?.[b];
       if (bun && bun.viable && bun.data) {
-        this.bundleCode[b] = bytesToWords(bun.data);
+        this.bundleViable[b] = true;
+        // Bundle 6 (GENOME) holds non-executable UTF-8 JSON metadata — never load as bytecode!
+        this.bundleCode[b] = spec.organId === ORGAN_IDS.GENOME ? null : bytesToWords(bun.data);
         this.bundleSources[b] = bun.source;
       } else {
+        this.bundleViable[b] = false;
         this.bundleCode[b] = null;
         this.bundleSources[b] = 'MISSING';
       }
     }
+
+    this.alive = Boolean(decoded && decoded.bootable && this.bundleCode[0]);
     if (!this.alive) {
       this.silenceVoices();
       this.renderFlatline();
+    } else if (!wasAlive && !resetRam) {
+      // Clean resurrection from CELL DEATH: wipe red flatline screen & stale trap banner
+      this.fb.fill(PALETTE_RGBA[0]);
+      this.lastTrap = null;
     }
   }
 
@@ -219,23 +236,31 @@ export class PVM32 {
   }
 
   /**
-   * Anastomosis Organ Resolver (matches Lean 4 `resolveOrgan` specification!):
+   * Return all viable executable bundles for `organId` with `stratum <= maxStratum`,
+   * ordered by descending stratum (enables automatic fallback if a higher-stratum organ traps!).
+   * Forbids re-entering KERNEL or executing non-code GENOME bundles.
+   */
+  resolveOrganCandidates(organId, maxStratum) {
+    if (organId === ORGAN_IDS.KERNEL || organId === ORGAN_IDS.GENOME) return [];
+    const cands = [];
+    for (let b = 0; b < BUNDLE_SPECS.length; b++) {
+      const spec = BUNDLE_SPECS[b];
+      if (spec.organId === organId && spec.stratum <= maxStratum && this.bundleCode[b]) {
+        cands.push(b);
+      }
+    }
+    cands.sort((a, b) => BUNDLE_SPECS[b].stratum - BUNDLE_SPECS[a].stratum);
+    return cands;
+  }
+
+  /**
+   * Anastomosis Organ Resolver (matches Lean 4 `resolveOrgan` specification):
    * Given an organId and maxStratum, selects the highest viable bundle for that organ
    * with stratum <= maxStratum.
    */
   resolveOrganBundle(organId, maxStratum) {
-    let bestId = -1;
-    let bestStratum = -1;
-    for (let b = 0; b < BUNDLE_SPECS.length; b++) {
-      const spec = BUNDLE_SPECS[b];
-      if (spec.organId === organId && spec.stratum <= maxStratum && this.bundleCode[b]) {
-        if (spec.stratum > bestStratum) {
-          bestStratum = spec.stratum;
-          bestId = b;
-        }
-      }
-    }
-    return bestId;
+    const cands = this.resolveOrganCandidates(organId, maxStratum);
+    return cands.length > 0 ? cands[0] : -1;
   }
 
   /** Execute one complete 60 Hz frame starting at Bundle 0 (S0_STEM_NUCLEUS). */
@@ -251,7 +276,7 @@ export class PVM32 {
 
     // Track whether any voice was written this frame; mute stale voices if audio organ dies
     const voiceTouched = [false, false, false, false];
-    const budget = { remaining: maxInsnBudget, voiceTouched };
+    const budget = { remaining: maxInsnBudget, voiceTouched, childInsns: 0 };
 
     this.lastFrameRoutes.push({
       organId: 0,
@@ -261,12 +286,15 @@ export class PVM32 {
       resolvedStratum: 0,
       source: this.bundleSources[0],
       insns: 0,
+      selfInsns: 0,
     });
     const rootRoute = this.lastFrameRoutes[0];
     const startRem = budget.remaining;
 
     this._execBundle(0, budget, 0);
-    rootRoute.insns = startRem - budget.remaining;
+    const totalUsed = startRem - budget.remaining;
+    rootRoute.insns = totalUsed;
+    rootRoute.selfInsns = Math.max(0, totalUsed - budget.childInsns);
 
     // Mute any voice not touched during this frame (prevents stuck notes when AUDIO organ amputated)
     for (let ch = 0; ch < 4; ch++) {
@@ -277,7 +305,7 @@ export class PVM32 {
     }
 
     this.frameCount++;
-    this.lastFrameInsns = maxInsnBudget - budget.remaining;
+    this.lastFrameInsns = totalUsed;
     this.totalInsns += this.lastFrameInsns;
 
     return {
@@ -291,14 +319,25 @@ export class PVM32 {
 
   _execBundle(bundleId, budget, depth) {
     const code = this.bundleCode[bundleId];
-    if (!code || depth > 4) return false;
+    if (!code) return false;
+    if (depth > 4) {
+      this.traps++;
+      this.lastTrap = `RECURSION_LIMIT@B${bundleId}`;
+      return false;
+    }
 
     const regs = new Int32Array(32);
-    const callStack = [];
+    const callStack = []; // { pc, regs: Int32Array(32) } — windowed register preservation!
     let pc = 0;
     const len = code.length;
 
-    while (pc >= 0 && pc < len && budget.remaining > 0) {
+    while (budget.remaining > 0) {
+      if (pc < 0 || pc >= len) {
+        this.traps++;
+        this.lastTrap = `PC_OOB@B${bundleId}:PC${pc}`;
+        this.lastRegisters.set(regs);
+        return false;
+      }
       budget.remaining--;
       const word = code[pc++];
       const op = word & 0x3f;
@@ -312,13 +351,19 @@ export class PVM32 {
         case OP.HALT:
           this.lastRegisters.set(regs);
           return true;
-        case OP.RET:
+        case OP.RET: {
           if (callStack.length === 0) {
             this.lastRegisters.set(regs);
             return true;
           }
-          pc = callStack.pop();
+          const retVal = regs[1];
+          const frame = callStack.pop();
+          regs.set(frame.regs);
+          regs[1] = retVal;
+          regs[0] = 0;
+          pc = frame.pc;
           break;
+        }
         case OP.ADD: regs[rd] = (regs[rs1] + regs[rs2]) | 0; break;
         case OP.SUB: regs[rd] = (regs[rs1] - regs[rs2]) | 0; break;
         case OP.MUL: regs[rd] = Math.imul(regs[rs1], regs[rs2]) | 0; break;
@@ -375,11 +420,12 @@ export class PVM32 {
         case OP.CALL: {
           const target = signExt21((word >>> 11) & 0x1fffff);
           if (callStack.length < 32) {
-            callStack.push(pc);
+            callStack.push({ pc, regs: new Int32Array(regs) });
             pc = target;
           } else {
             this.traps++;
             this.lastTrap = `STACK_OVERFLOW@B${bundleId}`;
+            this.lastRegisters.set(regs);
             return false;
           }
           break;
@@ -387,18 +433,35 @@ export class PVM32 {
 
         case OP.SYSCALL: {
           const scId = signExt16((word >>> 16) & 0xffff);
-          regs[rd] = this._syscall(scId, regs, budget.voiceTouched) | 0;
+          const scRes = this._syscall(scId, regs, budget.voiceTouched, bundleId);
+          if (scRes === null) {
+            this.lastRegisters.set(regs);
+            return false;
+          }
+          regs[rd] = scRes | 0;
           break;
         }
 
         case OP.ORGAN_CALL: {
           const organId = rs1;
           const maxStratum = signExt16((word >>> 16) & 0xffff);
-          const resolvedId = this.resolveOrganBundle(organId, maxStratum);
-          if (resolvedId >= 0) {
-            const before = budget.remaining;
-            const ok = this._execBundle(resolvedId, budget, depth + 1);
-            const used = before - budget.remaining;
+          const candidates = this.resolveOrganCandidates(organId, maxStratum);
+          let executedOk = false;
+
+          for (const resolvedId of candidates) {
+            // Reserve headroom for Kernel fallback & sibling organs so a runaway organ cannot starve B0
+            const reserve = depth === 0 ? Math.min(2000, Math.floor(budget.remaining / 5)) : 0;
+            const childCap = Math.max(1, budget.remaining - reserve);
+            const childBudget = {
+              remaining: childCap,
+              voiceTouched: budget.voiceTouched,
+              childInsns: 0,
+            };
+            const ok = this._execBundle(resolvedId, childBudget, depth + 1);
+            const used = childCap - childBudget.remaining;
+            budget.remaining = Math.max(0, budget.remaining - used);
+            budget.childInsns += used;
+
             this.lastFrameRoutes.push({
               organId,
               organName: ORGAN_NAMES[organId] || `ORG_${organId}`,
@@ -407,19 +470,32 @@ export class PVM32 {
               resolvedStratum: BUNDLE_SPECS[resolvedId].stratum,
               source: this.bundleSources[resolvedId],
               insns: used,
+              trapped: !ok,
             });
-            regs[rd] = ok ? 1 : 0;
-          } else {
-            this.lastFrameRoutes.push({
-              organId,
-              organName: ORGAN_NAMES[organId] || `ORG_${organId}`,
-              requestedMaxS: maxStratum,
-              resolvedBundle: -1,
-              resolvedStratum: -1,
-              source: 'FALLBACK_STUB',
-              insns: 0,
-            });
+
+            if (ok) {
+              executedOk = true;
+              break;
+            }
+            // If higher stratum trapped (e.g. corrupt/runaway S2), anastomose cleanly down to S1!
+          }
+
+          if (!executedOk) {
+            if (candidates.length === 0) {
+              this.lastFrameRoutes.push({
+                organId,
+                organName: ORGAN_NAMES[organId] || `ORG_${organId}`,
+                requestedMaxS: maxStratum,
+                resolvedBundle: -1,
+                resolvedStratum: -1,
+                source: 'FALLBACK_STUB',
+                insns: 0,
+                trapped: false,
+              });
+            }
             regs[rd] = 0;
+          } else {
+            regs[rd] = 1;
           }
           break;
         }
@@ -428,21 +504,21 @@ export class PVM32 {
           // Invalid opcode (e.g., poisoned cell when Immune System is disabled!)
           this.traps++;
           this.lastTrap = `ILLEGAL_OP_${op}@B${bundleId}:PC${pc - 1}`;
+          this.lastRegisters.set(regs);
           return false;
       }
 
       regs[0] = 0; // r0 hardwired zero
     }
 
-    if (budget.remaining <= 0) {
-      this.traps++;
-      this.lastTrap = `BUDGET_EXCEEDED@B${bundleId}`;
-    }
+    // Budget exhausted cleanly — trap once on the offending bundle and return false
+    this.traps++;
+    this.lastTrap = `BUDGET_EXCEEDED@B${bundleId}`;
     this.lastRegisters.set(regs);
-    return true;
+    return false;
   }
 
-  _syscall(id, regs, voiceTouched) {
+  _syscall(id, regs, voiceTouched, bundleId = 0) {
     const a1 = regs[1], a2 = regs[2], a3 = regs[3], a4 = regs[4], a5 = regs[5], a6 = regs[6], a7 = regs[7];
     switch (id) {
       case SYSCALL.CLEAR:
@@ -496,21 +572,21 @@ export class PVM32 {
       case SYSCALL.RAND:
         return this.nextRand(a1);
       case SYSCALL.VOICE: {
-        const ch = a1 & 3;
-        const v = this.voices[ch];
-        v.wave = Math.max(0, Math.min(5, a2));
-        v.freqHz = Math.max(0, Math.min(8000, a3 / 16));
-        v.vol = Math.max(0, Math.min(100, a4)) / 100;
-        v.detune = a5;
-        v.filter = Math.max(120, Math.min(12000, a6 || 2400));
-        voiceTouched[ch] = true;
+        if (a1 < 0 || a1 > 3) return 0;
+        const v = this.voices[a1];
+        v.wave = Math.max(0, Math.min(5, a2 | 0));
+        v.freqHz = Math.max(0, Math.min(8000, (a3 | 0) / 16));
+        v.vol = Math.max(0, Math.min(100, a4 | 0)) / 100;
+        v.detune = Math.max(-2400, Math.min(2400, a5 | 0));
+        v.filter = a6 <= 0 ? 2400 : Math.max(120, Math.min(12000, a6 | 0));
+        voiceTouched[a1] = true;
         return 0;
       }
       case SYSCALL.HEALTH: {
         const maxS = Math.max(0, this.decoded?.maxViableStratum ?? 0);
         let mask = 0;
         for (let b = 0; b < BUNDLE_SPECS.length; b++) {
-          if (this.bundleCode[b]) mask |= 1 << b;
+          if (this.bundleViable[b]) mask |= 1 << b;
         }
         const xeno = this.decoded?.xenografts?.length ?? 0;
         return (maxS & 0xf) | ((mask & 0xff) << 4) | ((xeno & 0xf) << 12);
@@ -518,9 +594,8 @@ export class PVM32 {
       case SYSCALL.INPUT:
         return this.inputMask;
       case SYSCALL.FRAME:
-        return this.frameCount | 0;
+        return (this.frameCount & 0x7fffffff) | 0;
       case SYSCALL.GLOW: {
-        // Fast phosphor persistence decay in-place
         const decay = Math.max(0, Math.min(250, a1));
         const b = this.fbBytes;
         for (let i = 0; i < b.length; i += 4) {
@@ -531,16 +606,18 @@ export class PVM32 {
         return 0;
       }
       case SYSCALL.DIST:
-        return Math.round(Math.hypot(a1, a2)) | 0;
+        return Math.min(2147483647, Math.round(Math.hypot(a1, a2))) | 0;
       case SYSCALL.ABS:
-        return a1 < 0 ? -a1 : a1;
+        return a1 === -2147483648 ? 2147483647 : Math.abs(a1) | 0;
       case SYSCALL.BUNDLE_OK:
-        return a1 >= 0 && a1 < this.bundleCode.length && this.bundleCode[a1] ? 1 : 0;
+        return a1 >= 0 && a1 < this.bundleViable.length && this.bundleViable[a1] ? 1 : 0;
       case SYSCALL.SILENCE:
         this.silenceVoices();
         return 0;
       default:
-        return 0;
+        this.traps++;
+        this.lastTrap = `ILLEGAL_SYSCALL_${id}@B${bundleId}`;
+        return null;
     }
   }
 
@@ -550,30 +627,71 @@ export class PVM32 {
     }
   }
 
+  _hline(x0, x1, y, col) {
+    if (y < 0 || y >= FB_HEIGHT) return;
+    const left = Math.max(0, Math.min(x0, x1));
+    const right = Math.min(FB_WIDTH - 1, Math.max(x0, x1));
+    if (left > right) return;
+    const row = y * FB_WIDTH;
+    for (let x = left; x <= right; x++) {
+      this.fb[row + x] = col;
+    }
+  }
+
   _line(x0, y0, x1, y1, col) {
-    x0 |= 0; y0 |= 0; x1 |= 0; y1 |= 0;
-    let dx = Math.abs(x1 - x0);
-    let dy = -Math.abs(y1 - y0);
-    const sx = x0 < x1 ? 1 : -1;
-    const sy = y0 < y1 ? 1 : -1;
+    // Liang-Barsky clip to [0..FB_WIDTH-1] x [0..FB_HEIGHT-1] (prevents signed 32-bit overflow & guard drops!)
+    let t0 = 0, t1 = 1;
+    const dxF = x1 - x0;
+    const dyF = y1 - y0;
+    const checks = [
+      [-dxF, x0],
+      [dxF, (FB_WIDTH - 1) - x0],
+      [-dyF, y0],
+      [dyF, (FB_HEIGHT - 1) - y0],
+    ];
+    for (let i = 0; i < 4; i++) {
+      const p = checks[i][0];
+      const q = checks[i][1];
+      if (p === 0) {
+        if (q < 0) return;
+      } else {
+        const t = q / p;
+        if (p < 0) {
+          if (t > t1) return;
+          if (t > t0) t0 = t;
+        } else {
+          if (t < t0) return;
+          if (t < t1) t1 = t;
+        }
+      }
+    }
+    let cx0 = Math.round(x0 + t0 * dxF);
+    let cy0 = Math.round(y0 + t0 * dyF);
+    const cx1 = Math.round(x0 + t1 * dxF);
+    const cy1 = Math.round(y0 + t1 * dyF);
+
+    let dx = Math.abs(cx1 - cx0);
+    let dy = -Math.abs(cy1 - cy0);
+    const sx = cx0 < cx1 ? 1 : -1;
+    const sy = cy0 < cy1 ? 1 : -1;
     let err = dx + dy;
-    let guard = 320;
+    let guard = FB_WIDTH + FB_HEIGHT + 4;
     while (guard-- > 0) {
-      this._plot(x0, y0, col);
-      if (x0 === x1 && y0 === y1) break;
-      const e2 = err << 1;
-      if (e2 >= dy) { err += dy; x0 += sx; }
-      if (e2 <= dx) { err += dx; y0 += sy; }
+      this._plot(cx0, cy0, col);
+      if (cx0 === cx1 && cy0 === cy1) break;
+      const e2 = err * 2;
+      if (e2 >= dy) { err += dy; cx0 += sx; }
+      if (e2 <= dx) { err += dx; cy0 += sy; }
     }
   }
 
   _rect(x, y, w, h, col, filled) {
     if (w <= 0 || h <= 0) return;
     if (filled) {
-      const x0 = Math.max(0, x | 0);
-      const y0 = Math.max(0, y | 0);
-      const x1 = Math.min(FB_WIDTH, (x + w) | 0);
-      const y1 = Math.min(FB_HEIGHT, (y + h) | 0);
+      const x0 = Math.max(0, x);
+      const y0 = Math.max(0, y);
+      const x1 = Math.min(FB_WIDTH, x + w);
+      const y1 = Math.min(FB_HEIGHT, y + h);
       for (let yy = y0; yy < y1; yy++) {
         const row = yy * FB_WIDTH;
         for (let xx = x0; xx < x1; xx++) {
@@ -589,15 +707,16 @@ export class PVM32 {
   }
 
   _circle(cx, cy, r, col, filled) {
-    if (r <= 0) { this._plot(cx, cy, col); return; }
+    if (r < 0) return;
+    if (r === 0) { this._plot(cx, cy, col); return; }
     if (r > 90) r = 90;
     let x = r, y = 0, err = 1 - r;
     while (x >= y) {
       if (filled) {
-        this._line(cx - x, cy + y, cx + x, cy + y, col);
-        this._line(cx - x, cy - y, cx + x, cy - y, col);
-        this._line(cx - y, cy + x, cx + y, cy + x, col);
-        this._line(cx - y, cy - x, cx + y, cy - x, col);
+        this._hline(cx - x, cx + x, cy + y, col);
+        this._hline(cx - x, cx + x, cy - y, col);
+        this._hline(cx - y, cx + y, cy + x, col);
+        this._hline(cx - y, cx + y, cy - x, col);
       } else {
         this._plot(cx + x, cy + y, col); this._plot(cx - x, cy + y, col);
         this._plot(cx + x, cy - y, col); this._plot(cx - x, cy - y, col);
@@ -638,15 +757,21 @@ export class PVM32 {
     this._drawText(16, 72, 'STRATUM 0 LOST', PALETTE_RGBA[14]);
   }
 
-  /** Compute simple perceptual checksum of framebuffer to verify live graphical output in tests. */
+  /** Compute perceptual checksum across ALL 3 RGB channels (excluding background & decayed black). */
   framebufferStats() {
     let nonBg = 0;
     let hash = 2166136261 >>> 0;
-    const bg = PALETTE_RGBA[0];
-    for (let i = 0; i < this.fb.length; i++) {
-      const px = this.fb[i];
-      if (px !== bg) nonBg++;
-      hash ^= px & 0xff;
+    const b = this.fbBytes;
+    for (let i = 0; i < b.length; i += 4) {
+      const r = b[i];
+      const g = b[i + 1];
+      const bl = b[i + 2];
+      if (r > 6 || g > 10 || bl > 14) nonBg++;
+      hash ^= r;
+      hash = Math.imul(hash, 16777619) >>> 0;
+      hash ^= g;
+      hash = Math.imul(hash, 16777619) >>> 0;
+      hash ^= bl;
       hash = Math.imul(hash, 16777619) >>> 0;
     }
     return { nonBgPixels: nonBg, hashHex: hash.toString(16).padStart(8, '0') };

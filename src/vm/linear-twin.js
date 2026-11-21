@@ -10,7 +10,7 @@
  * Linear Control Twin and the PLANARIA Holographic Binary simultaneously.
  */
 
-import { sha256, toHex } from '../core/sha256.js';
+import { sha256, toBytes, toHex } from '../core/sha256.js';
 import { TOTAL_HBIN_BYTES, BUNDLE_SPECS } from '../core/hbin.js';
 
 const LINEAR_MAGIC = new Uint8Array([0x4c, 0x49, 0x4e, 0x42, 0x49, 0x4e, 0x30, 0x31]); // "LINBIN01"
@@ -27,11 +27,15 @@ export function encodeLinearBinary(bundles, name = 'LINEAR') {
   let cursor = HEADER_SIZE;
   for (let b = 0; b < 6; b++) {
     const data = bundles instanceof Map ? bundles.get(b) : bundles[b];
-    const len = data ? data.length : 0;
+    const bytes = data ? toBytes(data) : new Uint8Array(0);
+    const len = bytes.length;
+    if (cursor + len + 32 > TOTAL_HBIN_BYTES) {
+      throw new RangeError(`Linear binary payload exceeds ${TOTAL_HBIN_BYTES - 32}B capacity at section ${b}`);
+    }
     dv.setUint32(12 + b * 8, cursor, true);     // section offset
     dv.setUint32(16 + b * 8, len, true);        // section length
     if (len > 0) {
-      out.set(data, cursor);
+      out.set(bytes, cursor);
       cursor += len;
     }
   }
@@ -51,12 +55,12 @@ export function encodeLinearBinary(bundles, name = 'LINEAR') {
 
 /**
  * Standard OS-style Linear Binary Loader:
- * Validates header magic at byte 0, section bounds, and code integrity digest.
+ * Validates header magic at byte 0, section bounds, non-overlap, and code integrity digest.
  * Any header corruption, truncation, unaligned shift, or single bit-flip in active code
  * triggers an immediate fatal loader fault (matching real ELF/PE/WASM loaders).
  */
 export function decodeLinearBinary(rawBytes) {
-  const buf = rawBytes instanceof Uint8Array ? rawBytes : new Uint8Array(rawBytes);
+  const buf = toBytes(rawBytes);
 
   if (buf.length < HEADER_SIZE) {
     return {
@@ -106,24 +110,26 @@ export function decodeLinearBinary(rawBytes) {
   }
 
   const bundles = [];
+  let prevEnd = HEADER_SIZE;
   for (let b = 0; b < 6; b++) {
     const off = dv.getUint32(12 + b * 8, true);
     const len = dv.getUint32(16 + b * 8, true);
-    if (off + len > activeEnd) {
+    if (off < HEADER_SIZE || off < prevEnd || off + len > activeEnd) {
       return {
         bootable: false,
         fault: 'ERR_SECTION_OUT_OF_BOUNDS',
-        detail: `Section ${b} out of bounds`,
+        detail: `Section ${b} out of bounds or overlapping (off=${off}, len=${len})`,
         bundles: [],
       };
     }
+    prevEnd = off + len;
     bundles.push({
       id: b,
       name: BUNDLE_SPECS[b].name,
       organId: BUNDLE_SPECS[b].organId,
       stratum: BUNDLE_SPECS[b].stratum,
       viable: true,
-      data: buf.subarray(off, off + len),
+      data: buf.slice(off, off + len),
       source: 'LINEAR',
     });
   }

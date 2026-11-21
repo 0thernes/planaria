@@ -16,11 +16,15 @@
  *   original payload with 100% mathematical certainty.
  */
 
-import { gfMul, gfInv } from './gf256.js';
+import { GF_MUL_TABLE, gfMul, gfInv } from './gf256.js';
+import { toBytes } from './sha256.js';
 
 /** Compute single Cauchy entry C(x_i, y_j) = (x_i ^ y_j)^(-1) in GF(2^8). */
 export function cauchyEntry(xVal, yVal) {
-  const diff = (xVal ^ yVal) & 0xff;
+  if (!Number.isInteger(xVal) || xVal < 0 || xVal > 255 || !Number.isInteger(yVal) || yVal < 0 || yVal > 255) {
+    throw new RangeError(`Cauchy coordinates must be integers in 0..255, got x=${xVal}, y=${yVal}`);
+  }
+  const diff = xVal ^ yVal;
   if (diff === 0) {
     throw new RangeError(`Cauchy coordinate collision: x=${xVal}, y=${yVal}`);
   }
@@ -34,17 +38,19 @@ export function cauchyEntry(xVal, yVal) {
  * Returns array of n objects: { evalX: k + i, shard: Uint8Array(shardSize) }
  */
 export function cauchyEncode(payload, k, n, shardSize) {
-  if (k < 1 || n < k || k + n > 256) {
-    throw new RangeError(`Invalid Cauchy MDS parameters: k=${k}, n=${n}`);
+  const srcBytes = toBytes(payload);
+  if (!Number.isInteger(k) || !Number.isInteger(n) || !Number.isInteger(shardSize) ||
+      k < 1 || n < k || k + n > 256 || shardSize < 1) {
+    throw new RangeError(`Invalid Cauchy MDS parameters: k=${k}, n=${n}, shardSize=${shardSize}`);
   }
   const capacity = k * shardSize;
-  if (payload.length > capacity) {
-    throw new RangeError(`Payload (${payload.length}B) exceeds k*shardSize (${capacity}B)`);
+  if (srcBytes.length > capacity) {
+    throw new RangeError(`Payload (${srcBytes.length}B) exceeds k*shardSize (${capacity}B)`);
   }
 
   // Partition payload into k padded source chunks D_0..D_{k-1}
   const padded = new Uint8Array(capacity);
-  padded.set(payload, 0);
+  padded.set(srcBytes, 0);
 
   const cells = new Array(n);
   for (let i = 0; i < n; i++) {
@@ -52,12 +58,10 @@ export function cauchyEncode(payload, k, n, shardSize) {
     const shard = new Uint8Array(shardSize);
     for (let j = 0; j < k; j++) {
       const c = cauchyEntry(evalX, j);
+      const cRow = c << 8;
       const srcOffset = j * shardSize;
       for (let b = 0; b < shardSize; b++) {
-        const val = padded[srcOffset + b];
-        if (val !== 0) {
-          shard[b] ^= gfMul(c, val);
-        }
+        shard[b] ^= GF_MUL_TABLE[cRow | padded[srcOffset + b]];
       }
     }
     cells[i] = { evalX, shard };
@@ -71,7 +75,14 @@ export function cauchyEncode(payload, k, n, shardSize) {
  * Returns flat inverse Uint8Array(k * k) or null if singular.
  */
 export function invertMatrixGF256(mat, k) {
-  const A = new Uint8Array(mat);
+  if (!Number.isInteger(k) || k < 1) {
+    throw new RangeError(`Matrix dimension k must be a positive integer, got ${k}`);
+  }
+  const mBytes = toBytes(mat);
+  if (mBytes.length !== k * k) {
+    throw new RangeError(`Expected ${k * k}-byte matrix for k=${k}, got ${mBytes.length}`);
+  }
+  const A = new Uint8Array(mBytes);
   const Inv = new Uint8Array(k * k);
   for (let i = 0; i < k; i++) Inv[i * k + i] = 1;
 
@@ -131,13 +142,27 @@ export function invertMatrixGF256(mat, k) {
  * Returns { ok: true, data: Uint8Array(origLen), rankUsed: k } or { ok: false, reason }
  */
 export function cauchyDecode(cells, k, shardSize, origLen) {
-  // Deduplicate by evalX and validate disjointness from Y = {0..k-1}
+  if (!Number.isInteger(k) || k < 1 || k >= 256) {
+    return { ok: false, reason: 'invalid_k', rankFound: 0, rankNeeded: k };
+  }
+  if (!Number.isInteger(shardSize) || shardSize < 1) {
+    return { ok: false, reason: 'invalid_shard_size', rankFound: 0, rankNeeded: k };
+  }
+  const maxLen = k * shardSize;
+  if (!Number.isInteger(origLen) || origLen < 0 || origLen > maxLen) {
+    return { ok: false, reason: 'invalid_orig_len', rankFound: 0, rankNeeded: k };
+  }
+  if (!Array.isArray(cells)) {
+    return { ok: false, reason: 'invalid_cells', rankFound: 0, rankNeeded: k };
+  }
+
+  // Deduplicate by exact integer evalX and validate disjointness from Y = {0..k-1}
   const unique = [];
   const seen = new Set();
   for (const cell of cells) {
-    if (cell.evalX < k || cell.evalX > 255) continue;
+    if (!cell || !Number.isInteger(cell.evalX) || cell.evalX < k || cell.evalX > 255) continue;
     if (seen.has(cell.evalX)) continue;
-    if (!cell.shard || cell.shard.length !== shardSize) continue;
+    if (!(cell.shard instanceof Uint8Array) || cell.shard.length !== shardSize) continue;
     seen.add(cell.evalX);
     unique.push(cell);
     if (unique.length === k) break;
@@ -162,26 +187,23 @@ export function cauchyDecode(cells, k, shardSize, origLen) {
   }
 
   // Reconstruct k source blocks: D_j = sum_{r=0}^{k-1} Minv[j, r] * P_r
-  const full = new Uint8Array(k * shardSize);
+  const full = new Uint8Array(maxLen);
   for (let j = 0; j < k; j++) {
     const dstOffset = j * shardSize;
     for (let r = 0; r < k; r++) {
       const coeff = Minv[j * k + r];
       if (coeff === 0) continue;
+      const cRow = coeff << 8;
       const src = unique[r].shard;
       for (let b = 0; b < shardSize; b++) {
-        const val = src[b];
-        if (val !== 0) {
-          full[dstOffset + b] ^= gfMul(coeff, val);
-        }
+        full[dstOffset + b] ^= GF_MUL_TABLE[cRow | src[b]];
       }
     }
   }
 
-  const clampedLen = Math.min(origLen, full.length);
   return {
     ok: true,
-    data: full.subarray(0, clampedLen),
+    data: full.slice(0, origLen),
     rankUsed: k,
   };
 }

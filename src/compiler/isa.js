@@ -44,7 +44,7 @@ export const OP = {
   JMP: 28,
   CALL: 29,
   // Syscall & Anastomosis Organ Dispatch
-  SYSCALL: 30,     // rd = dest reg for return value; imm16 = syscall ID; args in r1..r6
+  SYSCALL: 30,     // rd = dest reg for return value; imm16 = syscall ID; args in r1..r7
   ORGAN_CALL: 31,  // rd = return (1=executed, 0=fallback/missing); rs1 = organId; imm16 = maxStratum
 };
 
@@ -96,17 +96,42 @@ export const SYSCALL_BY_NAME = {
   silence: { id: SYSCALL.SILENCE, args: 0 },
 };
 
-/** Pack up to 4 ASCII characters into a signed 32-bit int for label(). */
+/** Pack up to 4 printable ASCII characters into a signed 32-bit int for label(). */
 export function pack4(str) {
+  if (typeof str !== 'string') {
+    throw new TypeError('pack4 expects a string');
+  }
+  if (str.length > 4) {
+    throw new RangeError(`pack4 string "${str}" exceeds 4-character limit (${str.length} chars)`);
+  }
   let v = 0;
-  for (let i = 0; i < 4; i++) {
-    const ch = i < str.length ? str.charCodeAt(i) & 0x7f : 0;
-    v |= ch << (i * 8);
+  for (let i = 0; i < str.length; i++) {
+    const code = str.charCodeAt(i);
+    if (code > 0x7f) {
+      throw new RangeError(`pack4 character '${str[i]}' (0x${code.toString(16)}) is non-ASCII`);
+    }
+    v |= code << (i * 8);
   }
   return v | 0;
 }
 
+function assertReg(r, label) {
+  if (!Number.isInteger(r) || r < 0 || r > 31) {
+    throw new RangeError(`Invalid register ${label}=${r} (expected integer 0..31)`);
+  }
+}
+
+function assertOp(op) {
+  if (!Number.isInteger(op) || op < 0 || op > 63) {
+    throw new RangeError(`Invalid opcode ${op} (expected integer 0..63)`);
+  }
+}
+
 export function encodeR(op, rd, rs1, rs2) {
+  assertOp(op);
+  assertReg(rd, 'rd');
+  assertReg(rs1, 'rs1');
+  assertReg(rs2, 'rs2');
   return (
     (op & 0x3f) |
     ((rd & 0x1f) << 6) |
@@ -116,6 +141,14 @@ export function encodeR(op, rd, rs1, rs2) {
 }
 
 export function encodeI(op, rd, rs1, imm16) {
+  assertOp(op);
+  assertReg(rd, 'rd');
+  assertReg(rs1, 'rs1');
+  const minImm = op === OP.LUI ? 0 : -32768;
+  const maxImm = op === OP.LUI ? 65535 : 32767;
+  if (!Number.isInteger(imm16) || imm16 < minImm || imm16 > maxImm) {
+    throw new RangeError(`Immediate ${imm16} out of range [${minImm}..${maxImm}] for opcode ${op}`);
+  }
   return (
     (op & 0x3f) |
     ((rd & 0x1f) << 6) |
@@ -125,6 +158,12 @@ export function encodeI(op, rd, rs1, imm16) {
 }
 
 export function encodeB(op, rs1, rs2, rel16) {
+  assertOp(op);
+  assertReg(rs1, 'rs1');
+  assertReg(rs2, 'rs2');
+  if (!Number.isInteger(rel16) || rel16 < -32768 || rel16 > 32767) {
+    throw new RangeError(`Branch offset ${rel16} out of signed 16-bit range [-32768..32767]`);
+  }
   return (
     (op & 0x3f) |
     ((rs1 & 0x1f) << 6) |
@@ -134,6 +173,11 @@ export function encodeB(op, rs1, rs2, rel16) {
 }
 
 export function encodeJ(op, rd, imm21) {
+  assertOp(op);
+  assertReg(rd, 'rd');
+  if (!Number.isInteger(imm21) || imm21 < -1048576 || imm21 > 1048575) {
+    throw new RangeError(`Jump target ${imm21} out of signed 21-bit range [-1048576..1048575]`);
+  }
   return (
     (op & 0x3f) |
     ((rd & 0x1f) << 6) |

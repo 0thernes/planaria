@@ -1,46 +1,47 @@
 {
-  "schema": "PLANARIA-BENCHMARKS-1.0",
-  "generatedAt": "2026-11-21T09:23:48.809Z",
+  "schema": "PLANARIA-BENCHMARKS-1.1",
+  "generatedAt": "2026-11-21T13:12:59.163Z",
   "nodeVersion": "v25.8.2",
   "artifacts": [
     {
       "name": "QUANTUM_CHRONICLE",
       "bytes": 98304,
-      "lineageRootHex": "60a1bb8748538186e3f4d16fa61e4289",
-      "sha256Hex": "299827cdc11ff3848b738d7b47f5941fd6eabac101fafd9a169a227a61bd8af0",
-      "instructions": 418,
-      "codeBytes": 1672
+      "lineageRootHex": "09b9ce24a0a181f485406f2d5ad5324c",
+      "sha256Hex": "14844a15539ee678a35bb2c09ef6bf726c2c7a50f1ec16f4ed886b515c0a19ab",
+      "instructions": 426,
+      "codeBytes": 1704
     },
     {
       "name": "AEGIS_DRIFT",
       "bytes": 98304,
-      "lineageRootHex": "2ce3fb499c8f94c684a3fbfeb38496bf",
-      "sha256Hex": "462b56071e0f52b6fb28015d4f409af27f2c6e970b2d096e8a1f19b102c54fd0",
-      "instructions": 958,
-      "codeBytes": 3832
+      "lineageRootHex": "b0b2f1e397e21270977a2a5b7bfad758",
+      "sha256Hex": "011f93b8a735e6019d36a21225bc5711cc3304a69062fb32c48292f0b3b29a1f",
+      "instructions": 991,
+      "codeBytes": 3964
     },
     {
       "name": "SYNTH_REACTOR",
       "bytes": 98304,
-      "lineageRootHex": "3650bf9e153d0eb1314f64e9eca0c2f0",
-      "sha256Hex": "0d7dd32f971a7f979cec418703f7ffa2843205beb2d06efa67e5ae4214a50864",
-      "instructions": 621,
-      "codeBytes": 2484
+      "lineageRootHex": "c61ac049c1e5fa34eec90c7fec7f4b35",
+      "sha256Hex": "987d159ec31814398d2591a59b13f52363a8464d6602f82cb01762b3fbd60ab0",
+      "instructions": 645,
+      "codeBytes": 2580
     },
     {
       "name": "CIPHER_VAULT",
       "bytes": 98304,
-      "lineageRootHex": "38731bc0ca687abdce12c6bfa3437e1c",
-      "sha256Hex": "fd902cb1ab867dc0c4e1fbebb98f91c52e1f469e41144310a9ae2a1c97f70b56",
-      "instructions": 526,
-      "codeBytes": 2104
+      "lineageRootHex": "1abcda703778272dd61f7704b83844a4",
+      "sha256Hex": "09916c53c472866375a4bc3bca806fabbb97a53100845a39937eb0996a89f7bd",
+      "instructions": 534,
+      "codeBytes": 2136
     }
   ],
   "performance": {
-    "meanFullDecodeMs": 8.62,
-    "meanPvm32FrameMs": 0.083,
-    "effectiveFrameRateHeadroomFps": 12048,
-    "pvm32ThroughputMIPS": 28.35
+    "compileAll4SpeciesMs": 61.59,
+    "meanFullDecodeMs": 8.96,
+    "meanPvm32FrameMs": 0.082,
+    "effectiveFrameRateHeadroomFps": 12195,
+    "pvm32ThroughputMIPS": 27.02
   },
   "survivalCurve": [
     {
@@ -215,12 +216,12 @@
       "dropPct": 48,
       "survivingPct": 52,
       "linearSurvivalPct": 0,
-      "rsCliffSurvivalPct": 100,
+      "rsCliffSurvivalPct": 97.5,
       "planariaSurvivalPct": 100,
-      "meanCapabilityScore": 100,
+      "meanCapabilityScore": 99.4,
       "stratumDist": {
-        "s3": 40,
-        "s2": 0,
+        "s3": 39,
+        "s2": 1,
         "s1": 0,
         "s0": 0
       }
@@ -229,12 +230,12 @@
       "dropPct": 52,
       "survivingPct": 48,
       "linearSurvivalPct": 0,
-      "rsCliffSurvivalPct": 95,
+      "rsCliffSurvivalPct": 87.5,
       "planariaSurvivalPct": 100,
-      "meanCapabilityScore": 98.8,
+      "meanCapabilityScore": 96.9,
       "stratumDist": {
-        "s3": 38,
-        "s2": 2,
+        "s3": 35,
+        "s2": 5,
         "s1": 0,
         "s0": 0
       }
@@ -243,12 +244,12 @@
       "dropPct": 56,
       "survivingPct": 44,
       "linearSurvivalPct": 0,
-      "rsCliffSurvivalPct": 87.5,
+      "rsCliffSurvivalPct": 85,
       "planariaSurvivalPct": 100,
-      "meanCapabilityScore": 96.3,
+      "meanCapabilityScore": 95.6,
       "stratumDist": {
-        "s3": 34,
-        "s2": 6,
+        "s3": 33,
+        "s2": 7,
         "s1": 0,
         "s0": 0
       }
@@ -257,12 +258,12 @@
       "dropPct": 60,
       "survivingPct": 40,
       "linearSurvivalPct": 0,
-      "rsCliffSurvivalPct": 52.5,
+      "rsCliffSurvivalPct": 57.5,
       "planariaSurvivalPct": 100,
-      "meanCapabilityScore": 87.5,
+      "meanCapabilityScore": 88.8,
       "stratumDist": {
-        "s3": 20,
-        "s2": 20,
+        "s3": 22,
+        "s2": 18,
         "s1": 0,
         "s0": 0
       }
@@ -271,12 +272,12 @@
       "dropPct": 64,
       "survivingPct": 36,
       "linearSurvivalPct": 0,
-      "rsCliffSurvivalPct": 37.5,
+      "rsCliffSurvivalPct": 27.5,
       "planariaSurvivalPct": 100,
-      "meanCapabilityScore": 83.1,
+      "meanCapabilityScore": 80.6,
       "stratumDist": {
-        "s3": 13,
-        "s2": 27,
+        "s3": 9,
+        "s2": 31,
         "s1": 0,
         "s0": 0
       }
@@ -285,13 +286,13 @@
       "dropPct": 68,
       "survivingPct": 32,
       "linearSurvivalPct": 0,
-      "rsCliffSurvivalPct": 20,
+      "rsCliffSurvivalPct": 15,
       "planariaSurvivalPct": 100,
-      "meanCapabilityScore": 76.9,
+      "meanCapabilityScore": 76.3,
       "stratumDist": {
-        "s3": 5,
-        "s2": 33,
-        "s1": 2,
+        "s3": 3,
+        "s2": 36,
+        "s1": 1,
         "s0": 0
       }
     },
@@ -299,13 +300,13 @@
       "dropPct": 72,
       "survivingPct": 28,
       "linearSurvivalPct": 0,
-      "rsCliffSurvivalPct": 0,
+      "rsCliffSurvivalPct": 2.5,
       "planariaSurvivalPct": 100,
-      "meanCapabilityScore": 70,
+      "meanCapabilityScore": 72.5,
       "stratumDist": {
         "s3": 0,
-        "s2": 32,
-        "s1": 8,
+        "s2": 36,
+        "s1": 4,
         "s0": 0
       }
     },
@@ -315,11 +316,11 @@
       "linearSurvivalPct": 0,
       "rsCliffSurvivalPct": 0,
       "planariaSurvivalPct": 100,
-      "meanCapabilityScore": 63.1,
+      "meanCapabilityScore": 65.6,
       "stratumDist": {
         "s3": 0,
-        "s2": 21,
-        "s1": 19,
+        "s2": 25,
+        "s1": 15,
         "s0": 0
       }
     },
@@ -328,13 +329,13 @@
       "survivingPct": 20,
       "linearSurvivalPct": 0,
       "rsCliffSurvivalPct": 0,
-      "planariaSurvivalPct": 97.5,
-      "meanCapabilityScore": 54.4,
+      "planariaSurvivalPct": 95,
+      "meanCapabilityScore": 55.6,
       "stratumDist": {
         "s3": 0,
-        "s2": 10,
-        "s1": 28,
-        "s0": 1
+        "s2": 13,
+        "s1": 25,
+        "s0": 0
       }
     },
     {
@@ -342,12 +343,12 @@
       "survivingPct": 16,
       "linearSurvivalPct": 0,
       "rsCliffSurvivalPct": 0,
-      "planariaSurvivalPct": 97.5,
-      "meanCapabilityScore": 43.8,
+      "planariaSurvivalPct": 87.5,
+      "meanCapabilityScore": 39.4,
       "stratumDist": {
         "s3": 0,
-        "s2": 2,
-        "s1": 27,
+        "s2": 3,
+        "s1": 22,
         "s0": 10
       }
     },
@@ -357,11 +358,11 @@
       "linearSurvivalPct": 0,
       "rsCliffSurvivalPct": 0,
       "planariaSurvivalPct": 82.5,
-      "meanCapabilityScore": 30.6,
+      "meanCapabilityScore": 31.3,
       "stratumDist": {
         "s3": 0,
-        "s2": 0,
-        "s1": 16,
+        "s2": 1,
+        "s1": 15,
         "s0": 17
       }
     },
@@ -370,12 +371,12 @@
       "survivingPct": 8,
       "linearSurvivalPct": 0,
       "rsCliffSurvivalPct": 0,
-      "planariaSurvivalPct": 70,
-      "meanCapabilityScore": 21.9,
+      "planariaSurvivalPct": 65,
+      "meanCapabilityScore": 19.4,
       "stratumDist": {
         "s3": 0,
         "s2": 0,
-        "s1": 7,
+        "s1": 5,
         "s0": 21
       }
     },
@@ -384,13 +385,13 @@
       "survivingPct": 4,
       "linearSurvivalPct": 0,
       "rsCliffSurvivalPct": 0,
-      "planariaSurvivalPct": 37.5,
-      "meanCapabilityScore": 9.4,
+      "planariaSurvivalPct": 32.5,
+      "meanCapabilityScore": 8.1,
       "stratumDist": {
         "s3": 0,
         "s2": 0,
         "s1": 0,
-        "s0": 15
+        "s0": 13
       }
     }
   ],
@@ -509,35 +510,35 @@
       "trojansInjected": 1,
       "immuneOnQuarantined": 1,
       "immuneOnExactMatch": true,
-      "immuneOffB0CorruptedBytes": 415,
+      "immuneOffB0CorruptedBytes": 470,
       "immuneOffPoisoned": true
     },
     {
       "trojansInjected": 5,
       "immuneOnQuarantined": 5,
       "immuneOnExactMatch": true,
-      "immuneOffB0CorruptedBytes": 415,
+      "immuneOffB0CorruptedBytes": 471,
       "immuneOffPoisoned": true
     },
     {
       "trojansInjected": 20,
       "immuneOnQuarantined": 20,
       "immuneOnExactMatch": true,
-      "immuneOffB0CorruptedBytes": 415,
+      "immuneOffB0CorruptedBytes": 469,
       "immuneOffPoisoned": true
     },
     {
       "trojansInjected": 60,
       "immuneOnQuarantined": 60,
       "immuneOnExactMatch": true,
-      "immuneOffB0CorruptedBytes": 415,
+      "immuneOffB0CorruptedBytes": 472,
       "immuneOffPoisoned": true
     },
     {
       "trojansInjected": 192,
       "immuneOnQuarantined": 192,
       "immuneOnExactMatch": true,
-      "immuneOffB0CorruptedBytes": 415,
+      "immuneOffB0CorruptedBytes": 470,
       "immuneOffPoisoned": true
     }
   ],
@@ -549,7 +550,7 @@
       "rightBytes": 49152,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 23.98
+      "dualDecodeRegenMs": 21.07
     },
     {
       "cutByteOffset": 49153,
@@ -558,7 +559,7 @@
       "rightBytes": 49151,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 27.25
+      "dualDecodeRegenMs": 21.64
     },
     {
       "cutByteOffset": 49177,
@@ -567,7 +568,7 @@
       "rightBytes": 49127,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 19.15
+      "dualDecodeRegenMs": 24.53
     },
     {
       "cutByteOffset": 48701,
@@ -576,7 +577,7 @@
       "rightBytes": 49603,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 21.59
+      "dualDecodeRegenMs": 24.43
     },
     {
       "cutByteOffset": 49597,
@@ -585,7 +586,7 @@
       "rightBytes": 48707,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 33.72
+      "dualDecodeRegenMs": 27.06
     },
     {
       "cutByteOffset": 49000,
@@ -594,7 +595,7 @@
       "rightBytes": 49304,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 21.26
+      "dualDecodeRegenMs": 22.39
     }
   ],
   "xenograftMatrix": [

@@ -22,6 +22,7 @@ import { cauchyEncode, cauchyDecode } from './cauchy.js';
 import { rsArmorInterleaved, rsUnarmorInterleaved } from './rs.js';
 import {
   sha256,
+  toBytes,
   toHex,
   buildMerkleTree,
   getMerkleProof,
@@ -171,20 +172,24 @@ export function syncBitDistance(buf, offset) {
 }
 
 /**
- * Deterministic low-discrepancy physical cell ordering across the 192 slots.
- * Spreads every bundle's n_b cells uniformly across [0, 1) so ANY contiguous 50% slice
- * receives floor(n_b/2) or ceil(n_b/2) cells of EVERY bundle, guaranteeing 50/50 Mitosis.
+ * Deterministic exact-integer low-discrepancy physical cell ordering across the 192 slots.
+ * Uses exact scaled integer numerator posNum(b, i) = (14 * i + 2 * b + 1) * (480 / n_b)
+ * (representing pos = posNum / 6720 in (0, 1)) — eliminating all IEEE-754 tie-break ULP drift
+ * and matching Lean 4 MitosisBounds.lean bit-for-bit. Every bundle places exactly n_b / 2 cells
+ * strictly in the left half [0..95] and n_b / 2 strictly in the right half [96..191], with any
+ * contiguous 95-cell window retaining >= floor(n_b/2) - 1 > k_b cells across all 7 bundles.
  */
 function buildPlacementSchedule() {
   const entries = [];
   for (const spec of BUNDLE_SPECS) {
+    const scale = 480 / spec.n; // exact integers: 20 (n=24), 15 (n=32), 12 (n=40)
     for (let i = 0; i < spec.n; i++) {
-      const pos = (i + (spec.id + 0.5) / BUNDLE_SPECS.length) / spec.n;
-      entries.push({ pos, bundleId: spec.id, cellInBundle: i });
+      const posNum = (14 * i + 2 * spec.id + 1) * scale;
+      entries.push({ posNum, pos: posNum / 6720, bundleId: spec.id, cellInBundle: i });
     }
   }
   entries.sort((a, b) => {
-    if (a.pos !== b.pos) return a.pos - b.pos;
+    if (a.posNum !== b.posNum) return a.posNum - b.posNum;
     if (a.bundleId !== b.bundleId) return a.bundleId - b.bundleId;
     return a.cellInBundle - b.cellInBundle;
   });
@@ -242,7 +247,10 @@ function unpackHeader(src) {
  */
 export function encodeHbin(programSpec) {
   const name = programSpec.name || 'UNNAMED';
-  const speciesTag = computeSpeciesTag(name);
+  const speciesTag =
+    Number.isInteger(programSpec.speciesTag) && programSpec.speciesTag >= 0 && programSpec.speciesTag <= 0xffff
+      ? programSpec.speciesTag
+      : computeSpeciesTag(name);
 
   // Prepare raw payloads for bundles 0..5 first
   const rawPayloads = new Array(BUNDLE_SPECS.length);
@@ -252,7 +260,10 @@ export function encodeHbin(programSpec) {
     const data = programSpec.bundles instanceof Map
       ? programSpec.bundles.get(b)
       : programSpec.bundles[b];
-    const bytes = data instanceof Uint8Array ? data : new Uint8Array(0);
+    if (data != null && !(data instanceof Uint8Array)) {
+      throw new TypeError(`Bundle ${spec.name} payload must be a Uint8Array`);
+    }
+    const bytes = data || new Uint8Array(0);
     const maxCap = spec.k * CELL_PAYLOAD_SIZE;
     if (bytes.length > maxCap) {
       throw new RangeError(
@@ -268,7 +279,14 @@ export function encodeHbin(programSpec) {
     ? programSpec.bundles.get(6)
     : programSpec.bundles[6];
 
+  if (suppliedGenome != null && !(suppliedGenome instanceof Uint8Array)) {
+    throw new TypeError('Bundle S3_GENOME_LEDGER payload must be a Uint8Array');
+  }
   if (suppliedGenome && suppliedGenome.length > 0) {
+    const maxCap = BUNDLE_SPECS[6].k * CELL_PAYLOAD_SIZE;
+    if (suppliedGenome.length > maxCap) {
+      throw new RangeError(`Genome ledger (${suppliedGenome.length}B) exceeds ${maxCap}B`);
+    }
     rawPayloads[6] = suppliedGenome;
   } else {
     const genomeObj = {
@@ -382,78 +400,136 @@ export function encodeHbin(programSpec) {
  *   - disableImmuneSystem?: boolean (Falsification mode ONLY: bypasses Merkle quarantine to expose raw Cauchy poisoning!)
  */
 export function decodeHbin(rawBytes, options = {}) {
-  const buf = rawBytes instanceof Uint8Array ? rawBytes : new Uint8Array(rawBytes);
-  const pinnedRootHex = options.pinnedRootHex ? options.pinnedRootHex.toLowerCase() : null;
-  const allowXenograft = Boolean(options.allowXenograft);
+  const buf = toBytes(rawBytes);
+  const pinnedRootHex = options.pinnedRootHex ? String(options.pinnedRootHex).trim().toLowerCase() : null;
+  const requestedXenograft = Boolean(options.allowXenograft);
   const disableImmuneSystem = Boolean(options.disableImmuneSystem);
+  const maxInputBytes = Number.isInteger(options.maxInputBytes) && options.maxInputBytes > 0
+    ? options.maxInputBytes
+    : 8 * 1024 * 1024;
+  const maxSyncCandidates = Number.isInteger(options.maxSyncCandidates) && options.maxSyncCandidates > 0
+    ? options.maxSyncCandidates
+    : 16384;
+  const maxRsFailures = Number.isInteger(options.maxRsFailures) && options.maxRsFailures > 0
+    ? options.maxRsFailures
+    : 4096;
+
+  // Enforce host sovereignty on Xenografting: require pinnedRootHex unless explicitly opted into unpinned mode
+  const xenograftBlockedUnpinned = requestedXenograft && !pinnedRootHex && !options.allowUnpinnedXenograft;
+  const allowXenograft = requestedXenograft && !xenograftBlockedUnpinned;
 
   const harvested = [];
+  const harvestedOffsets = new Set();
+  const flywheelOffsets = new Set();
   let syncCandidates = 0;
   let rsFailedCells = 0;
   let rsRepairedCells = 0;
   let rsTotalByteErrorsFixed = 0;
   let unalignedRecoveries = 0;
+  let flywheelRecoveries = 0;
+  let truncatedByBudget = false;
 
-  // Step 1: Sliding-window fuzzy sync correlator across arbitrary byte alignment
-  let offset = 0;
-  const limit = buf.length - CELL_SIZE;
-  while (offset <= limit) {
-    const dist = syncBitDistance(buf, offset);
-    if (dist <= SYNC_MAX_BIT_ERRORS) {
-      syncCandidates++;
-      const block508 = buf.subarray(offset + 4, offset + CELL_SIZE);
-      const rsRes = rsUnarmorInterleaved(block508);
-      if (rsRes.ok) {
-        const body = rsRes.body;
-        const header = unpackHeader(body.subarray(0, CELL_HEADER_SIZE));
+  const scanLen = Math.min(buf.length, maxInputBytes);
+  if (buf.length > maxInputBytes) truncatedByBudget = true;
+  const limit = scanLen - CELL_SIZE;
 
-        // Basic structural sanity check on header fields
-        const validSpec =
-          header.version === HBIN_VERSION &&
-          header.bundleId < BUNDLE_SPECS.length &&
-          header.k >= 1 &&
-          header.n >= header.k &&
-          header.k + header.n <= 256 &&
-          header.evalX >= header.k &&
-          header.evalX < header.k + header.n &&
-          header.leafIdx < 256;
+  function tryHarvestAt(off, dist, fromFlywheel) {
+    if (off < 0 || off > limit || harvestedOffsets.has(off)) return null;
+    if (syncCandidates >= maxSyncCandidates || rsFailedCells >= maxRsFailures) {
+      truncatedByBudget = true;
+      return null;
+    }
+    syncCandidates++;
+    const block508 = buf.subarray(off + 4, off + CELL_SIZE);
+    const rsRes = rsUnarmorInterleaved(block508);
+    if (!rsRes.ok) {
+      rsFailedCells++;
+      return null;
+    }
+    const body = rsRes.body;
+    const header = unpackHeader(body.subarray(0, CELL_HEADER_SIZE));
+    const spec = BUNDLE_SPECS[header.bundleId];
+    const sched = header.leafIdx < TOTAL_CELLS ? PLACEMENT_SCHEDULE[header.leafIdx] : null;
 
-        if (validSpec) {
-          if (rsRes.errorsCorrected > 0) {
-            rsRepairedCells++;
-            rsTotalByteErrorsFixed += rsRes.errorsCorrected;
-          }
-          if (offset % CELL_SIZE !== 0) {
-            unalignedRecoveries++;
-          }
-          const commit348 = body.subarray(0, CELL_HEADER_SIZE + CELL_PAYLOAD_SIZE);
-          const payload = body.subarray(CELL_HEADER_SIZE, CELL_HEADER_SIZE + CELL_PAYLOAD_SIZE);
-          const merkleProof = body.subarray(CELL_HEADER_SIZE + CELL_PAYLOAD_SIZE, CELL_BODY_SIZE);
-          const impliedRoot = computeMerkleRootFromProof(commit348, header.leafIdx, merkleProof);
-          const impliedRootHex = toHex(impliedRoot);
+    // Strict structural validation against BUNDLE_SPECS and PLACEMENT_SCHEDULE
+    // (blocks 256-cell header-forgery Sybil inflation and invalid origLen)
+    const validSpec =
+      Boolean(spec && sched) &&
+      header.version === HBIN_VERSION &&
+      header.stratum === spec.stratum &&
+      header.organId === spec.organId &&
+      header.k === spec.k &&
+      header.n === spec.n &&
+      sched.bundleId === header.bundleId &&
+      header.evalX === spec.k + sched.cellInBundle &&
+      header.origLen <= spec.k * CELL_PAYLOAD_SIZE;
 
-          harvested.push({
-            byteOffset: offset,
-            syncBitErrors: dist,
-            rsErrorsFixed: rsRes.errorsCorrected,
-            header,
-            payload: new Uint8Array(payload),
-            merkleProof: new Uint8Array(merkleProof),
-            impliedRootHex,
-          });
-          // Advance past this validated cell
-          offset += CELL_SIZE;
-          continue;
+    if (!validSpec) {
+      rsFailedCells++;
+      return null;
+    }
+
+    const commit348 = body.subarray(0, CELL_HEADER_SIZE + CELL_PAYLOAD_SIZE);
+    const payload = body.subarray(CELL_HEADER_SIZE, CELL_HEADER_SIZE + CELL_PAYLOAD_SIZE);
+    const merkleProof = body.subarray(CELL_HEADER_SIZE + CELL_PAYLOAD_SIZE, CELL_BODY_SIZE);
+    const impliedRoot = computeMerkleRootFromProof(commit348, header.leafIdx, merkleProof);
+    const impliedRootHex = toHex(impliedRoot);
+
+    harvestedOffsets.add(off);
+    if (rsRes.errorsCorrected > 0) {
+      rsRepairedCells++;
+      rsTotalByteErrorsFixed += rsRes.errorsCorrected;
+    }
+    if (off % CELL_SIZE !== 0) {
+      unalignedRecoveries++;
+    }
+    if (fromFlywheel && dist > SYNC_MAX_BIT_ERRORS) {
+      flywheelRecoveries++;
+    }
+
+    const cellObj = {
+      byteOffset: off,
+      syncBitErrors: dist,
+      rsErrorsFixed: rsRes.errorsCorrected,
+      header,
+      payload: new Uint8Array(payload),
+      merkleProof: new Uint8Array(merkleProof),
+      impliedRootHex,
+    };
+    harvested.push(cellObj);
+
+    // CCSDS-style cell-cadence flywheel: once an authentic (or pinned) cell locks cadence,
+    // probe immediately adjacent +/- 512B slots even if their 4-byte sync word took a burst!
+    const cadenceTrusted = !pinnedRootHex || impliedRootHex === pinnedRootHex;
+    if (cadenceTrusted) {
+      if (off + CELL_SIZE <= limit && !harvestedOffsets.has(off + CELL_SIZE)) {
+        flywheelOffsets.add(off + CELL_SIZE);
+      }
+      if (off - CELL_SIZE >= 0 && !harvestedOffsets.has(off - CELL_SIZE)) {
+        const prevDist = syncBitDistance(buf, off - CELL_SIZE);
+        if (prevDist > SYNC_MAX_BIT_ERRORS) {
+          tryHarvestAt(off - CELL_SIZE, prevDist, true);
         }
-      } else {
-        rsFailedCells++;
       }
     }
-    offset++;
+    return cellObj;
+  }
+
+  // Step 1: Byte-granular sliding-window fuzzy sync correlator + cadence flywheel.
+  // Never jumps blindly across unverified/repaired offsets -> eliminates Overlap-Eclipse & Cell-Eating!
+  for (let offset = 0; offset <= limit; offset++) {
+    if (harvestedOffsets.has(offset)) continue;
+    const isFlywheel = flywheelOffsets.has(offset);
+    const dist = syncBitDistance(buf, offset);
+    if (dist <= SYNC_MAX_BIT_ERRORS || isFlywheel) {
+      tryHarvestAt(offset, dist, isFlywheel);
+      if (truncatedByBudget) break;
+    }
   }
 
   // Step 2: Cryptographic Byzantine Immune System (Merkle Quorum / Pinned Root Filter)
   const rootGroups = new Map();
+  const rootUniqueCounts = new Map();
   for (const cell of harvested) {
     let arr = rootGroups.get(cell.impliedRootHex);
     if (!arr) {
@@ -462,21 +538,40 @@ export function decodeHbin(rawBytes, options = {}) {
     }
     arr.push(cell);
   }
+  for (const [rHex, cells] of rootGroups.entries()) {
+    rootUniqueCounts.set(
+      rHex,
+      new Set(cells.map((c) => `${c.header.bundleId}:${c.header.evalX}`)).size
+    );
+  }
 
   let primaryRootHex = pinnedRootHex;
+  let quorumAmbiguous = false;
   if (!primaryRootHex && !disableImmuneSystem) {
-    // Consensus Quorum Election: choose the lineage root with the largest number of distinct
-    // authenticated cells (must have >= 2 cells to form a quorum unless only 1 cell exists).
+    // Consensus Quorum Election: choose the unique lineage root with the largest number of
+    // distinct authenticated cells; enforce >= 2 quorum when multiple roots compete, and fail
+    // closed on exact ties (no byte-stream insertion-order bias).
     let bestRoot = null;
-    let bestUnique = -1;
-    for (const [rHex, cells] of rootGroups.entries()) {
-      const uniq = new Set(cells.map((c) => `${c.header.bundleId}:${c.header.evalX}`)).size;
+    let bestUnique = 0;
+    let tieCount = 0;
+    for (const [rHex, uniq] of rootUniqueCounts.entries()) {
       if (uniq > bestUnique) {
         bestUnique = uniq;
         bestRoot = rHex;
+        tieCount = 1;
+      } else if (uniq === bestUnique && uniq > 0) {
+        tieCount++;
       }
     }
-    primaryRootHex = bestRoot;
+    if (bestUnique < 2 && rootGroups.size > 1) {
+      primaryRootHex = null;
+      quorumAmbiguous = true;
+    } else if (tieCount > 1) {
+      primaryRootHex = null;
+      quorumAmbiguous = true;
+    } else {
+      primaryRootHex = bestRoot;
+    }
   }
 
   const authenticPrimary = [];
@@ -493,9 +588,10 @@ export function decodeHbin(rawBytes, options = {}) {
       if (primaryRootHex && cell.impliedRootHex === primaryRootHex) {
         authenticPrimary.push(cell);
       } else {
-        // Check if this foreign root has a genuine coherent donor quorum (not random Trojan noise)
-        const groupSize = rootGroups.get(cell.impliedRootHex)?.length || 0;
-        if (allowXenograft && groupSize >= 4) {
+        // Require >= 4 UNIQUE (bundleId:evalX) cells to form a genuine coherent donor quorum
+        // (prevents single-Trojan duplicate-replay amplification into donorGroups)
+        const uniqDonorSize = rootUniqueCounts.get(cell.impliedRootHex) || 0;
+        if (allowXenograft && uniqDonorSize >= 4) {
           let dArr = donorGroups.get(cell.impliedRootHex);
           if (!dArr) {
             dArr = [];
@@ -511,11 +607,9 @@ export function decodeHbin(rawBytes, options = {}) {
 
   // Helper to group cells by bundleId and decode each bundle via exact Cauchy GF(2^8) elimination
   function decodeGroup(cells) {
-    const byBundle = Array.from({ length: BUNDLE_SPECS.length }, () => []);
     const uniqueByBundle = Array.from({ length: BUNDLE_SPECS.length }, () => new Map());
     for (const c of cells) {
       const b = c.header.bundleId;
-      byBundle[b].push(c);
       if (!uniqueByBundle[b].has(c.header.evalX)) {
         uniqueByBundle[b].set(c.header.evalX, c);
       }
@@ -527,19 +621,41 @@ export function decodeHbin(rawBytes, options = {}) {
       const uniqCells = Array.from(uniqueByBundle[b].values());
       const count = uniqCells.length;
       if (count >= spec.k) {
-        const origLen = uniqCells[0].header.origLen;
-        const dec = cauchyDecode(
-          uniqCells.map((c) => ({ evalX: c.header.evalX, shard: c.payload })),
-          spec.k,
-          CELL_PAYLOAD_SIZE,
-          origLen
-        );
+        const firstHdr = uniqCells[0].header;
+        const origLen = firstHdr.origLen;
+        const headerAbiSig = firstHdr.abiSig;
+        const headerFlags = firstHdr.flags;
+        const headerSpeciesTag = firstHdr.speciesTag;
+
+        // Require cross-cell metadata consistency (skipped only in unsafe disableImmuneSystem mode
+        // so falsification tests can observe raw unauthenticated Cauchy poisoning!)
+        const metadataConsistent =
+          disableImmuneSystem ||
+          (origLen <= spec.k * CELL_PAYLOAD_SIZE &&
+            uniqCells.every(
+              (c) =>
+                c.header.origLen === origLen &&
+                c.header.abiSig === headerAbiSig &&
+                c.header.flags === headerFlags &&
+                c.header.speciesTag === headerSpeciesTag
+            ));
+
+        const dec = metadataConsistent
+          ? cauchyDecode(
+              uniqCells.map((c) => ({ evalX: c.header.evalX, shard: c.payload })),
+              spec.k,
+              CELL_PAYLOAD_SIZE,
+              origLen
+            )
+          : { ok: false, reason: 'inconsistent_bundle_headers' };
+
         bundles[b] = {
           id: b,
           name: spec.name,
           organId: spec.organId,
           stratum: spec.stratum,
-          abiSig: spec.abiSig,
+          abiSig: headerAbiSig,
+          xenograftable: (headerFlags & 0x01) !== 0,
           k: spec.k,
           n: spec.n,
           cellsFound: count,
@@ -547,7 +663,7 @@ export function decodeHbin(rawBytes, options = {}) {
           data: dec.ok ? dec.data : null,
           source: 'PRIMARY',
           lineageRootHex: uniqCells[0].impliedRootHex,
-          speciesTag: uniqCells[0].header.speciesTag,
+          speciesTag: headerSpeciesTag,
         };
       } else {
         bundles[b] = {
@@ -556,6 +672,7 @@ export function decodeHbin(rawBytes, options = {}) {
           organId: spec.organId,
           stratum: spec.stratum,
           abiSig: spec.abiSig,
+          xenograftable: spec.xenograftable,
           k: spec.k,
           n: spec.n,
           cellsFound: count,
@@ -575,14 +692,21 @@ export function decodeHbin(rawBytes, options = {}) {
   // Step 3: Optional ABI-Verified Cross-Species Xenograft Anastomosis
   const xenografts = [];
   if (allowXenograft && donorGroups.size > 0) {
-    // Sort donors by cell count descending
-    const sortedDonors = Array.from(donorGroups.entries()).sort((a, b) => b[1].length - a[1].length);
+    // Sort donors by UNIQUE cell count descending (immune to duplicate-cell flooding)
+    const sortedDonors = Array.from(donorGroups.entries()).sort(
+      (a, b) => (rootUniqueCounts.get(b[0]) || 0) - (rootUniqueCounts.get(a[0]) || 0)
+    );
     for (const [donorRootHex, donorCells] of sortedDonors) {
       const donorBundles = decodeGroup(donorCells);
       for (let b = 0; b < BUNDLE_SPECS.length; b++) {
         const spec = BUNDLE_SPECS[b];
         if (!spec.xenograftable) continue;
-        if (!bundles[b].viable && donorBundles[b].viable && donorBundles[b].abiSig === spec.abiSig) {
+        if (
+          !bundles[b].viable &&
+          donorBundles[b].viable &&
+          donorBundles[b].abiSig === spec.abiSig &&
+          donorBundles[b].xenograftable
+        ) {
           bundles[b] = {
             ...donorBundles[b],
             source: 'XENOGRAFT',
@@ -607,16 +731,14 @@ export function decodeHbin(rawBytes, options = {}) {
   let maxViableStratum = -1;
   if (bundles[0].viable) {
     maxViableStratum = 0;
-    if (bundles[1].viable && bundles[2].viable) {
+    if (bundles[1].viable || bundles[2].viable || bundles[3].viable) {
       maxViableStratum = 1;
-      if (bundles[3].viable || bundles[4].viable) {
+      if (bundles[1].viable && (bundles[3].viable || bundles[4].viable)) {
         maxViableStratum = 2;
         if (bundles[3].viable && bundles[4].viable && bundles[5].viable) {
           maxViableStratum = 3;
         }
       }
-    } else if (bundles[1].viable || bundles[2].viable) {
-      maxViableStratum = 1;
     }
   }
 
@@ -702,6 +824,10 @@ export function decodeHbin(rawBytes, options = {}) {
       byzantineQuarantined: quarantinedCells.length,
       xenograftDonorCells: Array.from(donorGroups.values()).reduce((a, g) => a + g.length, 0),
       unalignedRecoveries,
+      flywheelRecoveries,
+      truncatedByBudget,
+      quorumAmbiguous,
+      xenograftBlockedUnpinned,
       immuneSystemEnabled: !disableImmuneSystem,
     },
     slotMap,
@@ -717,12 +843,16 @@ export function decodeHbin(rawBytes, options = {}) {
  * When all 7 bundles of a pure organism survive (canFullRegenerate === true), the re-emitted
  * binary is 100.000% SHA-256 bit-for-bit IDENTICAL to the original pristine .hbin!
  */
-export function regenerateHbin(decoded, overrideName = null) {
-  if (!decoded.bootable) {
+export function regenerateHbin(decoded, overrideName = null, options = {}) {
+  if (!decoded || !decoded.bootable) {
     throw new Error('Cannot regenerate: Stratum 0 Stem Nucleus is dead.');
   }
+  if (decoded.stats && decoded.stats.immuneSystemEnabled === false) {
+    throw new Error('Cannot regenerate from an unauthenticated decode (immuneSystemEnabled === false).');
+  }
   const hasAll = decoded.bundles.every((b) => b.viable);
-  if (!hasAll && !overrideName) {
+  const allowPartial = Boolean(options.allowPartial);
+  if (!hasAll && !allowPartial) {
     throw new Error(
       'Cannot perform 100% lossless regeneration: one or more bundles are below Cauchy threshold k.'
     );
@@ -736,13 +866,15 @@ export function regenerateHbin(decoded, overrideName = null) {
 
   const bundlePayloads = decoded.bundles.map((b) => (b.viable && b.data ? b.data : new Uint8Array(0)));
   // If pure regeneration (not chimera, no name override) preserve exact bundle 6 genome ledger bytes
-  // so SHA-256 matches the pristine original bit-for-bit!
-  if (isChimera || overrideName) {
-    bundlePayloads[6] = new Uint8Array(0); // regenerate fresh chimera genome ledger
+  // AND original speciesTag so SHA-256 matches the pristine original bit-for-bit even on non-JSON Bundle 6!
+  const preservePure = !isChimera && !overrideName && hasAll;
+  if (!preservePure) {
+    bundlePayloads[6] = new Uint8Array(0); // regenerate fresh chimera/override genome ledger
   }
 
   return encodeHbin({
     name,
+    speciesTag: preservePure ? decoded.bundles[0].speciesTag : undefined,
     bundles: bundlePayloads,
     metadata: isChimera
       ? {
@@ -757,7 +889,8 @@ export function regenerateHbin(decoded, overrideName = null) {
 /**
  * Inspect a single 512-byte cell slice for forensic / UI Hex Anatomy viewing.
  */
-export function inspectSingleCell(cell512) {
+export function inspectSingleCell(rawCell512) {
+  const cell512 = toBytes(rawCell512);
   if (cell512.length < CELL_SIZE) return null;
   const syncDist = syncBitDistance(cell512, 0);
   const block508 = cell512.subarray(4, CELL_SIZE);
@@ -767,9 +900,10 @@ export function inspectSingleCell(cell512) {
   const payload = rawBody.subarray(CELL_HEADER_SIZE, CELL_HEADER_SIZE + CELL_PAYLOAD_SIZE);
   const proof = rawBody.subarray(CELL_HEADER_SIZE + CELL_PAYLOAD_SIZE, CELL_BODY_SIZE);
   const commit = rawBody.subarray(0, CELL_HEADER_SIZE + CELL_PAYLOAD_SIZE);
-  const impliedRootHex = rsRes.ok
-    ? toHex(computeMerkleRootFromProof(commit, header.leafIdx, proof))
-    : null;
+  const impliedRootHex =
+    rsRes.ok && header.leafIdx < TOTAL_CELLS
+      ? toHex(computeMerkleRootFromProof(commit, header.leafIdx, proof))
+      : null;
 
   return {
     syncHex: toHex(cell512.subarray(0, 4)),

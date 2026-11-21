@@ -1,22 +1,36 @@
 /**
- * PLANARIA Brutal 12-Suite Falsifiable Verification & Counterexample Test Harness
+ * PLANARIA v2.2 — 24-Suite Falsifiable Verification, Security & Adversarial Torture Harness
  *
- * Explicitly verifies BOTH positive survival guarantees AND negative tight-bound
- * Popperian falsification boundaries (showing the architecture fails precisely where
- * Theorems I–V prove it must fail, and NEVER silently miscorrects or misauthenticates).
+ * Verifies BOTH positive mathematical/operational guarantees AND negative tight-bound
+ * Popperian falsification boundaries across all 5 architectural layers:
+ *   Layer 1: GF(2^8), Interleaved RS(254,238), Cauchy MDS, SHA-256, Depth-8 Merkle, .hbin
+ *   Layer 2: Plang Compiler (Lexer/Parser/Codegen), PVM-32 VM, Linear Control Twin, 4 Species
+ *   Layer 3: 4-Qubit QuantumRegister (CHSH/Mermin), TemporalEngine, Generator, 3D World
+ *   Layer 4: Hardened CLI (9 commands), Hardened HTTP Server (CSP/Traversal/XSS), On-Disk Artifacts
  */
 
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import http from 'node:http';
+import os from 'node:os';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-import { gfMul, gfMulDirect, gfInv, gfAdd } from '../src/core/gf256.js';
+import { gfMul, gfMulDirect, gfInv, gfAdd, gfPow } from '../src/core/gf256.js';
 import { rsEncode, rsDecode, rsArmorInterleaved, rsUnarmorInterleaved, RS_K } from '../src/core/rs.js';
 import { cauchyEncode, cauchyDecode } from '../src/core/cauchy.js';
-import { sha256, toHex } from '../src/core/sha256.js';
-import { encodeHbin, decodeHbin, regenerateHbin, BUNDLE_SPECS, TOTAL_HBIN_BYTES } from '../src/core/hbin.js';
+import { sha256, toHex, fromHex, EMPTY_LEAF_HASH, computeMerkleRootFromProof } from '../src/core/sha256.js';
+import {
+  decodeHbin,
+  regenerateHbin,
+  inspectSingleCell,
+  TOTAL_HBIN_BYTES,
+  CELL_SIZE,
+  SYNC_WORD,
+  BUNDLE_SPECS,
+} from '../src/core/hbin.js';
 import {
   bisectBinary,
   splitBinary,
@@ -25,6 +39,7 @@ import {
   amputateBundles,
   shiftAndShuffle,
   injectByzantineTrojans,
+  injectOverlapEclipseTrojan,
   concatShards,
   makeRng,
 } from '../src/core/torture.js';
@@ -38,7 +53,6 @@ import {
   zenoSuppressionFactor,
   evalWaveInterference,
 } from '../src/quantum/qengine.js';
-import { TemporalEngine } from '../src/quantum/temporal.js';
 import {
   forgeWeapon,
   forgeArmor,
@@ -47,6 +61,7 @@ import {
   combinatorialSpaceMetrics,
 } from '../src/world/generator.js';
 import { ChronoQuantumWorld } from '../src/world/game3d.js';
+import { createPlanariaServer } from '../server.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -54,10 +69,10 @@ const ROOT = path.resolve(__dirname, '..');
 let passed = 0;
 let failed = 0;
 
-function suite(name, fn) {
+async function suite(name, fn) {
   const t0 = performance.now();
   try {
-    fn();
+    await fn();
     const dt = (performance.now() - t0).toFixed(1);
     console.log(`  [PASS] ${name} (${dt} ms)`);
     passed++;
@@ -67,8 +82,29 @@ function suite(name, fn) {
   }
 }
 
+function httpRequest(port, reqPath, method = 'GET') {
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      { host: '127.0.0.1', port, path: reqPath, method },
+      (res) => {
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => {
+          resolve({
+            status: res.statusCode,
+            headers: res.headers,
+            body: Buffer.concat(chunks).toString('utf8'),
+          });
+        });
+      }
+    );
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 console.log('========================================================================');
-console.log(' PLANARIA v2.0.0 — 16-SUITE FALSIFIABLE VERIFICATION & TORTURE HARNESS');
+console.log(' PLANARIA v2.2.0 — 24-SUITE FALSIFIABLE VERIFICATION & SECURITY HARNESS');
 console.log('========================================================================');
 
 const qchronSrc = fs.readFileSync(path.join(ROOT, 'programs/quantum_chronicle.plang'), 'utf8');
@@ -81,8 +117,8 @@ const aegis = compilePlangToHbin(aegisSrc);
 const synth = compilePlangToHbin(synthSrc);
 const vault = compilePlangToHbin(vaultSrc);
 
-// SUITE 1: Exhaustive GF(2^8) Field Axioms & Cauchy MDS Invertibility
-suite('Suite 01: Exhaustive GF(2^8) Field Axioms (65,536 pairs) & Cauchy MDS Exact Recovery', () => {
+// SUITE 01: Exhaustive GF(2^8) Field Axioms & Cauchy MDS Invertibility
+await suite('Suite 01: Exhaustive GF(2^8) Field Axioms (65,536 pairs) & Cauchy MDS Exact Recovery', () => {
   for (let a = 0; a < 256; a++) {
     assert.equal(gfAdd(a, a), 0);
     if (a > 0) {
@@ -95,7 +131,10 @@ suite('Suite 01: Exhaustive GF(2^8) Field Axioms (65,536 pairs) & Cauchy MDS Exa
       assert.equal(gfMul(a, b), gfMul(b, a));
     }
   }
-  // Test Cauchy k=16, n=40 across 40 randomized 16-of-40 subsets
+  assert.throws(() => gfPow(0, -1), RangeError);
+  assert.throws(() => gfPow(3, 1.5), RangeError);
+  assert.equal(gfPow(0, 0), 1);
+
   const rng = makeRng(2026);
   const payload = new Uint8Array(16 * 64);
   for (let i = 0; i < payload.length; i++) payload[i] = Math.floor(rng() * 256);
@@ -106,16 +145,16 @@ suite('Suite 01: Exhaustive GF(2^8) Field Axioms (65,536 pairs) & Cauchy MDS Exa
     assert.equal(dec.ok, true);
     assert.deepEqual(dec.data, payload);
   }
-  // Negative Falsification Boundary: k - 1 = 15 cells MUST fail!
   const under = cauchyDecode(encoded.slice(0, 15), 16, 64, payload.length);
   assert.equal(under.ok, false);
   assert.equal(under.reason, 'insufficient_rank');
+  assert.throws(() => cauchyEncode(payload, 0, 10, 64), RangeError);
+  assert.equal(cauchyDecode([{ evalX: NaN, data: new Uint8Array(64) }], 1, 64, 64).ok, false);
 });
 
-// SUITE 2: Inner RS(254, 238) Exact 8-Error Correction, 16-Byte Burst Repair & Tight 9-Error Rejection
-suite('Suite 02: Inner Interleaved RS(254, 238) 8B/lane + 16B Burst Repair & Tight Boundary Rejection', () => {
+// SUITE 02: Inner RS(254, 238) Exact 8-Error Correction, 16-Byte Burst Repair & Tight Rejection
+await suite('Suite 02: Inner Interleaved RS(254, 238) 8B/lane + 16B Burst Repair & Tight Boundary Rejection', () => {
   const rng = makeRng(9001);
-  // Single-lane RS: 50 trials with exact t=8 random errors
   for (let trial = 0; trial < 50; trial++) {
     const msg = new Uint8Array(RS_K);
     for (let i = 0; i < RS_K; i++) msg[i] = Math.floor(rng() * 256);
@@ -128,8 +167,10 @@ suite('Suite 02: Inner Interleaved RS(254, 238) 8B/lane + 16B Burst Repair & Tig
     assert.equal(res.ok, true);
     assert.equal(res.errorsCorrected, 8);
     assert.deepEqual(res.data, msg);
+    // Verify detached copy (mutating corrupt does not mutate res.data)
+    corrupt[0] ^= 0xff;
+    assert.deepEqual(res.data, msg);
   }
-  // Interleaved 508B cell body: EVERY contiguous 16-byte burst offset heals 100%!
   const body = new Uint8Array(476);
   for (let i = 0; i < 476; i++) body[i] = (i * 53 + 7) & 0xff;
   const armored = rsArmorInterleaved(body);
@@ -141,26 +182,33 @@ suite('Suite 02: Inner Interleaved RS(254, 238) 8B/lane + 16B Burst Repair & Tig
     assert.equal(dec.errorsCorrected, 16);
     assert.deepEqual(dec.body, body);
   }
-  // Negative Falsification Boundary: 10 errors in a single lane (> t=8) MUST fail cleanly, NOT silently misdecode!
   const msg = new Uint8Array(RS_K).fill(0x42);
   const cw = rsEncode(msg);
   for (let i = 0; i < 10; i++) cw[i * 17] ^= 0xff;
-  const over = rsDecode(cw);
-  assert.equal(over.ok, false);
+  assert.equal(rsDecode(cw).ok, false);
+  assert.throws(() => rsEncode(new Uint8Array(0)), RangeError);
 });
 
-// SUITE 3: FIPS 180-4 SHA-256 Cross-Check vs OpenSSL
-suite('Suite 03: Zero-Dep Synchronous SHA-256 Exact Bit-Match vs Node OpenSSL', () => {
+// SUITE 03: FIPS 180-4 SHA-256 Cross-Check vs OpenSSL + Merkle Domain Separation
+await suite('Suite 03: Zero-Dep Streaming SHA-256 Exact Bit-Match vs Node OpenSSL & Domain Separation', () => {
   const vectors = ['', 'a', 'abc', 'a'.repeat(55), 'a'.repeat(56), 'a'.repeat(64), 'a'.repeat(1000)];
   for (const v of vectors) {
     const b = new TextEncoder().encode(v);
     assert.equal(toHex(sha256(b)), crypto.createHash('sha256').update(b).digest('hex'));
   }
   assert.equal(toHex(sha256(aegis.bytes)), crypto.createHash('sha256').update(aegis.bytes).digest('hex'));
+  // Distinct 0x02 domain separation for EMPTY_LEAF_HASH vs 0x00 real empty leaf
+  const realEmptyLeaf = sha256(new Uint8Array([0x00])).slice(0, 16);
+  assert.notEqual(toHex(EMPTY_LEAF_HASH), toHex(realEmptyLeaf));
+  assert.throws(() => fromHex('zz'), RangeError);
+  assert.throws(() => fromHex('abc'), RangeError);
+  assert.throws(() => computeMerkleRootFromProof(new Uint8Array(16), -1, new Uint8Array(128)), RangeError);
+  assert.throws(() => computeMerkleRootFromProof(new Uint8Array(16), 256, new Uint8Array(128)), RangeError);
+  assert.throws(() => computeMerkleRootFromProof(new Uint8Array(16), 0, new Uint8Array(64)), RangeError);
 });
 
-// SUITE 4: Zero-Overlap 50/50 Planarian Mitosis (Aligned & Unaligned Prime Cuts) -> 100% SHA-256 Twin Regeneration
-suite('Suite 04: Zero-Overlap Planarian Mitosis (Exact & Unaligned Prime Cuts) -> Bit-Exact Dual Regeneration', () => {
+// SUITE 04: Zero-Overlap 50/50 Planarian Mitosis -> Bit-Exact Dual Regeneration
+await suite('Suite 04: Zero-Overlap Planarian Mitosis (Exact & Unaligned Prime Cuts) -> Bit-Exact Dual Regeneration', () => {
   assert.equal(aegis.bytes.length, TOTAL_HBIN_BYTES);
   const linTwin = encodeLinearBinary(aegis.rawBundles, 'AEGIS_LINEAR');
 
@@ -175,34 +223,23 @@ suite('Suite 04: Zero-Overlap Planarian Mitosis (Exact & Unaligned Prime Cuts) -
     assert.equal(decL.canFullRegenerate, true);
     assert.equal(decR.canFullRegenerate, true);
 
-    const regL = regenerateHbin(decL);
-    const regR = regenerateHbin(decR);
-    // BOTH zero-overlap halves regenerate 100.000% SHA-256 identical 98,304B original binary!
-    assert.equal(regL.sha256Hex, aegis.sha256Hex);
-    assert.equal(regR.sha256Hex, aegis.sha256Hex);
+    assert.equal(regenerateHbin(decL).sha256Hex, aegis.sha256Hex);
+    assert.equal(regenerateHbin(decR).sha256Hex, aegis.sha256Hex);
 
-    // Control Group Check: Linear Binary Twin dies on BOTH halves (or at minimum right half!)
     const linCut = bisectBinary(linTwin.bytes, cut);
-    const linR = decodeLinearBinary(linCut.right);
-    assert.equal(linR.bootable, false);
+    assert.equal(decodeLinearBinary(linCut.right).bootable, false);
   }
 });
 
-// SUITE 5: 3-Way Trisection -> Sub-Threshold Shards + Raw `cat` Super-Additive Synergistic Healing!
-suite('Suite 05: 3-Way Trisection + Raw Byte Concatenation (cat A + B) Super-Additive Synergistic Healing', () => {
+// SUITE 05: 3-Way Trisection + Raw Byte Concatenation Super-Additive Synergistic Healing
+await suite('Suite 05: 3-Way Trisection + Raw Byte Concatenation (cat A + B) Super-Additive Synergistic Healing', () => {
   const parts = splitBinary(aegis.bytes, 3);
-  const d0 = decodeHbin(parts[0]);
-  const d1 = decodeHbin(parts[1]);
-  const d2 = decodeHbin(parts[2]);
-
-  // Every single third boots at Stratum 2, but CANNOT recover Stratum 3 alone (13-14 < k=16)!
-  for (const d of [d0, d1, d2]) {
+  for (const p of parts) {
+    const d = decodeHbin(p);
     assert.equal(d.bootable, true);
     assert.equal(d.maxViableStratum, 2);
     assert.equal(d.canFullRegenerate, false);
   }
-
-  // Raw OS-style concatenation of ANY pair (even with 137B random garbage between them!) jumps to S3 & 100% SHA-256!
   for (const [i, j] of [[0, 1], [0, 2], [1, 2]]) {
     const fused = concatShards(parts[i], parts[j], 137, i * 10 + j);
     const df = decodeHbin(fused);
@@ -212,9 +249,8 @@ suite('Suite 05: 3-Way Trisection + Raw Byte Concatenation (cat A + B) Super-Add
   }
 });
 
-// SUITE 6: Extreme 88% Destruction ("The 12% Ghost") -> Zero-Cliff Stratum 0 Live Execution!
-suite('Suite 06: 88% File Obliteration ("12% Ghost") -> Still Boots & Executes Live in Stratum 0!', () => {
-  // Find deterministic 88% shredded survival (keeping ~23 of 192 cells)
+// SUITE 06: 88% File Obliteration ("12% Ghost") -> Stratum 0 Live Execution
+await suite('Suite 06: 88% File Obliteration ("12% Ghost") -> Still Boots & Executes Live in Stratum 0!', () => {
   let ghostDec = null;
   for (let seed = 1; seed <= 20; seed++) {
     const { bytes } = shredCells(aegis.bytes, 0.88, seed, true);
@@ -229,11 +265,11 @@ suite('Suite 06: 88% File Obliteration ("12% Ghost") -> Still Boots & Executes L
   vm.loadDecoded(ghostDec, true);
   for (let f = 0; f < 30; f++) vm.stepFrame();
   assert.equal(vm.traps, 0);
-  assert.ok(vm.framebufferStats().nonBgPixels > 100, 'Ghost Stratum-0 must draw visible wireframe beacon');
+  assert.ok(vm.framebufferStats().nonBgPixels > 100);
 });
 
-// SUITE 7: Full-File Radiation Storm (14-Byte Contiguous Burst Inside ALL 192 Cells!) + Unaligned Shift & Shuffle
-suite('Suite 07: Simultaneous 14B Burst Radiation Across ALL 192 Cells + 137B Unaligned Shift + Shuffle', () => {
+// SUITE 07: Simultaneous 14B Burst Radiation Across ALL 192 Cells + 137B Unaligned Shift + Shuffle
+await suite('Suite 07: Simultaneous 14B Burst Radiation Across ALL 192 Cells + 137B Unaligned Shift + Shuffle', () => {
   let rad = irradiateCells(synth.bytes, 14, 777, true).bytes;
   rad = shiftAndShuffle(rad, 137, 888, true);
   const dec = decodeHbin(rad);
@@ -245,24 +281,27 @@ suite('Suite 07: Simultaneous 14B Burst Radiation Across ALL 192 Cells + 137B Un
   assert.equal(regenerateHbin(dec).sha256Hex, synth.sha256Hex);
 });
 
-// SUITE 8: Byzantine Trojan Injection Attack — Immune System ON (100% Quarantine) vs OFF (Falsified Catastrophic Poisoning!)
-suite('Suite 08: Active Byzantine Trojan Attack — Merkle Quarantine (ON=100% Safe vs OFF=Catastrophic Poisoning)', () => {
-  // Inject 60 RS-valid forged Trojan cells at the FRONT of the file!
+// SUITE 08: Active Byzantine Trojan Attack + Overlap-Eclipse Defense
+await suite('Suite 08: Active Byzantine Trojans & Overlap-Eclipse Attack — Merkle Quarantine ON vs OFF', () => {
   const attacked = injectByzantineTrojans(aegis.bytes, 60, 666, true).bytes;
 
-  // 1. Immune System ENABLED (Pinned Root): 60/60 Trojans quarantined, 100% exact recovery!
   const safeDec = decodeHbin(attacked, { pinnedRootHex: aegis.lineageRootHex });
   assert.equal(safeDec.stats.byzantineQuarantined, 60);
   assert.equal(safeDec.canFullRegenerate, true);
   assert.equal(regenerateHbin(safeDec).sha256Hex, aegis.sha256Hex);
 
-  // 2. Immune System ENABLED (Unpinned Consensus Quorum): STILL quarantines 60/60 Trojans!
   const quorumDec = decodeHbin(attacked);
   assert.equal(quorumDec.primaryRootHex, aegis.lineageRootHex);
   assert.equal(quorumDec.stats.byzantineQuarantined, 60);
   assert.equal(regenerateHbin(quorumDec).sha256Hex, aegis.sha256Hex);
 
-  // 3. FALSIFICATION PROOF — Disable Immune System: raw Cauchy decoder gets POISONED immediately!
+  // Overlap-Eclipse attack: forged sync inside gap before honest cell MUST NOT eclipse honest cell!
+  const eclipsed = injectOverlapEclipseTrojan(aegis.bytes, 128, 777).bytes;
+  const eclDec = decodeHbin(eclipsed, { pinnedRootHex: aegis.lineageRootHex });
+  assert.equal(eclDec.canFullRegenerate, true);
+  assert.equal(regenerateHbin(eclDec).sha256Hex, aegis.sha256Hex);
+
+  // Falsification proof: disabling immune system allows Cauchy poisoning AND blocks regenerateHbin
   const poisonedDec = decodeHbin(attacked, { disableImmuneSystem: true });
   const origB0 = aegis.rawBundles.get(0);
   const poisB0 = poisonedDec.bundles[0].data;
@@ -270,66 +309,64 @@ suite('Suite 08: Active Byzantine Trojan Attack — Merkle Quarantine (ON=100% S
   for (let i = 0; i < Math.min(origB0.length, poisB0.length); i++) {
     if (origB0[i] !== poisB0[i]) diffBytes++;
   }
-  assert.ok(diffBytes > 50, `Expected catastrophic Cauchy poisoning without Merkle quarantine, got ${diffBytes} diffs`);
+  assert.ok(diffBytes > 50);
+  assert.throws(() => regenerateHbin(poisonedDec));
 });
 
-// SUITE 9: Surgical Organ Amputation -> Real-Time Hot-Swap Control-Flow Anastomosis Without Halting!
-suite('Suite 09: Live Surgical Organ Amputation -> Seamless Hot-Swap Anastomosis (S3 -> S2 -> S1 -> S0 -> Healed)', () => {
+// SUITE 09: Live Surgical Organ Amputation -> Seamless Hot-Swap Anastomosis
+await suite('Suite 09: Live Surgical Organ Amputation -> Seamless Hot-Swap Anastomosis (S3 -> S2 -> S1 -> S0 -> Healed)', () => {
   const vm = new PVM32();
   vm.loadDecoded(decodeHbin(aegis.bytes), true);
   for (let f = 0; f < 20; f++) vm.stepFrame();
   const savedScore = vm.ram[1];
   const savedFrame = vm.frameCount;
 
-  // Amputate S3 FX (5) & S2 Cortex Render (3) & S2 Audio (4) LIVE while running!
   const amp1 = amputateBundles(aegis.bytes, [3, 4, 5]).bytes;
-  vm.loadDecoded(decodeHbin(amp1), false); // HOT-SWAP without resetting RAM!
+  vm.loadDecoded(decodeHbin(amp1), false);
   vm.stepFrame();
   assert.equal(vm.frameCount, savedFrame + 1);
-  assert.ok(vm.ram[1] >= savedScore, 'Live game state RAM must survive hot-swap amputation');
-  const renderRoute = vm.lastFrameRoutes.find((r) => r.organName === 'RENDERER');
-  assert.equal(renderRoute.resolvedStratum, 1, 'RENDERER must anastomose from S2 down to S1_WIREFRAME!');
+  assert.ok(vm.ram[1] >= savedScore);
+  assert.equal(vm.lastFrameRoutes.find((r) => r.organName === 'RENDERER').resolvedStratum, 1);
 
-  // Now amputate S1 Wireframe (2) too -> must anastomose down to S0 Ghost fallback stub!
   const amp2 = amputateBundles(amp1, [2]).bytes;
   vm.loadDecoded(decodeHbin(amp2), false);
   vm.stepFrame();
-  const ghostRoute = vm.lastFrameRoutes.find((r) => r.organName === 'RENDERER');
-  assert.equal(ghostRoute.source, 'FALLBACK_STUB');
+  assert.equal(vm.lastFrameRoutes.find((r) => r.organName === 'RENDERER').source, 'FALLBACK_STUB');
   assert.equal(vm.traps, 0);
 
-  // Hot-graft the healed full binary back in LIVE -> S2/S3 organs grow back without reset!
   vm.loadDecoded(decodeHbin(aegis.bytes), false);
   vm.stepFrame();
-  const regrown = vm.lastFrameRoutes.find((r) => r.organName === 'RENDERER');
-  assert.equal(regrown.resolvedStratum, 2);
+  assert.equal(vm.lastFrameRoutes.find((r) => r.organName === 'RENDERER').resolvedStratum, 2);
 });
 
-// SUITE 10: Live Cross-Species Xenograft Chimera Forging & Standalone .hbin Export!
-suite('Suite 10: Cross-Species Xenograft Chimera (AEGIS_DRIFT x SYNTH_REACTOR & CIPHER_VAULT) + Export', () => {
+// SUITE 10: Cross-Species Xenograft Chimera + Unpinned Sovereignty Guard + Export
+await suite('Suite 10: Cross-Species Xenograft Chimera, Unpinned Sovereignty Guard & Standalone Export', () => {
   const amputatedAegis = amputateBundles(aegis.bytes, [3, 4]).bytes;
   const spliced = concatShards(amputatedAegis, synth.bytes, 79);
+
+  // Unpinned xenograft MUST be blocked by default unless pinnedRootHex or allowUnpinnedXenograft!
+  const unpinnedBlocked = decodeHbin(spliced, { allowXenograft: true });
+  assert.equal(unpinnedBlocked.xenografts.length, 0);
+  assert.equal(unpinnedBlocked.stats.xenograftBlockedUnpinned, true);
+
+  // Pinned xenograft succeeds cleanly and preserves B0 sovereignty!
   const chimeraDec = decodeHbin(spliced, {
     pinnedRootHex: aegis.lineageRootHex,
     allowXenograft: true,
   });
-
   assert.equal(chimeraDec.bootable, true);
   assert.equal(chimeraDec.xenografts.length, 2);
   assert.equal(chimeraDec.bundles[3].source, 'XENOGRAFT');
   assert.equal(chimeraDec.bundles[4].source, 'XENOGRAFT');
-  assert.equal(chimeraDec.bundles[0].source, 'PRIMARY'); // Sovereignty preserved!
+  assert.equal(chimeraDec.bundles[0].source, 'PRIMARY');
 
-  // Boot and run 90 frames of newborn Chimera
   const vm = new PVM32();
   vm.loadDecoded(chimeraDec, true);
   for (let f = 0; f < 90; f++) vm.stepFrame();
   assert.equal(vm.traps, 0);
   assert.ok(vm.framebufferStats().nonBgPixels > 2000);
-  // Verify audio voices are actively driven by SYNTH_REACTOR donor organ!
   assert.ok(vm.voices.some((v) => v.vol > 0 && v.freqHz > 40));
 
-  // Export newborn Chimera as its own standalone self-healing 96 KB .hbin and verify IT undergoes 50/50 Mitosis!
   const exported = regenerateHbin(chimeraDec);
   assert.equal(exported.bytes.length, TOTAL_HBIN_BYTES);
   const { left, right } = bisectBinary(exported.bytes, 49152);
@@ -337,9 +374,9 @@ suite('Suite 10: Cross-Species Xenograft Chimera (AEGIS_DRIFT x SYNTH_REACTOR & 
   assert.equal(regenerateHbin(decodeHbin(right)).sha256Hex, exported.sha256Hex);
 });
 
-// SUITE 11: All 3 Species Functional & Deterministic Execution Audit
-suite('Suite 11: All 3 Compiled Species (AEGIS_DRIFT, SYNTH_REACTOR, CIPHER_VAULT) Deterministic Execution', () => {
-  for (const prog of [aegis, synth, vault]) {
+// SUITE 11: ALL 4 Compiled Living Species Deterministic Execution Audit
+await suite('Suite 11: All 4 Compiled Living Species Deterministic Execution (QC, AEGIS, SYNTH, VAULT)', () => {
+  for (const prog of [qchron, aegis, synth, vault]) {
     const vmA = new PVM32(12345);
     const vmB = new PVM32(12345);
     const dec = decodeHbin(prog.bytes);
@@ -349,15 +386,14 @@ suite('Suite 11: All 3 Compiled Species (AEGIS_DRIFT, SYNTH_REACTOR, CIPHER_VAUL
       vmA.stepFrame();
       vmB.stepFrame();
     }
-    assert.equal(vmA.traps, 0);
-    assert.equal(vmA.framebufferStats().hashHex, vmB.framebufferStats().hashHex, 'PVM-32 must be bit-deterministic');
-    assert.ok(vmA.framebufferStats().nonBgPixels > 1000);
+    assert.equal(vmA.traps, 0, `${prog.name} trapped unexpectedly`);
+    assert.equal(vmA.framebufferStats().hashHex, vmB.framebufferStats().hashHex, `${prog.name} not deterministic`);
+    assert.ok(vmA.framebufferStats().nonBgPixels > 1000, `${prog.name} drew too few pixels`);
   }
 });
 
-// SUITE 12: Tight Popperian Falsification Boundaries (Linear Twin Control & Sub-Threshold Death)
-suite('Suite 12: Popperian Falsification Boundaries (1-Bit Linear Death & Sub-S0 Cellular Extinction)', () => {
-  // 1. Single bit flip in Linear Control Twin active code MUST kill Linear Twin immediately, while Planaria heals it!
+// SUITE 12: Tight Popperian Falsification Boundaries
+await suite('Suite 12: Popperian Falsification Boundaries (1-Bit Linear Death, Sub-S0 Extinction & Tie Fail-Closed)', () => {
   const lin = encodeLinearBinary(aegis.rawBundles);
   const flippedLin = new Uint8Array(lin.bytes);
   flippedLin[100] ^= 0x01;
@@ -370,89 +406,104 @@ suite('Suite 12: Popperian Falsification Boundaries (1-Bit Linear Death & Sub-S0
   assert.equal(decP.stats.rsTotalByteErrorsFixed, 1);
   assert.equal(regenerateHbin(decP).sha256Hex, aegis.sha256Hex);
 
-  // 2. Destroying all but 1 Stratum-0 cell (below k_0 = 2) MUST result in clean cellular death!
-  const tiny = aegis.bytes.subarray(0, 512); // only 1 cell total -> strictly < k_0 = 2
+  const tiny = aegis.bytes.subarray(0, 512);
   const deadDec = decodeHbin(tiny);
   assert.equal(deadDec.bootable, false);
   assert.equal(deadDec.maxViableStratum, -1);
+
+  // Exact 10-vs-10 root tie MUST fail closed (quorumAmbiguous = true)!
+  const tie = concatShards(aegis.bytes.subarray(0, 10 * CELL_SIZE), synth.bytes.subarray(0, 10 * CELL_SIZE), 0);
+  const tieDec = decodeHbin(tie);
+  assert.equal(tieDec.bootable, false);
+  assert.equal(tieDec.stats.quorumAmbiguous, true);
 });
 
-// SUITE 13: Quantum Register Unitarity, Exact Tsirelson CHSH Violation, WKB Tunneling & Heisenberg Stance
-suite('Suite 13: 4-Qubit Unitarity, Exact CHSH Bell Violation (|S|=2*sqrt(2)), WKB Tunneling & Heisenberg Law', () => {
+// SUITE 13: 4-Qubit Unitarity, Horodecki CHSH, 4-Qubit Mermin GHZ, WKB & Heisenberg
+await suite('Suite 13: 4-Qubit Unitarity (X/Y/Z/H/CNOT/CZ/SWAP), Horodecki CHSH, Mermin GHZ, WKB & Heisenberg', () => {
   const q = new QuantumRegister(4);
-  q.H(0); q.CNOT(0, 1); q.RX(2, 0.73); q.RY(3, 1.19); q.RZ(1, 0.55); q.CZ(2, 3);
-  assert.ok(Math.abs(q.normSq() - 1.0) < 1e-13, `Unitary norm drift: ${q.normSq()}`);
+  q.H(0); q.CNOT(0, 1); q.Y(2); q.RX(2, 0.73); q.RY(3, 1.19); q.RZ(1, 0.55); q.CZ(2, 3); q.SWAP(0, 3);
+  assert.ok(Math.abs(q.normSq() - 1.0) < 1e-13);
 
-  // Exact Bell pair CHSH Tsirelson bound: |S| = 2*sqrt(2) ~= 2.828427 > 2.0 (classical bound)
+  // Rotation-invariant Horodecki CHSH: stays at exact Tsirelson 2*sqrt(2) even after arbitrary local rotation!
   q.prepareBellPair(0, 1);
+  q.RY(0, 0.91);
+  q.RZ(1, 1.37);
   const S = Math.abs(q.computeCHSH(0, 1));
-  assert.ok(Math.abs(S - 2 * Math.SQRT2) < 1e-9, `Expected Tsirelson 2*sqrt(2), got ${S}`);
-  // Decoherence strictly reduces Bell visibility below classical bound
+  assert.ok(Math.abs(S - 2 * Math.SQRT2) < 1e-9, `Expected rotation-invariant Tsirelson 2*sqrt(2), got ${S}`);
+
+  // Exact 4-qubit GHZ Mermin inequality violation: |M_4| = 4.0 > 2.0 (classical local-realism bound)!
+  q.prepareGHZ();
+  const M4 = Math.abs(q.computeMermin4());
+  assert.ok(Math.abs(M4 - 4.0) < 1e-9, `Expected GHZ Mermin |M_4|=4.0, got ${M4}`);
+
+  q.prepareBellPair(0, 1);
   q.applyDecoherence(1.0);
   assert.ok(Math.abs(q.computeCHSH(0, 1)) < 2.0);
+  assert.ok(q.purity() <= 1.0 + 1e-12 && q.purity() >= 1 / 16 - 1e-12);
 
-  // Projective Born measurement collapses norm cleanly to 1.0
   q.prepareBellPair(0, 1);
   const m0 = q.measureQubit(0, 0.1);
   const m1 = q.measureQubit(1, 0.9);
-  assert.equal(m0.outcome, m1.outcome, 'Bell pair |Phi+> measurements MUST be 100% correlated');
+  assert.equal(m0.outcome, m1.outcome);
   assert.ok(Math.abs(q.normSq() - 1.0) < 1e-13);
 
-  // WKB Tunneling monotonicity & exact Heisenberg uncertainty product Delta_x * Delta_p = 0.5
   assert.ok(wkbTunnelingProbability(0.8, 1.0, 0.5) > wkbTunnelingProbability(0.2, 1.0, 0.5));
   assert.equal(wkbTunnelingProbability(1.2, 1.0, 0.5), 1.0);
   for (const s of [0, 0.25, 0.5, 0.75, 1.0]) {
-    const h = heisenbergStance(s);
-    assert.ok(Math.abs(h.product - 0.5) < 1e-12);
+    assert.ok(Math.abs(heisenbergStance(s).product - 0.5) < 1e-12);
   }
   assert.ok(zenoSuppressionFactor(1.0, 4.0) < 0.1);
-  const wi = evalWaveInterference(0, 0, 0, [{ x: 0, z: 0, amp: 1, k: 1, omega: 1, phase: 0 }]);
-  assert.ok(wi > 0);
+  assert.ok(evalWaveInterference(0, 0, 0, [{ x: 0, z: 0, amp: 1, k: 1, omega: 1, phase: 0 }]) > 0);
+  assert.throws(() => q.CNOT(1, 1), RangeError);
+  assert.throws(() => q.H(99), RangeError);
 });
 
-// SUITE 14: Temporal Engine Lossless Rewind, Chrono-Wells & Past-Timeline Echo Clones
-suite('Suite 14: Temporal Causality — Exact 360-Frame Rewind, Spherical Chrono-Wells & Past-Timeline Echoes', () => {
+// SUITE 14: Temporal Engine O(1) RingBuffer Rewind, Chrono-Wells & Past-Timeline Echoes
+await suite('Suite 14: Temporal Causality — Exact 360-Frame O(1) RingBuffer Rewind, Chrono-Wells & Echoes', () => {
   const world = new ChronoQuantumWorld(2026);
   for (let f = 0; f < 45; f++) world.step(1 / 60, { moveX: 0.7, moveZ: 0.3, fire: f % 6 === 0 });
   const savedStep = world.temporal.chronoStep;
   const savedX = world.player.x;
+  const savedTrailLen = world.temporal.playerTrail.length;
   for (let f = 0; f < 25; f++) world.step(1 / 60, { moveX: -0.5, moveZ: 0.8, fire: false });
   assert.ok(world.temporal.chronoStep > savedStep);
 
-  // Hold Rewind for 25 frames -> restores exact prior chronoStep & player position!
   for (let f = 0; f < 25; f++) world.step(1 / 60, { rewindHeld: true });
   assert.equal(world.temporal.chronoStep, savedStep);
   assert.ok(Math.abs(world.player.x - savedX) < 1e-6);
+  assert.ok(world.temporal.playerTrail.length <= savedTrailLen);
 
-  // Chrono-Well smooth radial dilation gradient
   world.temporal.spawnChronoWell(0, 1, 0, 10, 0.15, 5.0);
   assert.ok(world.temporal.localTimeFactor(0, 1, 0) < 0.2);
   assert.equal(world.temporal.localTimeFactor(25, 1, 0), 1.0);
 
-  // Chrono-Fork Past-Timeline Echo spawns and advances autonomously
   const echo = world.temporal.spawnChronoFork();
   assert.ok(echo && echo.frames.length >= 25);
 });
 
-// SUITE 15: Endless 1/1 Procedural Combinatorial Uniqueness, Adaptive AI & 24-Order Scale Realms
-suite('Suite 15: Endless 1/1 Combinatorial Uniqueness (300 Forged Items/NPCs), Adaptive AI & 6-Order Stages', () => {
+// SUITE 15: Endless 1/1 Reachable Combinatorial Uniqueness (6.42T) & 64-Bit SHA-256 Lineages
+await suite('Suite 15: Endless 1/1 Reachable Combinatorial Space (6.42T), 64-Bit Lineages & 6-Order Stages', () => {
   const cm = combinatorialSpaceMetrics();
-  assert.ok(cm.jointLoadoutCrossProduct > 6.8e12);
+  assert.equal(cm.jointLoadoutCrossProduct, 6421059993600);
+  assert.ok(cm.jointLoadoutCrossProduct > 6.4e12);
   assert.equal(cm.scaleOrdersOfMagnitude, 24);
 
   const wIds = new Set();
   const aIds = new Set();
   const nIds = new Set();
   for (let i = 0; i < 100; i++) {
-    wIds.add(forgeWeapon(`TEST:${i}`, (i % 12) + 1).lineageId);
-    aIds.add(forgeArmor(`TEST:${i}`, (i % 12) + 1).lineageId);
-    nIds.add(forgeNPC(`TEST:${i}`, (i % 12) + 1, 1, i % 10 === 0, { beamRatio: 0.8, closeRatio: 0.1, entangleCount: 2 }).lineageId);
+    const w = forgeWeapon(`TEST:${i}`, (i % 12) + 1);
+    const a = forgeArmor(`TEST:${i}`, (i % 12) + 1);
+    const n = forgeNPC(`TEST:${i}`, (i % 12) + 1, 1, i % 10 === 0, { beamRatio: 0.8, closeRatio: 0.1, entangleCount: 2 });
+    assert.match(w.lineageId, /^[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}$/, 'Lineage ID must be full 64-bit 16-hex formatted');
+    wIds.add(w.lineageId);
+    aIds.add(a.lineageId);
+    nIds.add(n.lineageId);
   }
-  assert.equal(wIds.size, 100, 'All 100 forged 1/1 weapons must have unique Lineage IDs');
-  assert.equal(aIds.size, 100, 'All 100 forged 1/1 armors must have unique Lineage IDs');
-  assert.equal(nIds.size, 100, 'All 100 forged 1/1 NPCs must have unique Lineage IDs');
+  assert.equal(wIds.size, 100);
+  assert.equal(aIds.size, 100);
+  assert.equal(nIds.size, 100);
 
-  // Verify endless stage generation across stages 1..50 spanning all 6 scale orders
   const seenOrders = new Set();
   for (let st = 1; st <= 50; st++) {
     const spec = buildStageSpec(st, 2026);
@@ -462,8 +513,8 @@ suite('Suite 15: Endless 1/1 Combinatorial Uniqueness (300 Forged Items/NPCs), A
   assert.equal(seenOrders.size, 6);
 });
 
-// SUITE 16: QUANTUM_CHRONICLE.hbin Compilation, Unaligned Mitosis & Live 3D World Integration
-suite('Suite 16: QUANTUM_CHRONICLE.hbin 4th Living Species — Unaligned Mitosis & Live 3D Engine Coupling', () => {
+// SUITE 16: QUANTUM_CHRONICLE.hbin Mitosis & Live 3D Engine + Audio Bundle 4 Coupling
+await suite('Suite 16: QUANTUM_CHRONICLE.hbin 4th Living Species — Mitosis, 3D World & Bundle 4 Audio Coupling', () => {
   assert.equal(qchron.bytes.length, TOTAL_HBIN_BYTES);
   const { left, right } = bisectBinary(qchron.bytes, 49177);
   assert.equal(regenerateHbin(decodeHbin(left)).sha256Hex, qchron.sha256Hex);
@@ -476,17 +527,320 @@ suite('Suite 16: QUANTUM_CHRONICLE.hbin 4th Living Species — Unaligned Mitosis
   world.syncHbinState(dec, { mitosisActive: false });
   world.entangleWeapons(0, 1);
   assert.equal(world.upgradeSkill('sup_clones'), true);
-  assert.equal(world.triggerAbility('Q'), true);
-  assert.equal(world.triggerAbility('E'), true);
-  assert.equal(world.triggerAbility('F'), true);
-  assert.equal(world.triggerAbility('V'), true);
+  for (const k of ['Q', 'E', 'F', 'V']) assert.equal(world.triggerAbility(k), true);
 
   for (let f = 0; f < 60; f++) {
     vm.stepFrame();
-    world.step(1 / 60, { pvmRam: vm.ram });
+    world.step(1 / 60, { pvmRam: vm.ram, pvmVoices: vm.voices });
   }
   assert.equal(vm.traps, 0);
   assert.ok(world.liveVoices.some((v) => v.vol > 0));
+
+  // Amputating Bundle 4 (S2_SYNTH_AUDIO) degrades world audio cleanly (voices 1..3 silenced!)
+  const ampAudio = amputateBundles(qchron.bytes, [4]).bytes;
+  const ampDec = decodeHbin(ampAudio, { pinnedRootHex: qchron.lineageRootHex });
+  world.syncHbinState(ampDec);
+  world.step(1 / 60, { pvmRam: vm.ram, pvmVoices: vm.voices });
+  assert.equal(world.hbinState.hasSynthAudio, false);
+  assert.equal(world.liveVoices[1].vol, 0);
+  assert.equal(world.liveVoices[2].vol, 0);
+  assert.equal(world.liveVoices[3].vol, 0);
+});
+
+// SUITE 17: TypedArray Nonzero byteOffset, DataView & Uint32Array Safety
+await suite('Suite 17: Nonzero byteOffset Subarrays, DataView & Uint32Array Input Coercion Safety', () => {
+  const padded = new Uint8Array(100 + aegis.bytes.length + 37);
+  padded.fill(0xaa);
+  padded.set(aegis.bytes, 100);
+  const sub = padded.subarray(100, 100 + aegis.bytes.length);
+  const dv = new DataView(padded.buffer, 100, aegis.bytes.length);
+
+  assert.equal(toHex(sha256(sub)), aegis.sha256Hex);
+  assert.equal(toHex(sha256(dv)), aegis.sha256Hex);
+  const u32 = new Uint32Array([0x01020304, 0x05060708]);
+  assert.equal(toHex(sha256(u32)), crypto.createHash('sha256').update(Buffer.from(u32.buffer)).digest('hex'));
+
+  const decSub = decodeHbin(sub, { pinnedRootHex: aegis.lineageRootHex });
+  assert.equal(decSub.canFullRegenerate, true);
+  assert.equal(regenerateHbin(decSub).sha256Hex, aegis.sha256Hex);
+
+  const lin = encodeLinearBinary(aegis.rawBundles);
+  const linPad = new Uint8Array(64 + lin.bytes.length);
+  linPad.set(lin.bytes, 64);
+  const linSub = linPad.subarray(64);
+  assert.equal(decodeLinearBinary(linSub).bootable, true);
+});
+
+// SUITE 18: Malformed / Fuzz / DoS / Sybil .hbin & LinearTwin Boundary Defenses
+await suite('Suite 18: Adversarial Malformed, DoS Budget Cap, Sybil Header & Irradiate 508B Defenses', () => {
+  // 1. DoS input cap triggers cleanly without hanging
+  const bigNoise = new Uint8Array(2 * 1024 * 1024);
+  const capDec = decodeHbin(bigNoise, { maxInputBytes: 65536 });
+  assert.equal(capDec.bootable, false);
+  assert.equal(capDec.stats.truncatedByBudget, true);
+
+  // 2. Irradiating all 508 RS bytes per cell terminates cleanly without infinite loop
+  const maxRad = irradiateCells(aegis.bytes, 508, 42, false);
+  assert.equal(maxRad.bytes.length, TOTAL_HBIN_BYTES);
+  assert.equal(decodeHbin(maxRad.bytes).bootable, false);
+
+  // 3. LinearTwin rejects overlapping section tables (pointing into header or overlapping prev section)
+  const lin = encodeLinearBinary(aegis.rawBundles);
+  const badLin = new Uint8Array(lin.bytes);
+  const dv = new DataView(badLin.buffer);
+  dv.setUint32(16, 4, true); // section 0 offset inside header!
+  assert.equal(decodeLinearBinary(badLin).bootable, false);
+
+  // 4. inspectSingleCell rejects OOB leafIdx >= 192 (no impliedRootHex) & rejects corrupted RS body
+  const oobBody = new Uint8Array(476);
+  oobBody[10] = 220; // leafIdx = 220 >= TOTAL_CELLS (192)
+  const oobCell = new Uint8Array(CELL_SIZE);
+  oobCell.set(SYNC_WORD, 0);
+  oobCell.set(rsArmorInterleaved(oobBody), 4);
+  const oobInfo = inspectSingleCell(oobCell);
+  assert.equal(oobInfo.rsOk, true);
+  assert.equal(oobInfo.impliedRootHex, null);
+
+  const corruptCell = new Uint8Array(oobCell);
+  for (let i = 4; i < 40; i++) corruptCell[i] ^= 0xa5;
+  assert.equal(inspectSingleCell(corruptCell).rsOk, false);
+});
+
+// SUITE 19: Plang Compiler Error Diagnostics, Block Scoping, fn Windowing & MemCompoundAssign
+await suite('Suite 19: Plang Compiler Strict Diagnostics, Block Shadowing, fn Register Windowing & MemCompoundAssign', () => {
+  // Lexer & Parser strict rejections
+  assert.throws(() => compilePlangToHbin('program X; /* unterminated'), SyntaxError);
+  assert.throws(() => compilePlangToHbin('program X; const A = 0x;'), SyntaxError);
+  assert.throws(() => compilePlangToHbin('program X; const A = 123abc;'), SyntaxError);
+  assert.throws(() => compilePlangToHbin('program X; const A = 9999999999999;'), SyntaxError);
+  assert.throws(() => compilePlangToHbin('program X; bundle S1_CORE_LOGIC { let a = 1; }'), /S0_STEM_NUCLEUS/);
+  assert.throws(() => compilePlangToHbin('program X; bundle S0_STEM_NUCLEUS { } bundle S3_GENOME_LEDGER { }'), /reserved/);
+  assert.throws(() => compilePlangToHbin('program X; const Z = 10 / 0; bundle S0_STEM_NUCLEUS { }'), /division by zero/i);
+  assert.throws(() => compilePlangToHbin('program X; bundle S0_STEM_NUCLEUS { fn foo(a) { return a; } let x = foo(1, 2); }'), /expects 1/);
+
+  // Functional check: recursive/nested fn call preserves caller locals, block-scoped let x = x + 1, unary ~, single-eval mem[idx] += 5
+  const testProg = `
+    program COMP_TEST;
+    bundle S0_STEM_NUCLEUS {
+      fn bump(v) {
+        let tmp = v * 3;
+        return tmp + 1;
+      }
+      let x = 10;
+      let y = 7;
+      let r = bump(y);
+      {
+        let x = x + 5;
+        mem[2] = x;
+      }
+      mem[1] = x;
+      mem[3] = r;
+      mem[4] = ~0;
+      mem[5] = 0;
+      mem[5] += 1;
+      let idx = 10;
+      mem[idx] = 20;
+      mem[idx] += 22;
+      mem[6] = mem[10];
+    }
+  `;
+  const comp = compilePlangToHbin(testProg);
+  const vm = new PVM32();
+  vm.loadDecoded(decodeHbin(comp.bytes), true);
+  vm.stepFrame();
+  assert.equal(vm.traps, 0);
+  assert.equal(vm.ram[1], 10, 'Outer x must survive inner block shadowing + fn call');
+  assert.equal(vm.ram[2], 15, 'Self-referential shadowed let x = x + 5 must read outer x');
+  assert.equal(vm.ram[3], 22, 'bump(7) = 7*3 + 1 = 22');
+  assert.equal(vm.ram[4], -1, 'Unary bitwise NOT ~0 === -1');
+  assert.equal(vm.ram[5], 1, 'mem[5] += 1');
+  assert.equal(vm.ram[6], 42, 'mem[idx] += 22 single-eval');
+});
+
+// SUITE 20: PVM-32 Fault Isolation, Descending Anastomosis, Bundle 6 Non-Exec & Logic Xenograft
+await suite('Suite 20: PVM-32 Traps, Bundle 6 Non-Exec, Seed Preservation & Cross-Species S1_CORE_LOGIC Xenograft', () => {
+  // 1. Infinite loop hits BUDGET_EXCEEDED cleanly with exact single trap count
+  const infProg = `
+    program INF_TRAP;
+    bundle S0_STEM_NUCLEUS {
+      let i = 0;
+      while (i >= 0) { i = i + 1; }
+    }
+  `;
+  const infComp = compilePlangToHbin(infProg);
+  const vmTrap = new PVM32(777);
+  vmTrap.loadDecoded(decodeHbin(infComp.bytes), true);
+  vmTrap.stepFrame();
+  assert.equal(vmTrap.traps, 1);
+  assert.match(vmTrap.lastTrap, /BUDGET_EXCEEDED/);
+
+  // 2. Bundle 6 (GENOME) is NEVER loaded into executable bundleCode array
+  const decA = decodeHbin(aegis.bytes);
+  const vmCheck = new PVM32(999);
+  vmCheck.loadDecoded(decA, true);
+  assert.equal(vmCheck.bundleCode[6], null);
+  assert.equal(vmCheck.bundleViable[6], true);
+
+  // 3. initialSeed preserved across loadDecoded(..., true) resets
+  vmCheck.stepFrame();
+  const h1 = vmCheck.framebufferStats().hashHex;
+  vmCheck.loadDecoded(decA, true);
+  vmCheck.stepFrame();
+  assert.equal(vmCheck.framebufferStats().hashHex, h1);
+
+  // 4. Cross-species S1_CORE_LOGIC Xenograft (AEGIS_DRIFT host + QUANTUM_CHRONICLE logic) runs 60 frames with 0 traps!
+  const ampLogic = amputateBundles(aegis.bytes, [1]).bytes;
+  const xenoLogicDec = decodeHbin(concatShards(ampLogic, qchron.bytes, 41), {
+    pinnedRootHex: aegis.lineageRootHex,
+    allowXenograft: true,
+  });
+  assert.equal(xenoLogicDec.bundles[1].source, 'XENOGRAFT');
+  const vmX = new PVM32(2026);
+  vmX.loadDecoded(xenoLogicDec, true);
+  for (let f = 0; f < 60; f++) vmX.stepFrame();
+  assert.equal(vmX.traps, 0);
+});
+
+// SUITE 21: Game3D Hardening Regressions (Rewind Non-NaN, Solo Boss, Stage 0, Projectile Cap)
+await suite('Suite 21: Game3D Hardening — Post-Rewind Non-NaN Physics, Solo Boss Safety, Stage 0 & Projectile Cap', () => {
+  const w = new ChronoQuantumWorld(2026);
+  for (let f = 0; f < 40; f++) w.step(1 / 60, { moveX: 0.6, moveZ: -0.4, fire: true });
+  for (let f = 0; f < 20; f++) w.step(1 / 60, { rewindHeld: true });
+  // Step 60 more frames AFTER rewind — verify EVERY NPC has finite speed & coordinates (no NaN softlock!)
+  for (let f = 0; f < 60; f++) w.step(1 / 60, { moveX: 0.2, moveZ: 0.5, fire: true });
+  assert.ok(Number.isFinite(w.player.x) && Number.isFinite(w.player.z));
+  for (const n of w.npcs) {
+    assert.ok(Number.isFinite(n.speed) && n.speed > 0, `NPC speed invalid after rewind: ${n.speed}`);
+    assert.ok(Number.isFinite(n.x) && Number.isFinite(n.z));
+  }
+  assert.ok(w.projectiles.length <= 240);
+
+  // Solo boss must NEVER self-entangle when triggerAbility('E') fires!
+  w.npcs = [forgeNPC('SOLO_BOSS', 3, 3, true, {})];
+  w.abilityCooldowns.E = 0;
+  w.temporal.chronoEnergy = 100;
+  w.triggerAbility('E');
+  assert.notEqual(w.npcs[0].entangledWith, w.npcs[0].id);
+
+  // Stage 0 defensive clamping must not crash
+  const s0 = buildStageSpec(0, 2026);
+  assert.equal(s0.stageNum, 1);
+  assert.ok(s0.realm && s0.pillars.length >= 6);
+});
+
+// SUITE 22: End-to-End Hardened CLI Audit (All 9 Subcommands + Strict Rejection Exit Codes)
+await suite('Suite 22: End-to-End CLI Audit (compile/inspect/run/bisect/fuse/heal/damage/xenograft/disasm)', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'planaria-cli-'));
+  const cli = path.join(ROOT, 'bin', 'planaria.mjs');
+  const runCli = (args) => spawnSync(process.execPath, [cli, ...args], { encoding: 'utf8' });
+
+  try {
+    const ver = runCli(['--version']);
+    assert.equal(ver.status, 0);
+    assert.match(ver.stdout, /planaria v2\.2\.0/);
+
+    const hbinOut = path.join(tmp, 'nested', 'aegis.hbin');
+    assert.equal(runCli(['compile', path.join(ROOT, 'programs/aegis_drift.plang'), '-o', hbinOut]).status, 0);
+    assert.equal(fs.statSync(hbinOut).size, TOTAL_HBIN_BYTES);
+
+    const insp = runCli(['inspect', hbinOut]);
+    assert.equal(insp.status, 0);
+    assert.match(insp.stdout, /Bootable\s*:\s*YES/);
+
+    const runRes = runCli(['run', hbinOut, '--frames', '15']);
+    assert.equal(runRes.status, 0);
+    assert.match(runRes.stdout, /VM Traps\s*:\s*0/);
+
+    const leftOut = path.join(tmp, 'left.hbin');
+    const rightOut = path.join(tmp, 'right.hbin');
+    assert.equal(runCli(['bisect', hbinOut, leftOut, rightOut, '--offset=49177']).status, 0);
+
+    const fusedOut = path.join(tmp, 'fused.hbin');
+    assert.equal(runCli(['fuse', leftOut, rightOut, '-o', fusedOut, '--gap', '53']).status, 0);
+
+    const healedOut = path.join(tmp, 'healed.hbin');
+    assert.equal(runCli(['heal', rightOut, '-o', healedOut]).status, 0);
+    assert.deepEqual(fs.readFileSync(healedOut), fs.readFileSync(hbinOut));
+
+    const dmgOut = path.join(tmp, 'dmg.hbin');
+    assert.equal(runCli(['damage', hbinOut, '-o', dmgOut, '--bitrot', '12', '--burst', '--shift', '97']).status, 0);
+    assert.equal(runCli(['inspect', dmgOut]).status, 0);
+
+    const xenoOut = path.join(tmp, 'chimera.hbin');
+    assert.equal(
+      runCli(['xenograft', hbinOut, path.join(ROOT, 'artifacts/synth_reactor.hbin'), '-o', xenoOut, '--amputate', '3,4']).status,
+      0
+    );
+
+    const dis6 = runCli(['disasm', hbinOut, '--bundle', '6']);
+    assert.equal(dis6.status, 0);
+    assert.match(dis6.stdout, /AEGIS_DRIFT/);
+
+    // Strict negative CLI validation checks
+    assert.notEqual(runCli(['inspect', hbinOut, '--bogus-flag']).status, 0);
+    assert.notEqual(runCli(['damage', hbinOut, '-o', dmgOut, '--bitrot', '999']).status, 0);
+    assert.notEqual(runCli(['xenograft', hbinOut, path.join(ROOT, 'artifacts/synth_reactor.hbin'), '-o', xenoOut, '--amputate', '0']).status, 0);
+    assert.notEqual(runCli(['xenograft', hbinOut, hbinOut, '-o', xenoOut]).status, 0);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+// SUITE 23: Hardened HTTP Server Security Containment, CSP Headers & Traversal/XSS Defenses
+await suite('Suite 23: server.mjs HTTP Security Containment (CSP, Traversal, Dotfiles, 405, Reflected XSS)', async () => {
+  const server = createPlanariaServer(ROOT);
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address();
+  try {
+    const rHome = await httpRequest(port, '/');
+    assert.equal(rHome.status, 200);
+    assert.equal(rHome.headers['x-content-type-options'], 'nosniff');
+    assert.equal(rHome.headers['x-frame-options'], 'DENY');
+    assert.ok(rHome.headers['content-security-policy']?.includes("default-src 'self'"));
+    assert.match(rHome.body, /PLANARIA v2\.2/);
+
+    const rHead = await httpRequest(port, '/src/web/app.js', 'HEAD');
+    assert.equal(rHead.status, 200);
+    assert.equal(rHead.body, '');
+    assert.ok(Number(rHead.headers['content-length']) > 1000);
+
+    assert.equal((await httpRequest(port, '/', 'POST')).status, 405);
+    assert.equal((await httpRequest(port, '/%E0%A4%A')).status, 400);
+    assert.equal((await httpRequest(port, '/../package.json')).status, 403);
+    assert.equal((await httpRequest(port, '/.git/config')).status, 403);
+    assert.equal((await httpRequest(port, '/%2e%2e/server.mjs')).status, 403);
+    assert.equal((await httpRequest(port, '/server.mjs')).status, 404);
+    assert.equal((await httpRequest(port, '/package.json')).status, 404);
+
+    // Reflected XSS probe must return static text/plain without echoing payload
+    const rXss = await httpRequest(port, '/%3Cscript%3Ealert(1)%3C/script%3E');
+    assert.equal(rXss.status, 404);
+    assert.equal(rXss.body, 'Not Found');
+    assert.equal(rXss.headers['content-type'], 'text/plain; charset=utf-8');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+// SUITE 24: Deterministic On-Disk Artifact & Manifest SHA-256 Parity
+await suite('Suite 24: On-Disk Built artifacts/*.hbin & manifest.json Bit-Exact Deterministic Verification', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'artifacts/manifest.json'), 'utf8'));
+  assert.equal(manifest.artifacts.length, 4);
+  const compiledMap = {
+    quantum_chronicle: qchron,
+    aegis_drift: aegis,
+    synth_reactor: synth,
+    cipher_vault: vault,
+  };
+  for (const [slug, comp] of Object.entries(compiledMap)) {
+    const diskBytes = new Uint8Array(fs.readFileSync(path.join(ROOT, 'artifacts', `${slug}.hbin`)));
+    assert.equal(diskBytes.length, TOTAL_HBIN_BYTES);
+    assert.equal(toHex(sha256(diskBytes)), comp.sha256Hex, `${slug}.hbin on disk out of sync with .plang source`);
+    const entry = manifest.artifacts.find((a) => a.file === `artifacts/${slug}.hbin`);
+    assert.ok(entry);
+    assert.equal(entry.sha256Hex, comp.sha256Hex);
+    assert.equal(entry.lineageRootHex, comp.lineageRootHex);
+  }
 });
 
 console.log('------------------------------------------------------------------------');

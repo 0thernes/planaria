@@ -11,6 +11,8 @@ export const GF_SIZE = 256;
 
 export const GF_EXP = new Uint8Array(512);
 export const GF_LOG = new Uint8Array(256);
+/** Precomputed 256x256 flat multiplication table (GF_MUL_TABLE[(a << 8) | b] = gfMul(a, b)). */
+export const GF_MUL_TABLE = new Uint8Array(256 * 256);
 
 (function initTables() {
   let x = 1;
@@ -26,6 +28,14 @@ export const GF_LOG = new Uint8Array(256);
     GF_EXP[i] = GF_EXP[i - 255];
   }
   GF_LOG[0] = 0; // sentinel; never index log(0) in mul/div
+
+  for (let a = 1; a < 256; a++) {
+    const la = GF_LOG[a];
+    const rowOff = a << 8;
+    for (let b = 1; b < 256; b++) {
+      GF_MUL_TABLE[rowOff | b] = GF_EXP[la + GF_LOG[b]];
+    }
+  }
 })();
 
 /** Addition in GF(2^8) is bitwise XOR. */
@@ -81,11 +91,19 @@ export function gfDiv(a, b) {
   return GF_EXP[GF_LOG[a] + 255 - GF_LOG[b]];
 }
 
-/** Exponentiation a^e in GF(2^8). */
+/** Exponentiation a^e in GF(2^8) for integer exponents e (throws on 0^negative). */
 export function gfPow(a, e) {
+  if (!Number.isInteger(e)) {
+    throw new RangeError(`GF(2^8) exponent must be an integer, got ${e}`);
+  }
   a &= 0xff;
   if (e === 0) return 1;
-  if (a === 0) return 0;
+  if (a === 0) {
+    if (e < 0) {
+      throw new RangeError('GF(2^8) division by zero');
+    }
+    return 0;
+  }
   const idx = (GF_LOG[a] * (e % 255)) % 255;
   return GF_EXP[idx < 0 ? idx + 255 : idx];
 }
@@ -93,8 +111,9 @@ export function gfPow(a, e) {
 /** Evaluate polynomial poly[0]*x^(d-1) + ... + poly[d-1] at x using Horner's rule. */
 export function gfPolyEval(poly, x) {
   let acc = 0;
+  const xRow = (x & 0xff) << 8;
   for (let i = 0; i < poly.length; i++) {
-    acc = gfMul(acc, x) ^ poly[i];
+    acc = GF_MUL_TABLE[xRow | acc] ^ (poly[i] & 0xff);
   }
   return acc;
 }
@@ -103,23 +122,31 @@ export function gfPolyEval(poly, x) {
 export function gfPolyEvalAsc(poly, x) {
   let acc = 0;
   let xp = 1;
+  const xb = x & 0xff;
   for (let i = 0; i < poly.length; i++) {
-    if (poly[i] !== 0) {
-      acc ^= gfMul(poly[i], xp);
+    const c = poly[i] & 0xff;
+    if (c !== 0) {
+      acc ^= GF_MUL_TABLE[(c << 8) | xp];
     }
-    xp = gfMul(xp, x);
+    xp = GF_MUL_TABLE[(xp << 8) | xb];
   }
   return acc;
 }
 
 /** Multiply two descending polynomials over GF(2^8). */
 export function gfPolyMulDesc(p, q) {
+  if (!p || !q || p.length === 0 || q.length === 0) {
+    return new Uint8Array(0);
+  }
   const out = new Uint8Array(p.length + q.length - 1);
   for (let i = 0; i < p.length; i++) {
-    if (p[i] === 0) continue;
+    const pi = p[i] & 0xff;
+    if (pi === 0) continue;
+    const row = pi << 8;
     for (let j = 0; j < q.length; j++) {
-      if (q[j] === 0) continue;
-      out[i + j] ^= gfMul(p[i], q[j]);
+      const qj = q[j] & 0xff;
+      if (qj === 0) continue;
+      out[i + j] ^= GF_MUL_TABLE[row | qj];
     }
   }
   return out;
@@ -127,12 +154,18 @@ export function gfPolyMulDesc(p, q) {
 
 /** Multiply two ascending polynomials over GF(2^8), optionally truncated to maxLen. */
 export function gfPolyMulAsc(p, q, maxLen = p.length + q.length - 1) {
+  if (!p || !q || p.length === 0 || q.length === 0 || maxLen <= 0) {
+    return new Uint8Array(0);
+  }
   const out = new Uint8Array(maxLen);
   for (let i = 0; i < p.length; i++) {
-    if (p[i] === 0) continue;
+    const pi = p[i] & 0xff;
+    if (pi === 0) continue;
+    const row = pi << 8;
     for (let j = 0; j < q.length && i + j < maxLen; j++) {
-      if (q[j] === 0) continue;
-      out[i + j] ^= gfMul(p[i], q[j]);
+      const qj = q[j] & 0xff;
+      if (qj === 0) continue;
+      out[i + j] ^= GF_MUL_TABLE[row | qj];
     }
   }
   return out;
