@@ -68,9 +68,9 @@ jobs:
           tectonic --version
       - name: Compile paper/main.tex and verify dist/arxiv_submission.tar.gz standalone
         run: |
+          mkdir -p /tmp/pdf-out /tmp/arxiv-check/out
           tectonic -X compile paper/main.tex --outdir /tmp/pdf-out --keep-logs
           test -s /tmp/pdf-out/main.pdf
-          mkdir -p /tmp/arxiv-check
           tar -xzf dist/arxiv_submission.tar.gz -C /tmp/arxiv-check
           tectonic -X compile /tmp/arxiv-check/main.tex --outdir /tmp/arxiv-check/out
           test -s /tmp/arxiv-check/out/main.pdf
