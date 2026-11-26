@@ -2,7 +2,7 @@
   "schema": "PLANARIA-ATTESTATION-1.2",
   "signatureMode": "ephemeral-self-consistency-seal",
   "trustBoundary": "Ephemeral session Ed25519 key: proves internal bundle self-consistency against the embedded public key; external authenticity comes from git commit / GitHub release / SLSA provenance / Software Heritage archival.",
-  "timestamp": "2026-11-26T00:25:53.275Z",
+  "timestamp": "2026-11-26T00:30:17.919Z",
   "digests": {
     "package.json": "36d82ed553d82529bec7e6639f53b9dd95b4eaab4a0d4b795312239480302bb6",
     "VERSION": "a42caf4a54bbbe27aa45b6efbc6356c5e299b19763e728b6cdb7201b02ebbe36",
@@ -64,7 +64,7 @@
     "dist/arxiv_submission.tar.gz": "0e570f3c0d685ba72f1fa8cd84be432e1b9cbb74a2a99f5daf5fa1d75bfa118c",
     "results/benchmarks.json": "fe99966dbcf63489b6cea30392c858ff9b36b5be1cddc62a2c15efcb69d2e93b"
   },
-  "ed25519PublicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAZIyu36L/fPHslomuT0ZTk+sOH6zrBceGDmkEgFWo0h0=\n-----END PUBLIC KEY-----\n",
-  "ed25519SignatureHex": "7fa182d1cbfa7c7d1992d7c16d28c2d92b80640068a6d0efc097aafb5ede5c1c920441dd95b117aa123bb06e29df5832758520cd93c2dd922a987c93a320fd09",
+  "ed25519PublicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAAkDsDxJJNFXDmylUK4xOqcvgW9ebG7fXRFwg+L/0bfg=\n-----END PUBLIC KEY-----\n",
+  "ed25519SignatureHex": "71332a4298585c0a391117c8764ca34bddc694114a62c082c47440c81f2fa65aa4a6f592184fcc958bcd5accf63506069fbfd953fa130fe11670c6d2a15ef700",
   "selfVerified": true
 }
