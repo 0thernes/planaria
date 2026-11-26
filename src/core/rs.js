@@ -150,7 +150,12 @@ function berlekampMassey(synd) {
  *   { ok: false, reason: string, errorsCorrected: 0, positions: [] }
  */
 export function rsDecode(codeword) {
-  const cw = toBytes(codeword);
+  let cw;
+  try {
+    cw = toBytes(codeword);
+  } catch {
+    return { ok: false, reason: 'invalid_input', errorsCorrected: 0, positions: [] };
+  }
   const len = cw.length;
   if (len <= RS_PARITY || len > RS_N) {
     return { ok: false, reason: 'invalid_length', errorsCorrected: 0, positions: [] };

@@ -1,7 +1,9 @@
 COSMOGONIC LICENSE — NON-COMMERCIAL RESEARCH & PLAY
 
 Copyright (c) 2026 Alexander Stephen Donahue (0thernes) <0_0@0thernes.art>.
-Owned by 0thernes. Commercial rights reserved. Patent pending. Trademarks asserted.
+Owned by Alexander Stephen Donahue (0thernes). Commercial rights reserved.
+Certain architectural claims may be subject to pending or future patent applications.
+Trademarks asserted.
 
 The whole thing in one line: study it, research it, play with it, build on it —
 just don't sell it or make money from it, and don't claim it as your own. Credit
@@ -20,14 +22,15 @@ the Author keeps all commercial rights.
      (c) MODIFY the Work and make modified versions; and
      (d) SHARE the Work, and share your non-commercial modifications, with others,
          provided you keep to the two conditions in Section 2.
-   "The Work" is this software and every file in this repository.
+   "The Work" is this software and every file in this repository, excluding the
+   third-party files expressly carved out in Section 6.
 
 2. THE TWO CONDITIONS (the only real rules)
    (a) ATTRIBUTION — do NOT claim the Work as your own. Keep the copyright notice,
        this license, and the authorship intact in every copy or modified version
-       you share, and clearly credit "0thernes" as the original author. Do not
-       misrepresent the Work's origin or imply that 0thernes endorses you or your
-       project.
+       you share, and clearly credit "Alexander Stephen Donahue (0thernes)" as the
+       original author. Do not misrepresent the Work's origin or imply that 0thernes
+       endorses you or your project.
    (b) NON-COMMERCIAL — do NOT use the Work, in whole or in part, for commercial
        advantage or monetary compensation. Commercial use includes (without limit):
        selling or licensing it, charging for access, hosting it as a paid or
@@ -39,9 +42,9 @@ the Author keeps all commercial rights.
    All rights not expressly granted in Section 1 are reserved by the Author,
    including ALL commercial rights. No trademark license is granted — the names,
    logos, and brands remain the Author's. One or more inventions embodied in the
-   Work may be the subject of pending patent applications; no patent rights are
-   granted beyond those necessary for the non-commercial uses permitted in
-   Section 1.
+   Work may be the subject of pending or future patent applications; no patent
+   rights are granted beyond those necessary for the non-commercial uses permitted
+   in Section 1.
 
 4. TERMINATION
    This permission ends automatically if you breach it (for example, by selling the
@@ -55,6 +58,14 @@ the Author keeps all commercial rights.
    PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE
    FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM OR IN CONNECTION WITH
    THE WORK OR ITS USE.
+
+6. THIRD-PARTY & BUILD-STANDARD CARVE-OUT
+   The Build Standard checklist and standalone audit tooling files listed in
+   THIRD_PARTY_NOTICES.md (`docs/build-standard.md`, `scripts/audit-repo.sh`,
+   `scripts/Audit-Repo.ps1`, `scripts/audit-checks.tsv`, and
+   `repo-standard.schema.json`) remain governed solely by their original
+   Creative Commons Attribution 4.0 International (CC BY 4.0) license and are
+   expressly excluded from the non-commercial restrictions of this license.
 
 (If you want a recognized, lawyer-drafted equivalent, this license is intended to
 match the spirit of PolyForm Noncommercial 1.0.0 — https://polyformproject.org/.)

@@ -68,7 +68,8 @@ builtin_check() {
       local v; v="$(tr -d '[:space:]' < VERSION)"
       if ! grep -Eq "^## \[?v?$v\]?" CHANGELOG.md 2>/dev/null; then D="CHANGELOG.md has no section for $v"; return; fi
       if [ -f CITATION.cff ] && ! grep -Eq "^version: *\"?$v\"?" CITATION.cff; then D="CITATION.cff version differs from $v"; return; fi
-      R=pass; D="VERSION $v matches CHANGELOG and CITATION" ;;
+      if [ -f package.json ] && ! grep -Eq "\"version\": *\"$v\"" package.json; then D="package.json version differs from $v"; return; fi
+      R=pass; D="VERSION $v matches CHANGELOG, CITATION, and package.json" ;;
     tests_exist)
       if grep -Eqi '(^|/)(tests?|spec|__tests__|testdata)/|_test\.(go|py|rb|c|cc|cpp|exs)$|(^|/)test_[^/]*\.py$|\.(test|spec)\.[cm]?[jt]sx?$|_spec\.rb$|Tests?\.(java|kt|cs|fs|swift)$' "$FILES"; then R=pass; D="test files found"; else D="no test files found"; fi ;;
     ci_on_push)

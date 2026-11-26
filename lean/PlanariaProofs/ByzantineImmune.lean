@@ -66,6 +66,20 @@ public theorem rs_unique_correction_ball_disjoint
   have hTri := hammingDist_triangle c1 y c2 hlen1 hlen2
   omega
 
+/-- Non-vacuity witness for Theorem IV.2 (`rs_unique_correction_ball_disjoint`):
+    two concrete 17-byte codewords at Hamming distance `17 >= 2*8 + 1` have disjoint radius-8 balls. -/
+public theorem rs_unique_correction_ball_nonvacuous :
+    let c1 : List Nat := List.replicate 17 0
+    let c2 : List Nat := List.replicate 17 1
+    let y  : List Nat := List.replicate 8 1 ++ List.replicate 9 0
+    c1.length = y.length ∧ y.length = c2.length ∧
+    hammingDist c1 c2 ≥ 2 * 8 + 1 ∧
+    ¬ (hammingDist c1 y ≤ 8 ∧ hammingDist y c2 ≤ 8) :=
+  ⟨by decide, by decide, by decide,
+   rs_unique_correction_ball_disjoint
+     (List.replicate 17 0) (List.replicate 17 1) (List.replicate 8 1 ++ List.replicate 9 0) 8
+     (by decide) (by decide) (by decide)⟩
+
 private theorem even_step2 (start len : Nat) :
     countEven start (len + 2) = countEven start len + 1 := by
   simp only [countEven]
@@ -170,31 +184,51 @@ public theorem interleaved_burst_18_both_lanes_exceed (start : Nat) :
 -- EXPLICIT MERKLE PATH COMMITMENT & BYZANTINE QUARANTINE / QUORUM BOUNDS
 -- ============================================================================
 
-/-- Theorem IV.7 (Collision-Free Merkle Path Leaf Commitment):
-    Under a collision-resistant (injective) compression function `hashPair`, two leaves
-    producing the identical Merkle root along the same authentication path MUST be identical! -/
+/-- Theorem IV.7 (Collision-Free Full Merkle Path & Leaf Commitment):
+    Under a collision-resistant (injective) compression function `hashPair`, ANY two pairs
+    `(leaf1, path1)` and `(leaf2, path2)` with identical left/right branch directions
+    (`path1.map Prod.fst = path2.map Prod.fst`) that evaluate to the identical Merkle root
+    MUST have BOTH identical leaves (`leaf1 = leaf2`) AND identical sibling paths (`path1 = path2`)! -/
 public theorem merkle_path_collision_free_binding
     (hashPair : Nat → Nat → Nat)
     (hInj : ∀ a1 b1 a2 b2, hashPair a1 b1 = hashPair a2 b2 → a1 = a2 ∧ b1 = b2) :
-    ∀ (path : List (Bool × Nat)) (leaf1 leaf2 : Nat),
-      evalMerklePath hashPair leaf1 path = evalMerklePath hashPair leaf2 path →
-      leaf1 = leaf2 := by
-  intro path
-  induction path with
+    ∀ (path1 path2 : List (Bool × Nat)) (leaf1 leaf2 : Nat),
+      path1.map Prod.fst = path2.map Prod.fst →
+      evalMerklePath hashPair leaf1 path1 = evalMerklePath hashPair leaf2 path2 →
+      leaf1 = leaf2 ∧ path1 = path2 := by
+  intro path1
+  induction path1 with
   | nil =>
-    intro l1 l2 h
-    simpa [evalMerklePath] using h
-  | cons step rest ih =>
-    intro l1 l2 h
-    cases step with
-    | mk isRight sib =>
-      simp only [evalMerklePath] at h
-      have hNext := ih _ _ h
-      cases isRight
-      · simp only [Bool.false_eq_true, ↓reduceIte] at hNext
-        exact (hInj l1 sib l2 sib hNext).1
-      · simp only [↓reduceIte] at hNext
-        exact (hInj sib l1 sib l2 hNext).2
+    intro path2 l1 l2 hDir hEval
+    cases path2 with
+    | nil =>
+      exact ⟨by simpa [evalMerklePath] using hEval, rfl⟩
+    | cons _ _ =>
+      simp at hDir
+  | cons step1 rest1 ih =>
+    intro path2 l1 l2 hDir hEval
+    cases path2 with
+    | nil =>
+      simp at hDir
+    | cons step2 rest2 =>
+      cases step1 with
+      | mk dir1 sib1 =>
+        cases step2 with
+        | mk dir2 sib2 =>
+          simp only [List.map_cons, List.cons.injEq] at hDir
+          rcases hDir with ⟨hDirEq, hRestDir⟩
+          subst hDirEq
+          simp only [evalMerklePath] at hEval
+          have ⟨hNext, hRestEq⟩ := ih rest2 _ _ hRestDir hEval
+          cases dir1
+          · simp only [Bool.false_eq_true, ↓reduceIte] at hNext
+            have ⟨hl, hs⟩ := hInj l1 sib1 l2 sib2 hNext
+            subst hs; subst hRestEq
+            exact ⟨hl, rfl⟩
+          · simp only [↓reduceIte] at hNext
+            have ⟨hs, hl⟩ := hInj sib1 l1 sib2 l2 hNext
+            subst hs; subst hRestEq
+            exact ⟨hl, rfl⟩
 
 /-- Non-vacuity witness for Theorem IV.7: `pow2Pair` satisfies `hInj` universally over `Nat`. -/
 public theorem pow2Pair_injective :
@@ -289,31 +323,151 @@ private theorem electQuorumAux_strict_leader (bestRoot bestCnt : Nat) (hMin : be
       simp only [hSmall, hNotGt, hNotEq, Bool.false_eq_true, ↓reduceIte]
       exact electQuorumAux_strict_leader bestRoot bestCnt hMin rest hRest
 
-/-- Theorem IV.10a (Unpinned Quorum Honest-Majority Election):
-    If an honest lineage bucket `(honestRoot, honestCnt)` has `honestCnt >= 2` and strictly
-    outnumbers every competing bucket in `others`, `electUnpinnedQuorum` uniquely elects `some honestRoot`! -/
-public theorem unpinned_quorum_honest_majority
-    (honestRoot honestCnt : Nat) (others : List (Nat × Nat))
-    (hMin : honestCnt ≥ 2)
-    (hMaj : ∀ rc ∈ others, rc.2 < honestCnt) :
-    electUnpinnedQuorum ((honestRoot, honestCnt) :: others) = some honestRoot := by
-  unfold electUnpinnedQuorum electQuorumAux
-  have hNotSmall : ¬ (honestCnt < 2) := by omega
-  have hGt0 : honestCnt > 0 := by omega
-  simp only [hNotSmall, hGt0, ↓reduceIte]
-  exact electQuorumAux_strict_leader honestRoot honestCnt hMin others hMaj
+private theorem electQuorumAux_below_then_strict_leader
+    (honestRoot honestCnt : Nat) (hMin : honestCnt ≥ 2)
+    (suf : List (Nat × Nat)) (hSuf : ∀ rc ∈ suf, rc.2 < honestCnt) :
+    ∀ (pre : List (Nat × Nat)) (bestRoot bestCnt : Nat) (tied : Bool),
+      bestCnt < honestCnt →
+      (∀ rc ∈ pre, rc.2 < honestCnt) →
+      electQuorumAux bestRoot bestCnt tied (pre ++ (honestRoot, honestCnt) :: suf) = some honestRoot
+  | [], _, bestCnt, _, hBestLt, _ => by
+    simp only [List.nil_append, electQuorumAux]
+    have hNotSmall : ¬ (honestCnt < 2) := by omega
+    have hGt : honestCnt > bestCnt := by omega
+    simp only [hNotSmall, hGt, ↓reduceIte]
+    exact electQuorumAux_strict_leader honestRoot honestCnt hMin suf hSuf
+  | (r, c) :: rest, bestRoot, bestCnt, tied, hBestLt, hPre => by
+    have hcLt : c < honestCnt := hPre (r, c) (List.mem_cons_self ..)
+    have hRest : ∀ rc ∈ rest, rc.2 < honestCnt := fun rc hm => hPre rc (List.mem_cons_of_mem _ hm)
+    simp only [List.cons_append, electQuorumAux]
+    by_cases hSmall : c < 2
+    · simp only [hSmall, ↓reduceIte]
+      exact electQuorumAux_below_then_strict_leader honestRoot honestCnt hMin suf hSuf rest bestRoot bestCnt tied hBestLt hRest
+    · by_cases hGt : c > bestCnt
+      · simp only [hSmall, hGt, ↓reduceIte]
+        exact electQuorumAux_below_then_strict_leader honestRoot honestCnt hMin suf hSuf rest r c false hcLt hRest
+      · by_cases hEq : c == bestCnt
+        · simp only [hSmall, hGt, hEq, ↓reduceIte]
+          exact electQuorumAux_below_then_strict_leader honestRoot honestCnt hMin suf hSuf rest bestRoot bestCnt true hBestLt hRest
+        · simp only [hSmall, hGt, hEq, Bool.false_eq_true, ↓reduceIte]
+          exact electQuorumAux_below_then_strict_leader honestRoot honestCnt hMin suf hSuf rest bestRoot bestCnt tied hBestLt hRest
 
-/-- Theorem IV.10b (Unpinned Quorum Tie Fail-Closed):
-    For ANY two equal-count root buckets `(r1, c)` and `(r2, c)` with `c >= 2`,
-    `electUnpinnedQuorum` fails closed and returns `none` (never breaks ties arbitrarily!). -/
-public theorem unpinned_quorum_tie_fail_closed (r1 r2 c : Nat) (hc : c ≥ 2) :
-    electUnpinnedQuorum [(r1, c), (r2, c)] = none := by
-  have hNotSmall : ¬ (c < 2) := by omega
-  have hGt0 : c > 0 := by omega
-  have hNotGt : ¬ (c > c) := by omega
-  have hEq : (c == c) = true := beq_self_eq_true c
-  simp only [electUnpinnedQuorum, electQuorumAux, hNotSmall, hGt0, hNotGt, hEq, ↓reduceIte,
-    Bool.not_true, Bool.and_false, Bool.false_eq_true]
+/-- Theorem IV.10a (Order-Independent Unpinned Quorum Honest-Majority Election):
+    For ANY insertion position (`pre ++ (honestRoot, honestCnt) :: suf`), if the honest
+    lineage bucket has `honestCnt >= 2` and strictly outnumbers every competing bucket in
+    `pre` and `suf`, `electUnpinnedQuorum` uniquely elects `some honestRoot`! -/
+public theorem unpinned_quorum_honest_majority
+    (honestRoot honestCnt : Nat) (pre suf : List (Nat × Nat))
+    (hMin : honestCnt ≥ 2)
+    (hPre : ∀ rc ∈ pre, rc.2 < honestCnt)
+    (hSuf : ∀ rc ∈ suf, rc.2 < honestCnt) :
+    electUnpinnedQuorum (pre ++ (honestRoot, honestCnt) :: suf) = some honestRoot := by
+  unfold electUnpinnedQuorum
+  exact electQuorumAux_below_then_strict_leader honestRoot honestCnt hMin suf hSuf pre 0 0 false (by omega) hPre
+
+/-- Non-vacuity witness for Theorem IV.10a with the honest majority at a non-head index. -/
+public theorem unpinned_quorum_honest_majority_witness :
+    electUnpinnedQuorum ([(999, 5)] ++ (42, 12) :: [(777, 3)]) = some 42 :=
+  unpinned_quorum_honest_majority 42 12 [(999, 5)] [(777, 3)]
+    (by decide)
+    (fun rc hm => by simp at hm; subst hm; decide)
+    (fun rc hm => by simp at hm; subst hm; decide)
+
+private theorem electQuorumAux_tied_max_none (c : Nat) :
+    ∀ (xs : List (Nat × Nat)) (bestRoot : Nat),
+      (∀ rc ∈ xs, rc.2 ≤ c) →
+      electQuorumAux bestRoot c true xs = none
+  | [], _, _ => by
+    simp [electQuorumAux]
+  | (r, x) :: rest, bestRoot, hLe => by
+    have hxLe : x ≤ c := hLe (r, x) (List.mem_cons_self ..)
+    have hRest : ∀ rc ∈ rest, rc.2 ≤ c := fun rc hm => hLe rc (List.mem_cons_of_mem _ hm)
+    simp only [electQuorumAux]
+    by_cases hSmall : x < 2
+    · simp only [hSmall, ↓reduceIte]
+      exact electQuorumAux_tied_max_none c rest bestRoot hRest
+    · have hNotGt : ¬ (x > c) := by omega
+      by_cases hEq : x == c
+      · simp only [hSmall, hNotGt, hEq, ↓reduceIte]
+        exact electQuorumAux_tied_max_none c rest bestRoot hRest
+      · simp only [hSmall, hNotGt, hEq, Bool.false_eq_true, ↓reduceIte]
+        exact electQuorumAux_tied_max_none c rest bestRoot hRest
+
+private theorem electQuorumAux_second_tie_none
+    (r2 c : Nat) (hc : c ≥ 2) (suf : List (Nat × Nat)) (hSuf : ∀ rc ∈ suf, rc.2 ≤ c) :
+    ∀ (mid : List (Nat × Nat)) (bestRoot : Nat) (tied : Bool),
+      (∀ rc ∈ mid, rc.2 ≤ c) →
+      electQuorumAux bestRoot c tied (mid ++ (r2, c) :: suf) = none
+  | [], bestRoot, _, _ => by
+    simp only [List.nil_append, electQuorumAux]
+    have hNotSmall : ¬ (c < 2) := by omega
+    have hNotGt : ¬ (c > c) := by omega
+    have hEq : (c == c) = true := beq_self_eq_true c
+    simp only [hNotSmall, hNotGt, hEq, ↓reduceIte]
+    exact electQuorumAux_tied_max_none c suf bestRoot hSuf
+  | (r, x) :: rest, bestRoot, tied, hMid => by
+    have hxLe : x ≤ c := hMid (r, x) (List.mem_cons_self ..)
+    have hRest : ∀ rc ∈ rest, rc.2 ≤ c := fun rc hm => hMid rc (List.mem_cons_of_mem _ hm)
+    simp only [List.cons_append, electQuorumAux]
+    by_cases hSmall : x < 2
+    · simp only [hSmall, ↓reduceIte]
+      exact electQuorumAux_second_tie_none r2 c hc suf hSuf rest bestRoot tied hRest
+    · have hNotGt : ¬ (x > c) := by omega
+      by_cases hEq : x == c
+      · simp only [hSmall, hNotGt, hEq, ↓reduceIte]
+        exact electQuorumAux_second_tie_none r2 c hc suf hSuf rest bestRoot true hRest
+      · simp only [hSmall, hNotGt, hEq, Bool.false_eq_true, ↓reduceIte]
+        exact electQuorumAux_second_tie_none r2 c hc suf hSuf rest bestRoot tied hRest
+
+private theorem electQuorumAux_two_ties_none
+    (r1 r2 c : Nat) (hc : c ≥ 2)
+    (mid suf : List (Nat × Nat))
+    (hMid : ∀ rc ∈ mid, rc.2 ≤ c)
+    (hSuf : ∀ rc ∈ suf, rc.2 ≤ c) :
+    ∀ (pre : List (Nat × Nat)) (bestRoot bestCnt : Nat) (tied : Bool),
+      bestCnt ≤ c →
+      (∀ rc ∈ pre, rc.2 ≤ c) →
+      electQuorumAux bestRoot bestCnt tied (pre ++ (r1, c) :: (mid ++ (r2, c) :: suf)) = none
+  | [], bestRoot, bestCnt, _, hBestLe, _ => by
+    simp only [List.nil_append, electQuorumAux]
+    have hNotSmall : ¬ (c < 2) := by omega
+    by_cases hGt : c > bestCnt
+    · simp only [hNotSmall, hGt, ↓reduceIte]
+      exact electQuorumAux_second_tie_none r2 c hc suf hSuf mid r1 false hMid
+    · have hEqNat : c = bestCnt := by omega
+      have hEq : (c == bestCnt) = true := by rw [hEqNat]; exact beq_self_eq_true bestCnt
+      simp only [hNotSmall, hGt, hEq, ↓reduceIte]
+      rw [← hEqNat]
+      exact electQuorumAux_second_tie_none r2 c hc suf hSuf mid bestRoot true hMid
+  | (r, x) :: rest, bestRoot, bestCnt, tied, hBestLe, hPre => by
+    have hxLe : x ≤ c := hPre (r, x) (List.mem_cons_self ..)
+    have hRest : ∀ rc ∈ rest, rc.2 ≤ c := fun rc hm => hPre rc (List.mem_cons_of_mem _ hm)
+    simp only [List.cons_append, electQuorumAux]
+    by_cases hSmall : x < 2
+    · simp only [hSmall, ↓reduceIte]
+      exact electQuorumAux_two_ties_none r1 r2 c hc mid suf hMid hSuf rest bestRoot bestCnt tied hBestLe hRest
+    · by_cases hGt : x > bestCnt
+      · simp only [hSmall, hGt, ↓reduceIte]
+        exact electQuorumAux_two_ties_none r1 r2 c hc mid suf hMid hSuf rest r x false hxLe hRest
+      · by_cases hEq : x == bestCnt
+        · simp only [hSmall, hGt, hEq, ↓reduceIte]
+          exact electQuorumAux_two_ties_none r1 r2 c hc mid suf hMid hSuf rest bestRoot bestCnt true hBestLe hRest
+        · simp only [hSmall, hGt, hEq, Bool.false_eq_true, ↓reduceIte]
+          exact electQuorumAux_two_ties_none r1 r2 c hc mid suf hMid hSuf rest bestRoot bestCnt tied hBestLe hRest
+
+/-- Theorem IV.10b (General Arbitrary-List Unpinned Quorum Tie Fail-Closed):
+    For ANY vote list containing two tied maximum buckets `(r1, c)` and `(r2, c)` with `c >= 2`
+    at arbitrary positions (with all other buckets having count `<= c`), `electUnpinnedQuorum`
+    unconditionally fails closed and returns `none`! -/
+public theorem unpinned_quorum_tie_fail_closed
+    (pre mid suf : List (Nat × Nat)) (r1 r2 c : Nat)
+    (hc : c ≥ 2)
+    (hPre : ∀ rc ∈ pre, rc.2 ≤ c)
+    (hMid : ∀ rc ∈ mid, rc.2 ≤ c)
+    (hSuf : ∀ rc ∈ suf, rc.2 ≤ c) :
+    electUnpinnedQuorum (pre ++ (r1, c) :: (mid ++ (r2, c) :: suf)) = none := by
+  unfold electUnpinnedQuorum
+  exact electQuorumAux_two_ties_none r1 r2 c hc mid suf hMid hSuf pre 0 0 false (by omega) hPre
 
 /-- Theorem IV.10c (Sybil-Flood Override Counterexample):
     WITHOUT a pinned root, a Sybil attacker forging 36 cells under one coordinated fake root `999`

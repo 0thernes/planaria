@@ -134,8 +134,8 @@ function buildAbilityBar() {
     );
     btn.addEventListener('click', () => {
       if (ab.key === 'R') {
-        if (!world.hbinState.bootable || world.temporal.snapshotCount <= 2) {
-          logEvent('R · CHRONO REWIND unavailable (organism dead or insufficient timeline history).', 'log-warn');
+        if (!world.hbinState.bootable || world.temporal.snapshotCount <= 1 || world.temporal.chronoEnergy <= 2) {
+          logEvent('R · CHRONO REWIND unavailable (organism dead, low chrono energy, or insufficient timeline history).', 'log-warn');
           return;
         }
         state.rewindBurstFrames = 45;
@@ -167,9 +167,18 @@ function renderRpgPanels(force = false) {
   const gearSig = computeGearSignature();
   const npcSig = computeNpcSignature();
 
-  // Split gear/skill DOM updates from high-frequency NPC HP updates so keyboard focus is preserved!
+  // Split gear/skill DOM updates from high-frequency NPC HP updates AND preserve keyboard focus!
   if (force || gearSig !== state.lastGearSignature) {
     state.lastGearSignature = gearSig;
+    const activeEl = document.activeElement;
+    let restoreFocusSelector = null;
+    if (activeEl?.dataset?.weaponIdx !== undefined) {
+      restoreFocusSelector = `#weaponList [data-weapon-idx="${activeEl.dataset.weaponIdx}"]`;
+    } else if (activeEl?.dataset?.armorIdx !== undefined) {
+      restoreFocusSelector = `#armorList [data-armor-idx="${activeEl.dataset.armorIdx}"]`;
+    } else if (activeEl?.dataset?.skillId !== undefined) {
+      restoreFocusSelector = `#skillList [data-skill-id="${activeEl.dataset.skillId}"]`;
+    }
 
     // 1. Weapons (event-delegated click + keyboard handler attached once in wireEvents)
     const wBox = el('weaponList');
@@ -254,7 +263,7 @@ function renderRpgPanels(force = false) {
                 node('span', { text: `[${sk.branch.slice(0, 4)}]`, style: { color: 'var(--cyan)', fontSize: '10px' } }),
                 ` ${sk.name}`,
               ]),
-              node('span', { text: `Lv.${lvl}/${sk.maxLvl}`, style: { color: 'var(--gold)' } }),
+              node('span', { cls: 'skill-rank', text: `Lv.${lvl}/${sk.maxLvl}` }),
             ]
           ),
           node('div', { cls: 'item-sub', text: sk.desc }),
@@ -263,6 +272,9 @@ function renderRpgPanels(force = false) {
       sFrag.appendChild(card);
     }
     sBox.replaceChildren(sFrag);
+    if (restoreFocusSelector) {
+      document.querySelector(restoreFocusSelector)?.focus();
+    }
   }
 
   if (force || npcSig !== state.lastNpcSignature) {
@@ -502,11 +514,15 @@ function updateLive3DHud() {
   el('barShield').style.width = `${shPct}%`;
   el('trackShield')?.setAttribute('aria-valuenow', String(shPct));
   el('valShield').textContent = String(Math.round(pl.shield));
+  el('trackHp')?.setAttribute('aria-valuetext', `${Math.round(pl.hp)} / ${pl.maxHp} HP`);
+  el('trackShield')?.setAttribute('aria-valuetext', `${Math.round(pl.shield)} / ${pl.maxShield} Shield`);
   el('barChrono').style.width = `${chPct}%`;
   el('trackChrono')?.setAttribute('aria-valuenow', String(chPct));
+  el('trackChrono')?.setAttribute('aria-valuetext', `${Math.round(world.temporal.chronoEnergy)} / 100 Chrono Energy`);
   el('valChrono').textContent = String(Math.round(world.temporal.chronoEnergy));
   el('barCoh').style.width = `${coPct}%`;
   el('trackCoh')?.setAttribute('aria-valuenow', String(coPct));
+  el('trackCoh')?.setAttribute('aria-valuetext', `${coPct}% Quantum Coherence`);
   el('valCoh').textContent = `${coPct}%`;
 
   const absS = Math.abs(world.chshValue);
@@ -532,15 +548,24 @@ function updateLive3DHud() {
   el('statLatency').textContent = `${state.lastDecodeMs.toFixed(1)}ms · ${world.npcs.length} NPC`;
 
   const mb = el('modeBadge');
+  const effClock = world.temporal.globalTimeScale;
   if (world.temporal.rewinding) {
     mb.textContent = '◀◀ REWINDING TIME';
     mb.className = 'badge badge-s1';
-  } else if (world.temporal.globalTimeScale < 0.5) {
-    mb.textContent = `BULLET-TIME ${world.temporal.globalTimeScale.toFixed(2)}x`;
+  } else if (effClock < 0.5) {
+    mb.textContent = `BULLET-TIME ${effClock.toFixed(2)}x`;
     mb.className = 'badge badge-s0';
   } else {
-    mb.textContent = `CLOCK ${world.temporal.globalTimeScale.toFixed(2)}x`;
+    mb.textContent = `CLOCK ${effClock.toFixed(2)}x`;
     mb.className = 'badge badge-s2';
+  }
+  const timeSlider = el('sliderTime');
+  if (timeSlider && document.activeElement !== timeSlider) {
+    const pctVal = Math.max(15, Math.min(250, Math.round(effClock * 100)));
+    if (Math.abs(Number(timeSlider.value) - pctVal) >= 2) {
+      timeSlider.value = String(pctVal);
+      el('timeLabel').textContent = `${effClock.toFixed(2)}x · ${effClock < 0.6 ? 'Time Dilation' : effClock > 1.3 ? 'Hyper-Chronon' : 'Real-Time'}`;
+    }
   }
 
   for (const ab of ABILITIES) {
@@ -615,20 +640,37 @@ function frameLoop(now) {
     });
 
     if (renderer3d) {
+      // Keyboard 3D orbit & zoom accessibility shortcuts (J/L/I/K and +/-)
+      if (state.keys.has('KeyJ')) renderer3d.camYaw += 1.6 * dt;
+      if (state.keys.has('KeyL')) renderer3d.camYaw -= 1.6 * dt;
+      if (state.keys.has('KeyI')) renderer3d.camPitch = Math.max(0.14, renderer3d.camPitch - 1.1 * dt);
+      if (state.keys.has('KeyK')) renderer3d.camPitch = Math.min(1.42, renderer3d.camPitch + 1.1 * dt);
+      if (state.keys.has('Equal') || state.keys.has('NumpadAdd')) renderer3d.camDist = Math.max(11, renderer3d.camDist - 22 * dt);
+      if (state.keys.has('Minus') || state.keys.has('NumpadSubtract')) renderer3d.camDist = Math.min(64, renderer3d.camDist + 22 * dt);
       renderer3d.render(world, state.decoded);
     }
 
-    imgPrimary.data.set(vmPrimary.fbBytes);
-    ctxPrimary.putImageData(imgPrimary, 0, 0);
-    imgSecondary.data.set(vmSecondary.fbBytes);
-    ctxSecondary.putImageData(imgSecondary, 0, 0);
+    // Only blit 2D CRT canvases when Tab 2 is visible (saves redundant putImageData per frame)
+    if (el('tab-crt')?.classList.contains('active')) {
+      imgPrimary.data.set(vmPrimary.fbBytes);
+      ctxPrimary.putImageData(imgPrimary, 0, 0);
+      imgSecondary.data.set(vmSecondary.fbBytes);
+      ctxSecondary.putImageData(imgSecondary, 0, 0);
+    }
 
-    audio.pushVoices(world.liveVoices);
+    // Dirty-check AudioWorklet voice payload before structured-clone postMessage
+    const vSig = world.liveVoices.map((v) => `${v.wave}:${Math.round(v.freqHz * 4)}:${Math.round(v.vol * 100)}:${v.detune}:${v.filter}`).join('|');
+    if (vSig !== state.lastVoiceSig) {
+      state.lastVoiceSig = vSig;
+      audio.pushVoices(world.liveVoices);
+    }
 
     if (state.tick % 4 === 0) {
       el('primaryFps').textContent = `${r1.insns} insns/f · traps:${vmPrimary.traps}`;
       updateLive3DHud();
-      drawAnastomosisGraph(el('canvasVascular'), state.decoded, vmPrimary.lastFrameRoutes, state.tick);
+      if (el('tab-vascular')?.classList.contains('active')) {
+        drawAnastomosisGraph(el('canvasVascular'), state.decoded, vmPrimary.lastFrameRoutes, state.tick);
+      }
     }
     if (state.tick % 24 === 0) {
       renderRpgPanels(false);
@@ -704,6 +746,7 @@ function activateTab(btn, moveFocus = false) {
 function applyReducedMotion(enabled, quiet = false) {
   state.reducedMotion = Boolean(enabled);
   world.reducedMotion = state.reducedMotion;
+  document.documentElement.classList.toggle('reduced-motion', state.reducedMotion);
   const btn = el('btnMotion');
   if (btn) {
     btn.textContent = state.reducedMotion ? 'Motion: REDUCED' : 'Motion: FULL';
@@ -725,17 +768,18 @@ function applyReducedMotion(enabled, quiet = false) {
 }
 
 function wireEvents() {
-  // 3D Orbit & Zoom controls on WebGL2 viewport (Pointer Events: mouse + touch + pen!)
+  // 3D Orbit & Zoom controls on WebGL2 viewport (Pointer Events with single-pointer lock)
   const wrap3d = el('viewport3dWrap');
   wrap3d.addEventListener('pointerdown', (e) => {
-    if (!renderer3d || e.button > 0) return;
+    if (!renderer3d || e.button > 0 || state.isDragging3D) return;
     state.isDragging3D = true;
+    state.dragPointerId = e.pointerId;
     state.lastMouseX = e.clientX;
     state.lastMouseY = e.clientY;
     try { wrap3d.setPointerCapture(e.pointerId); } catch { /* ignore */ }
   });
   wrap3d.addEventListener('pointermove', (e) => {
-    if (state.isDragging3D && renderer3d) {
+    if (state.isDragging3D && e.pointerId === state.dragPointerId && renderer3d) {
       const dx = e.clientX - state.lastMouseX;
       const dy = e.clientY - state.lastMouseY;
       state.lastMouseX = e.clientX;
@@ -744,13 +788,20 @@ function wireEvents() {
       renderer3d.camPitch = Math.max(0.14, Math.min(1.42, renderer3d.camPitch + dy * 0.006));
     }
   });
-  const endPointerDrag = () => {
+  const endPointerDrag = (e) => {
+    if (e && state.dragPointerId !== undefined && e.pointerId !== undefined && e.pointerId !== state.dragPointerId && state.isDragging3D) {
+      return;
+    }
     state.isDragging3D = false;
+    state.dragPointerId = undefined;
     state.isDraggingTissue = false;
     state.lastExcisedSlot = -1;
   };
   const clearPointerAndKeys = () => {
-    endPointerDrag();
+    state.isDragging3D = false;
+    state.dragPointerId = undefined;
+    state.isDraggingTissue = false;
+    state.lastExcisedSlot = -1;
     state.keys.clear();
   };
   wrap3d.addEventListener('pointerup', endPointerDrag);
@@ -760,8 +811,13 @@ function wireEvents() {
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) clearPointerAndKeys();
   });
-  window.addEventListener('beforeunload', () => {
-    renderer3d?.dispose();
+  window.addEventListener('pagehide', (e) => {
+    if (e.persisted) {
+      audio.mute();
+    } else {
+      renderer3d?.dispose();
+      audio.dispose();
+    }
   });
   wrap3d.addEventListener('wheel', (e) => {
     if (!renderer3d) return;
@@ -825,8 +881,8 @@ function wireEvents() {
   });
 
   el('btnRewindHold').addEventListener('click', () => {
-    if (!world.hbinState.bootable || world.temporal.snapshotCount <= 2) {
-      logEvent('REWIND PULSE unavailable (organism dead or insufficient recorded frames).', 'log-warn');
+    if (!world.hbinState.bootable || world.temporal.snapshotCount <= 1 || world.temporal.chronoEnergy <= 2) {
+      logEvent('REWIND PULSE unavailable (organism dead, low chrono energy, or insufficient recorded frames).', 'log-warn');
       return;
     }
     state.rewindBurstFrames = 55;
@@ -982,6 +1038,7 @@ function wireEvents() {
       state.currentBytes = irradiateCells(pristine.bytes, errCnt, seed, burst).bytes;
       state.currentLinearBytes = irradiateCells(state.linearPristine[state.species].bytes, errCnt, seed, burst).bytes;
       refreshDecodedState(false);
+      world.syncHbinState(state.decoded, { mitosisActive: false, radiationTriggered: true });
       logEvent(`RADIATION ${errCnt}B/cell across ALL 192 cells: RS(254,238) healed ${state.decoded.stats.rsTotalByteErrorsFixed}B (${state.decoded.stats.authenticCells}/192 alive)!`, state.decoded.canFullRegenerate ? 'log-good' : 'log-bad');
     });
   });
@@ -1034,20 +1091,24 @@ function wireEvents() {
     const donorPristine = state.pristine[donorName];
     const ampHost = amputateBundles(hostPristine.bytes, [3, 4], true, ++state.seedCounter).bytes;
     state.currentBytes = concatShards(ampHost, donorPristine.bytes, 53, state.seedCounter);
+    if (state.linearPristine[state.species] && state.linearPristine[donorName]) {
+      const ampLin = shredCells(state.linearPristine[state.species].bytes, 0.25, state.seedCounter, false).bytes;
+      state.currentLinearBytes = concatShards(ampLin, state.linearPristine[donorName].bytes, 53, state.seedCounter);
+    }
     state.pinnedRootHex = hostPristine.lineageRootHex;
     refreshDecodedState(false);
     logEvent(`3D XENOGRAFT CHIMERA FORGED! ${hostPristine.name} × ${donorPristine.name} (${state.decoded.xenografts.length} organs transplanted live!)`, 'log-xeno');
   });
 
-  // Full WAI-ARIA Tabs with roving tabindex & Arrow/Home/End keyboard navigation
+  // Full WAI-ARIA Tabs with roving tabindex & Arrow/Home/End keyboard navigation (stops propagation so 3D player doesn't move!)
   const tabBtns = Array.from(document.querySelectorAll('.tab-btn'));
   tabBtns.forEach((btn, idx) => {
     btn.addEventListener('click', () => activateTab(btn, false));
     btn.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight') { e.preventDefault(); activateTab(tabBtns[(idx + 1) % tabBtns.length], true); }
-      else if (e.key === 'ArrowLeft') { e.preventDefault(); activateTab(tabBtns[(idx - 1 + tabBtns.length) % tabBtns.length], true); }
-      else if (e.key === 'Home') { e.preventDefault(); activateTab(tabBtns[0], true); }
-      else if (e.key === 'End') { e.preventDefault(); activateTab(tabBtns[tabBtns.length - 1], true); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); activateTab(tabBtns[(idx + 1) % tabBtns.length], true); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); activateTab(tabBtns[(idx - 1 + tabBtns.length) % tabBtns.length], true); }
+      else if (e.key === 'Home') { e.preventDefault(); e.stopPropagation(); activateTab(tabBtns[0], true); }
+      else if (e.key === 'End') { e.preventDefault(); e.stopPropagation(); activateTab(tabBtns[tabBtns.length - 1], true); }
     });
   });
   el('disasmBundle').addEventListener('change', updateDisassembly);
@@ -1102,8 +1163,31 @@ function wireEvents() {
   });
   tissueCanvas.addEventListener('pointerup', endPointerDrag);
   tissueCanvas.addEventListener('pointercancel', endPointerDrag);
+  // Keyboard accessibility for 192-Cell Tissue Surgery Map (Arrow keys inspect, Delete/Backspace excises)
+  state.kbdTissueSlot = 0;
+  tissueCanvas.addEventListener('keydown', (e) => {
+    const cols = 24;
+    let next = state.kbdTissueSlot;
+    if (e.key === 'ArrowRight') next = Math.min(191, next + 1);
+    else if (e.key === 'ArrowLeft') next = Math.max(0, next - 1);
+    else if (e.key === 'ArrowDown') next = Math.min(191, next + cols);
+    else if (e.key === 'ArrowUp') next = Math.max(0, next - cols);
+    else if (e.key === 'Delete' || e.key === 'Backspace') {
+      e.preventDefault();
+      e.stopPropagation();
+      exciseSlot(state.kbdTissueSlot);
+      return;
+    } else {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    state.kbdTissueSlot = next;
+    updateCellInspector(next);
+    drawTissueMap(tissueCanvas, state.decoded, next, state.mitosisMode ? 96 : -1);
+  });
 
-  // Physical-code keyboard shortcuts (works under Shift bullet-time & non-Latin layouts; never hijacks focused buttons!)
+  // Physical-code keyboard shortcuts (works under Shift bullet-time & non-Latin layouts; never hijacks focused tabs/buttons!)
   const ABILITY_BY_CODE = {
     KeyQ: 'Q', KeyE: 'E', KeyT: 'T', KeyF: 'F', KeyV: 'V', KeyX: 'X', KeyC: 'C',
   };
@@ -1112,6 +1196,7 @@ function wireEvents() {
   };
   window.addEventListener('keydown', (e) => {
     if (isEditableTarget(e.target) || isEditableTarget(document.activeElement)) return;
+    if (e.target?.closest?.('[role="tab"], [role="tablist"]') && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.code === 'Space' && isInteractiveActivationTarget(document.activeElement)) return;
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();

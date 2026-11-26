@@ -3,11 +3,11 @@ module
 public import PlanariaProofs.Spec
 
 /-!
-# PLANARIA v2.3.0 — Isolated Statement-Only Challenge Specification (`Challenge.lean`)
+# PLANARIA v2.4.0 — Isolated Statement-Only Challenge Specification (`Challenge.lean`)
 
 Imports ONLY `PlanariaProofs.Spec` (pure mathematical definitions, ZERO proofs, ZERO `sorry`)
-and NONE of the six proof modules (`GF256`, `MitosisBounds`, `StratumAnastomosis`,
-`ByzantineImmune`, `XenograftABI`, `QuantumTemporal`).
+and NONE of the seven proof modules (`GF256`, `MitosisBounds`, `StratumAnastomosis`,
+`ByzantineImmune`, `XenograftABI`, `QuantumTemporal`, `AdversarialTests`).
 
 Every `sorry` in this file is intentional — matched strictly against sorry-free `Solution.lean`
 across all 6 independent Lean 4.35.0 kernels via:
@@ -68,6 +68,8 @@ public theorem mitosis_exact_sufficient (N k : Nat) (h : N ≥ 2 * k) :
     N / 2 ≥ k ∧ (N - N / 2) ≥ k := by sorry
 public theorem mitosis_strict_impossibility (N k a b : Nat) (hN : N < 2 * k) (hPart : a + b = N) :
     ¬ (a ≥ k ∧ b ≥ k) := by sorry
+public theorem mitosis_strict_impossibility_witness :
+    3 < 2 * 2 ∧ 1 + 2 = 3 ∧ ¬ (1 ≥ 2 ∧ 2 ≥ 2) := by sorry
 public theorem mitosis_unaligned_cut_guarantee (N k : Nat) (h : N ≥ 2 * k + 2) :
     (N / 2 - 1) ≥ k ∧ ((N - N / 2) - 1) ≥ k := by sorry
 public theorem planaria_all_7_bundles_mitosis_safe :
@@ -101,6 +103,8 @@ public theorem planaria_payload_capacity_exact :
     totalK = 48 ∧ totalK * 332 = 15936 ∧ 4 * totalK = 192 := by sorry
 public theorem pigeonhole_two_way (N k a b : Nat) (hk : k ≥ 1) (hN : N > 2 * (k - 1)) (hPart : a + b = N) :
     a ≥ k ∨ b ≥ k := by sorry
+public theorem pigeonhole_two_way_witness :
+    2 ≥ 1 ∧ 24 > 2 * (2 - 1) ∧ 12 + 12 = 24 ∧ (12 ≥ 2 ∨ 12 ≥ 2) := by sorry
 public theorem trisection_synergy_recovery :
     let k := 16
     let s1 := 13; let s2 := 13; let s3 := 14
@@ -120,6 +124,12 @@ public theorem resolveOrgan_zero_crash_safety (p : ShardProfile) (organId maxStr
 public theorem anastomosis_monotonicity (p q : ShardProfile)
     (h0 : p.b0 ≤ q.b0) (h2 : p.b2 ≤ q.b2) (h3 : p.b3 ≤ q.b3) :
     (resolveRenderer p).rank ≤ (resolveRenderer q).rank := by sorry
+public theorem anastomosis_monotonicity_witness :
+    let p : ShardProfile := ⟨2, 0, 4, 0, 0, 0, 0⟩
+    let q : ShardProfile := ⟨2, 0, 4, 8, 0, 0, 0⟩
+    p.b0 ≤ q.b0 ∧ p.b2 ≤ q.b2 ∧ p.b3 ≤ q.b3 ∧
+    (resolveRenderer p).rank ≤ (resolveRenderer q).rank ∧
+    (resolveRenderer p).rank < (resolveRenderer q).rank := by sorry
 public theorem fusion_dominates_parents (a b : ShardProfile) :
     viabilityLevel (fuseDisjoint a b) ≥ max (viabilityLevel a) (viabilityLevel b) := by sorry
 public theorem fusion_strict_synergy_exists :
@@ -150,6 +160,13 @@ public theorem rs_unique_correction_ball_disjoint
     (hlen1 : c1.length = y.length) (hlen2 : y.length = c2.length)
     (hMinDist : hammingDist c1 c2 ≥ 2 * t + 1) :
     ¬ (hammingDist c1 y ≤ t ∧ hammingDist y c2 ≤ t) := by sorry
+public theorem rs_unique_correction_ball_nonvacuous :
+    let c1 : List Nat := List.replicate 17 0
+    let c2 : List Nat := List.replicate 17 1
+    let y  : List Nat := List.replicate 8 1 ++ List.replicate 9 0
+    c1.length = y.length ∧ y.length = c2.length ∧
+    hammingDist c1 c2 ≥ 2 * 8 + 1 ∧
+    ¬ (hammingDist c1 y ≤ 8 ∧ hammingDist y c2 ≤ 8) := by sorry
 public theorem rs_interleaved_lane_geometry :
     countEven 0 508 = 254 ∧ countOdd 0 508 = 254 ∧ 238 + 16 = 254 ∧ 4 + 508 = 512 := by sorry
 public theorem interleaved_burst_16_even_odd_bound (start len : Nat) (hlen : len ≤ 16) :
@@ -161,9 +178,10 @@ public theorem interleaved_burst_18_both_lanes_exceed (start : Nat) :
 public theorem merkle_path_collision_free_binding
     (hashPair : Nat → Nat → Nat)
     (hInj : ∀ a1 b1 a2 b2, hashPair a1 b1 = hashPair a2 b2 → a1 = a2 ∧ b1 = b2) :
-    ∀ (path : List (Bool × Nat)) (leaf1 leaf2 : Nat),
-      evalMerklePath hashPair leaf1 path = evalMerklePath hashPair leaf2 path →
-      leaf1 = leaf2 := by sorry
+    ∀ (path1 path2 : List (Bool × Nat)) (leaf1 leaf2 : Nat),
+      path1.map Prod.fst = path2.map Prod.fst →
+      evalMerklePath hashPair leaf1 path1 = evalMerklePath hashPair leaf2 path2 →
+      leaf1 = leaf2 ∧ path1 = path2 := by sorry
 public theorem pow2Pair_injective :
     ∀ b1 b2 a1 a2 : Nat, pow2Pair a1 b1 = pow2Pair a2 b2 → a1 = a2 ∧ b1 = b2 := by sorry
 public theorem merkle_quarantine_zero_contamination
@@ -177,11 +195,20 @@ public theorem hashBinding_mixed_nonvacuous :
     HashBinding 42 cells ∧
     merkleQuarantine 42 cells = [⟨2, 42, true⟩, ⟨4, 42, true⟩] := by sorry
 public theorem unpinned_quorum_honest_majority
-    (honestRoot honestCnt : Nat) (others : List (Nat × Nat))
-    (hMin : honestCnt ≥ 2) (hMaj : ∀ rc ∈ others, rc.2 < honestCnt) :
-    electUnpinnedQuorum ((honestRoot, honestCnt) :: others) = some honestRoot := by sorry
-public theorem unpinned_quorum_tie_fail_closed (r1 r2 c : Nat) (hc : c ≥ 2) :
-    electUnpinnedQuorum [(r1, c), (r2, c)] = none := by sorry
+    (honestRoot honestCnt : Nat) (pre suf : List (Nat × Nat))
+    (hMin : honestCnt ≥ 2)
+    (hPre : ∀ rc ∈ pre, rc.2 < honestCnt)
+    (hSuf : ∀ rc ∈ suf, rc.2 < honestCnt) :
+    electUnpinnedQuorum (pre ++ (honestRoot, honestCnt) :: suf) = some honestRoot := by sorry
+public theorem unpinned_quorum_honest_majority_witness :
+    electUnpinnedQuorum ([(999, 5)] ++ (42, 12) :: [(777, 3)]) = some 42 := by sorry
+public theorem unpinned_quorum_tie_fail_closed
+    (pre mid suf : List (Nat × Nat)) (r1 r2 c : Nat)
+    (hc : c ≥ 2)
+    (hPre : ∀ rc ∈ pre, rc.2 ≤ c)
+    (hMid : ∀ rc ∈ mid, rc.2 ≤ c)
+    (hSuf : ∀ rc ∈ suf, rc.2 ≤ c) :
+    electUnpinnedQuorum (pre ++ (r1, c) :: (mid ++ (r2, c) :: suf)) = none := by sorry
 public theorem unpinned_quorum_sybil_counterexample :
     electUnpinnedQuorum [(42, 24), (999, 36)] = some 999 := by sorry
 public theorem unauthenticated_poisoning_exists :
@@ -216,6 +243,12 @@ public theorem xenograft_improves_amputated_host_witness :
     let host : BundleSlot := ⟨3, 0x3333, true, false⟩
     let donor : BundleSlot := ⟨3, 0x3333, true, true⟩
     (applyXenograft host donor).viable = true := by sorry
+public theorem xenograft_dead_host_refused (host donor : BundleSlot) :
+    applyXenograftWithStem false host donor = host := by sorry
+public theorem xenograft_dead_host_witness :
+    let host : BundleSlot := ⟨3, 0x3333, true, false⟩
+    let donor : BundleSlot := ⟨3, 0x3333, true, true⟩
+    (applyXenograftWithStem false host donor).viable = false := by sorry
 
 end Planaria.Xenograft
 
@@ -255,3 +288,32 @@ public theorem combinatorial_1of1_space_exceeds_6_trillion :
     weaponDiscrete * armorDiscrete * npcDiscrete > 6400000000000 := by sorry
 
 end Planaria.QuantumTemporal
+
+namespace Planaria.Adversarial
+
+open Planaria.GF256
+open Planaria.Mitosis
+open Planaria.Anastomosis
+open Planaria.Byzantine
+open Planaria.Xenograft
+open Planaria.QuantumTemporal
+
+public theorem refute_mitosis_below_2k :
+    ¬ (∀ N k : Nat, N ≥ 2 * k - 1 → N / 2 ≥ k ∧ (N - N / 2) ≥ k) := by sorry
+public theorem refute_unaligned_cut_without_margin :
+    ¬ (∀ N k : Nat, N ≥ 2 * k → (N / 2 - 1) ≥ k ∧ ((N - N / 2) - 1) ≥ k) := by sorry
+public theorem refute_interleaved_burst_17_safe :
+    ¬ (∀ start : Nat, countEven start 17 ≤ 8 ∧ countOdd start 17 ≤ 8) := by sorry
+public theorem refute_anastomosis_dead_stem_safe :
+    ¬ (∀ p : ShardProfile, resolveRenderer p ≠ .deadCrash) := by sorry
+public theorem refute_unpinned_quorum_tie_elects :
+    ¬ (∀ r1 r2 c : Nat, c ≥ 2 → ∃ w, electUnpinnedQuorum [(r1, c), (r2, c)] = some w) := by sorry
+public theorem refute_xenograft_replaces_b0 :
+    ¬ (∃ host donor : BundleSlot,
+        host.bundleId = 0 ∧ host.viable = false ∧ (applyXenograft host donor).viable = true) := by sorry
+public theorem refute_hadamard_preserves_unscaled_norm :
+    ¬ (∀ q : Fin 4, ∀ ψ : QState4, normSq4 (hadamardScaled4Q q ψ) = normSq4 ψ) := by sorry
+public theorem refute_gf256_zero_invertible :
+    ¬ (∃ x : Nat, gfMul 0 x = 1) := by sorry
+
+end Planaria.Adversarial

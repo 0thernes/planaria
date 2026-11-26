@@ -333,6 +333,11 @@ public structure BundleSlot where
   else
     host
 
+/-- Full host-gated xenograft dispatch matching `src/core/hbin.js` Step 3 (`bundles[0].viable`):
+    a dead host (`hostStemViable = false`) unconditionally refuses ALL donor grafts. -/
+@[expose] public def applyXenograftWithStem (hostStemViable : Bool) (host donor : BundleSlot) : BundleSlot :=
+  if hostStemViable then applyXenograft host donor else host
+
 end Planaria.Xenograft
 
 -- ============================================================================

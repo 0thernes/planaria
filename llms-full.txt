@@ -1,33 +1,37 @@
-# PLANARIA v2.3.0 — Complete LLM Context Bundle (llms-full.txt)
+# PLANARIA v2.4.0 — Complete LLM Context Bundle (llms-full.txt)
 
 ---
 <!-- FILE: llms.txt -->
 
 # PLANARIA
 
-> Progressive Holographic Executable Architecture (`.hbin`), Plang Compiler, PVM-32 Vascular Anastomosis VM, 4-Qubit Temporal-Quantum WebGL2 Studio, and 6-Kernel Pure Lean 4.35.0 Formal Verification Suite (`v2.3.0`).
+> Progressive Holographic Executable Architecture (`.hbin`), Plang Compiler, PVM-32 Vascular Anastomosis VM, 4-Qubit Temporal-Quantum WebGL2 Studio, Clean-Room Python 3 Differential Oracle, Interactive Proof Blueprint, and 6-Kernel Pure Lean 4.35.0 Formal Verification Suite (`v2.4.0`).
 
 ## Core Documentation
 
 - [README](README.md): Overview, quickstart, 5-second verbatim Lean `#print axioms` audit, architecture, and live Studio guide
 - [AGENTS](AGENTS.md): Canonical instructions, one-word commands, hard rules R1–R8, and known pitfalls
-- [CLAIMS](CLAIMS.md): Numbered falsifiable claims ledger with exact evidence paths and refutation criteria
-- [LIMITATIONS](LIMITATIONS.md): Explicit system boundaries, real-vs-metaphor separation, threats to validity, and open dilemmas
+- [CLAIMS](CLAIMS.md): Numbered falsifiable claims ledger (`C01`–`C10`) with exact evidence paths and refutation criteria
+- [LIMITATIONS](LIMITATIONS.md): Explicit system boundaries, real-vs-metaphor separation, storage ratios, threats to validity, and open dilemmas
 - [REPLICATION](REPLICATION.md): Step-by-step clean-clone reproduction protocol and independent replication log
-- [VERIFICATION](VERIFICATION.md): 28-suite harness, 10/10 mutation testing, and 6-kernel Lean 4.35.0 verification guide
-- [SUMMARY](SUMMARY.md): Executive technical summary of PLANARIA v2.3.0
+- [VERIFICATION](VERIFICATION.md): 30-suite harness, 12/12 mutation testing, 2,000-case fuzzer, Python 3 oracle, and 6-kernel Lean 4.35.0 verification guide
+- [SUMMARY](SUMMARY.md): Executive technical summary of PLANARIA v2.4.0
 - [INDEX](INDEX.md): Complete repository index and table of contents
 
-## Formal Proofs & Scientific Paper
+## Formal Proofs, Blueprint & Scientific Paper
 
-- [White Paper (Markdown)](paper/WHITE_PAPER.md): Full academic paper with Claims Ledger, Statement-Fidelity Audit, 6-Kernel Proofs, and statistical evaluation
-- [Challenge Specification (Lean 4.35.0)](lean/Challenge.lean): Standalone human-auditable formal specification of all 70 theorems
+- [White Paper (Markdown)](paper/WHITE_PAPER.md): Full 12-section academic paper with Claims Ledger, Statement-Fidelity Audit, 6-Kernel Proofs, and statistical evaluation
+- [Interactive Proof Blueprint](blueprint/index.html): Zero-CDN SVG dependency graph & inspector covering all 85 Lean 4.35.0 theorems (`blueprint/blueprint.json`)
+- [Challenge Specification (Lean 4.35.0)](lean/Challenge.lean): Standalone zero-proof formal specification of all 85 theorems (`autoImplicit = false`)
 - [Formalization Manifest](formalization.yaml): Machine-readable Lean 4.35.0 toolchain, kernel, and module manifest
-- [10-Pass Red-Team & Mega-Atlas Review](docs/reviews/2026-11-25-10-pass-red-team-audit.md): Full 3-cycle findings ledger, Statement-Fidelity Audit, and 1,900-problem Mega-Atlas check
+- [Mega-Atlas Cross-Check](docs/MEGA_ATLAS_CROSSCHECK.md): Programmatic audit of all 1,900 Unsolved Problems Mega-Atlas entries (`0 / 1,900` solved)
+- [Literature Search Log](docs/LITERATURE_SEARCH.md): Dated prior-art search & live Crossref DOI verification log
+- [Submission Readiness Dossier](docs/SUBMISSION_READINESS.md): 43-item Playbook v1.3 scorecard, ACM/NeurIPS checklists & artifact datasheet
+- [10-Pass Red-Team & Mega-Atlas Review](docs/reviews/2026-11-25-10-pass-red-team-audit.md): Full multi-cycle findings ledger, Statement-Fidelity Audit, and Aaronson checklist
 
 ## Engineering Reference
 
-- [Architecture](docs/architecture.md): 5-layer system design and data/control-flow diagrams
+- [Architecture](docs/architecture.md): 5-layer system design, exact `BUNDLE_SPECS`, `PLACEMENT_SCHEDULE`, and data/control-flow diagrams
 - [Benchmarks](docs/benchmarks.md): Reproducible 4-architecture Monte Carlo survival, Wilson CIs, McNemar/Holm–Bonferroni statistics, and JIT latency profiles
 - [Threat Model](docs/threat-model.md): STRIDE security analysis, Merkle immune boundaries, and Sybil/DoS mitigations
 - [Operations](docs/operations.md): Runtime operations, `/healthz`, artifact backups, and offsite mirror/bundle protocol
@@ -46,44 +50,50 @@ Full standard: [docs/build-standard.md](docs/build-standard.md) (Build Standard 
 
 ## Project
 
-- **Name:** PLANARIA (`v2.3.0`)
-- **Purpose:** Progressive holographic executable architecture (`.hbin`), Plang compiler, PVM-32 vascular anastomosis VM, 4-qubit/temporal 3D WebGL2 Studio, and 6-kernel pure Lean 4.35.0 formal verification suite.
+- **Name:** PLANARIA (`v2.4.0`)
+- **Purpose:** Progressive holographic executable architecture (`.hbin`), Plang compiler, PVM-32 vascular anastomosis VM, 4-qubit/temporal 3D WebGL2 Studio, clean-room Python 3 differential oracle, interactive Proof Blueprint, and 6-kernel pure Lean 4.35.0 formal verification suite.
 - **Owner:** Alexander Stephen Donahue (`0thernes`, ORCID `0009-0006-8168-9648`, `0_0@0thernes.art`, Independent Researcher, Spokane, WA, USA — NOT an LLC).
 - **Manifest:** [repo.yaml](repo.yaml) (schema: [repo-standard.schema.json](repo-standard.schema.json)) and [formalization.yaml](formalization.yaml).
-- **Stack:** Zero-dependency ES2022 JavaScript (`Node.js >= 20`, WebGL2 GLSL 300 es, 48 kHz AudioWorklet), pure Lean 4.35.0 (`module` system, zero Mathlib), AMS-LaTeX (`tectonic`).
+- **Stack:** Zero-dependency ES2022 JavaScript (`Node.js >= 20`, WebGL2 GLSL 300 es, 48 kHz AudioWorklet), pure Python 3 stdlib differential oracle, pure Lean 4.35.0 (`module` system, `autoImplicit = false`, zero Mathlib), AMS-LaTeX (`tectonic`).
 - **Layout:**
   - `src/core/` — GF(2^8), interleaved RS(254,238), Cauchy MDS, FIPS 180-4 SHA-256, Depth-8 Merkle, `.hbin` codec, torture suite
   - `src/compiler/` — Plang ISA, lexer, recursive-descent parser, register-windowed codegen, compiler entrypoint
-  - `src/vm/` — PVM-32 sandboxed VM (`& 0xFFF` RAM, bounded budgets, 6-organ anastomosis) & LINBIN01 linear control twin
+  - `src/vm/` — PVM-32 sandboxed VM (`& 0xFFF` RAM, bounded budgets + proportional blitter fuel, transactional trap rollback, 6-organ anastomosis) & LINBIN01 linear control twin
   - `src/quantum/` — 4-qubit complex statevector (`qengine.js`: Horodecki CHSH, Mermin GHZ, WKB, Heisenberg, Zeno) & `TemporalEngine` (`temporal.js`: O(1) 360-frame RingBuffer)
-  - `src/world/` — Deterministic 6.42T combinatorial generator (`generator.js`) & 3D simulation (`game3d.js`)
+  - `src/world/` — Deterministic 6.42T combinatorial generator (`generator.js`) & seeded Mulberry32 3D simulation (`game3d.js`)
   - `src/web/` — WebGL2 3D renderer, 2D visualizers, 48 kHz AudioWorklet synth, Studio UI (`index.html`, `app.js`, `styles.css`)
   - `programs/` — 4 living `.plang` species (`quantum_chronicle`, `aegis_drift`, `synth_reactor`, `cipher_vault`)
   - `artifacts/` — Deterministic compiled 98,304 B `.hbin` binaries + `manifest.json`
-  - `lean/` — 6 pure Lean 4.35.0 `module` proof files + `PlanariaProofs.lean` + Palomar `Challenge.lean`, `Solution.lean`, `comparator.json`
-  - `test/` — 28-suite verification, property-based, metamorphic & regression harness (`verify.mjs`)
+  - `reference/` — Clean-room Python 3 cross-language differential oracle (`planaria_oracle.py`)
+  - `lean/` — 7 pure Lean 4.35.0 `module` proof files (`autoImplicit = false`, incl. `AdversarialTests.lean`) + `Spec.lean`, `PlanariaProofs.lean`, `VerifyAxioms.lean`, `Challenge.lean`, `Solution.lean`, `comparator.json` (**85 theorems**)
+  - `blueprint/` — Interactive zero-CDN SVG Proof Blueprint (`index.html`, `blueprint.json`, `blueprint.css`, `blueprint.js`)
+  - `test/` — 30-suite verification, property-based, metamorphic, AudioWorklet DSP & regression harness (`verify.mjs`)
   - `examples/` — 3 runnable zero-dependency scripts (`01-mitosis`, `02-byzantine`, `03-xenograft`)
-  - `scripts/` — Build, statistical benchmark, mutation tester, linter, citation checker, Pages builder, manifest generator, repo audit
+  - `scripts/` — Build, statistical benchmark, 12-mutant tester, 2,000-case fuzzer, Blueprint builder/checker, README axiom verifier, linter (with cross-doc theorem checker), Crossref citation verifier, Pages builder, manifest generator, repo audit
   - `paper/` & `dist/` — AMS-LaTeX white paper (`main.tex`), Markdown edition, frozen PDF & arXiv tarball
-  - `docs/` — Architecture, ADRs, benchmarks, configuration, operations, threat model, preregistration, FAQ, glossary, run log, 10-pass red-team review
+  - `docs/` — Architecture, ADRs, benchmarks, configuration, operations, threat model, preregistration, Mega-Atlas cross-check, literature search log, submission readiness dossier, FAQ, glossary, run log, 10-pass red-team review
 - **Status:** active
 
 ## Commands
 
 Every command works from a clean clone (see `justfile` and `scripts/dev.sh`):
 
-- `just setup` — verify Node.js >=20 and Lean 4.35.0 toolchains (zero npm runtime deps)
+- `just setup` — verify Node.js >=20 and compile artifacts (zero npm runtime deps)
 - `just build` — deterministically compile all 4 `.plang` species to `artifacts/*.hbin`
-- `just test` — run all 28 verification, property-based, regression, and example suites (`npm test`)
-- `just mutate` — run 10 surgical mutants (`scripts/mutation-test.mjs`; target 10/10 killed)
-- `just lint` — report-only syntax, security-sink, placeholder, entity, and JSDoc type checks
+- `just test` — run all 30 verification, property-based, DSP, regression, and example suites (`npm test`)
+- `just mutate` — run 12 surgical mutants (`scripts/mutation-test.mjs`; target 12/12 killed)
+- `just fuzz` — run 2,000 deterministic adversarial fuzz cases (`scripts/fuzz.mjs`)
+- `just oracle` — run clean-room Python 3 cross-language differential oracle (`reference/planaria_oracle.py`)
+- `just blueprint` — rebuild & verify interactive Lean 4.35.0 Proof Blueprint (`blueprint/`)
+- `just axioms` — verify verbatim README axiom parity & strict `{propext, Classical.choice, Quot.sound}` allowlist
+- `just lint` — report-only syntax, security-sink, Lean-header, cross-doc theorem, placeholder, entity, and citation checks
 - `just bench` — run 4-architecture Monte Carlo + Wilson 95% CI + McNemar + Holm–Bonferroni benchmarks (`npm run benchmark`)
-- `just lean` — build Lean 4.35.0 proofs and run multi-kernel verification (`leanchecker`, `leanchecker-paranoid`, `nanoda_bin`, `con-leche`, `con-ron`, `lake check --paranoid`, `lake comparator --paranoid`)
+- `just lean` — build Lean 4.35.0 proofs (`autoImplicit = false`) and run multi-kernel verification (`leanchecker`, `leanchecker-paranoid`, `nanoda_bin`, `con-leche`, `con-ron`, `lake check --paranoid`, `lake comparator --paranoid`)
 - `just paper` — compile `paper/main.tex` via Tectonic into `dist/Donahue_2026_planaria.pdf`
-- `just reproduce` — clean end-to-end build -> test -> mutate -> lint -> bench -> Lean audit
+- `just reproduce` — clean end-to-end build -> test -> mutate -> fuzz -> oracle -> Lean -> axioms -> blueprint -> lint -> bench -> manifest
 - `just audit` — score this repo against Build Standard v1.2.0 (`scripts/audit-repo.sh` / `Audit-Repo.ps1`)
 - `just deploy` / `just rollback` — build static GitHub Pages bundle (`_site/`) / revert latest Pages release commit
-- `just release X.Y.Z` — bump `VERSION`/`package.json`, commit to `main`, create plain tag `vX.Y.Z`, push
+- `just release X.Y.Z` — bump version manifests, commit to `main`, create plain tag `vX.Y.Z`, push
 
 ## Hard rules
 
@@ -102,86 +112,92 @@ Every command works from a clean clone (see `justfile` and `scripts/dev.sh`):
 - **CRLF vs LF in `results/lean4-audit.txt`:** Always write `results/lean4-audit.txt` with pure Unix LF (`\n`) so SHA-256 digests match Linux CI.
 - **No fabricated LLC entity:** Author affiliation is `Independent Researcher (0thernes project), Spokane, WA, USA` — never claim an unformed LLC corporate entity.
 - **AEGIS_DRIFT S1_CORE_LOGIC budget:** Bundle 1 (`S1_CORE_LOGIC`) has a hard 1,328-byte limit (332 PVM-32 instructions). Always verify `npm run build` after any `codegen.js` change.
-- **Lean 4.35.0 `module` mode:** Keep spec defs `@[expose] public`, avoid `by decide` subproofs inside `Fin` indices of `@[expose] public def` (use `fin16` with `Nat.zero_lt_succ 15`), and keep `Challenge` out of `defaultTargets` so `lake check --paranoid` sees zero `sorryAx`.
-- **GitHub Pages subpaths:** Never use root-anchored `/src/...` or `/programs/...` paths in `src/web/`; always resolve via `./src/web/...` in HTML and `new URL('../../...', import.meta.url)` in JS.
+- **Lean 4.35.0 `module` + `autoImplicit = false`:** EVERY `.lean` file (including `VerifyAxioms.lean`) must start with `module` on line 1; keep spec defs `@[expose] public`, bind all variables explicitly, and keep `Challenge` out of `defaultTargets` so `lake check --paranoid` sees zero `sorryAx`.
+- **GitHub Pages subpaths:** Never use root-anchored `/src/...` or `/programs/...` paths in `src/web/` or `blueprint/`; always resolve relative paths (`./src/web/...`, `./blueprint/`, `new URL('../../...', import.meta.url)`).
 
 ---
 <!-- FILE: CLAIMS.md -->
 
-# CLAIMS.md — Falsifiable Claims Ledger (`PLANARIA v2.3.0`)
+# CLAIMS.md — Falsifiable Claims Ledger (`PLANARIA v2.4.0`)
 
-Every substantive engineering, mathematical, and experimental claim made in PLANARIA's repository, README, and White Paper is enumerated below alongside its **exact verification boundary** (`LEAN-PROVED`, `EMPIRICAL`, `SYSTEM-TEST`, or `BOUNDARY`), **evidence artifact**, and **explicit falsification criterion ("What would prove us wrong")**.
+Every substantive engineering, mathematical, and experimental claim made in PLANARIA's repository, README, and White Paper (`paper/main.tex` Table 1) is enumerated 1:1 below alongside its **exact verification boundary** (`[Theorem — Lean 4.35.0]`, `[Empirical — Paired Monte Carlo]`, `[System-Test — JS + Python Oracle]`, or `[Scope Boundary]`), **evidence artifact**, and **explicit falsification criterion ("What would prove us wrong")**.
 
-> **Honest Scope Boundary:** PLANARIA solves **0 / 1,900** open conjectures in [`0thernes/unsolved-problems-mega-atlas`](https://github.com/0thernes/unsolved-problems-mega-atlas) (see [10-Pass Audit](docs/reviews/2026-11-25-10-pass-red-team-audit.md)). Every claim below is strictly scoped to PLANARIA's `.hbin` coding architecture, Plang/PVM-32 runtime, 4-qubit/temporal simulation, and pure Lean 4.35.0 formalizations.
+> **Honest Scope Boundary:** PLANARIA solves **0 / 1,900** open conjectures in [`0thernes/unsolved-problems-mega-atlas`](https://github.com/0thernes/unsolved-problems-mega-atlas) (programmatic scan archived in [docs/MEGA_ATLAS_CROSSCHECK.md](docs/MEGA_ATLAS_CROSSCHECK.md)). Every claim below is strictly scoped to PLANARIA's `.hbin` coding architecture, Plang/PVM-32 runtime, 4-qubit/temporal simulation, clean-room Python 3 oracle, and pure Lean 4.35.0 formalizations.
 
 | ID | Claim | Verification Class | Evidence & Machine Proof | What Would Prove Us Wrong (Falsification Criterion) |
 | :--- | :--- | :--- | :--- | :--- |
-| **C01** | PLANARIA's exact executable $\mathrm{GF}(2^8)$ arithmetic modulo `0x11D` forms a characteristic-2 field and decodes every 2-cell Cauchy Stratum-0 pair losslessly across all $256^2$ byte inputs and all distinct coordinates $x_0 \neq x_1 \in [2, 255]$. | `LEAN-PROVED` (6 kernels) + `SYSTEM-TEST` | `lean/PlanariaProofs/GF256.lean` (`gf256Field`, `gf256_cauchy2_exact_decode`, `gf256_cauchy2_nonvacuous_witness`); `test/verify.mjs` Suites 01 & 25 | Finding any $(a,b,c) \in [0,255]^3$ violating a field axiom, any $a \in [1,255]$ with $a \cdot a^{-1} \neq 1$, or any distinct $x_0, x_1 \ge 2$ failing lossless Cauchy decode. |
-| **C02** | Any zero-overlap 50/50 bisection of a pristine 98,304 B `.hbin` (including unaligned prime byte offsets such as `49,177`) produces two disjoint halves that BOTH decode to Stratum 3 and independently regenerate a bit-exact SHA-256 copy of the original 98,304 B binary. | `LEAN-PROVED` (schedule & bounds) + `SYSTEM-TEST` + `EMPIRICAL` | `lean/PlanariaProofs/MitosisBounds.lean` (`planaria_schedule_nodup_and_sorted_halves`, `mitosis_unaligned_cut_guarantee`); `test/verify.mjs` Suite 04; `examples/01-mitosis-roundtrip.mjs`; `results/benchmarks.json` (`mitosisResults`) | Any balanced cut offset $c \in [48701, 49597]$ where either disjoint half fails to decode to Stratum 3 or regenerates a single byte differing from the original SHA-256 digest. |
-| **C03** | Every 512 B `.hbin` cell repairs up to 8 arbitrary byte errors per RS(254,238) lane and up to 16 contiguous burst error bytes across the 508 B interleaved payload; 17+ contiguous burst bytes strictly exceed the unique decoding radius $t = 8$ in at least one lane. | `LEAN-PROVED` (tight upper & lower bounds) + `SYSTEM-TEST` + `EMPIRICAL` | `lean/PlanariaProofs/ByzantineImmune.lean` (`interleaved_burst_16_even_odd_bound`, `interleaved_burst_17_exceeds_radius`); `test/verify.mjs` Suites 02 & 07; `results/benchmarks.json` (`radiationSweep`) | A $\le 16$ B contiguous burst within the 508 B RS body failing exact repair, OR a 17 B contiguous burst fitting with $\le 8$ errors in both lanes. |
-| **C04** | Under 80% uniform random cell erasure (only ~20% of the binary remaining), PLANARIA achieves strictly higher bootable survival than BOTH a traditional linear binary (`LINBIN01`), a single-stratum `RS(40,16)` archive, AND an equal-storage flat `RS(192,48)` monolithic archive (identical 96 KiB footprint & 48-chunk raw payload capacity), with $p_{\text{Holm}} < 10^{-6}$ (paired McNemar exact test, $n = 40$ paired seeds). | `LEAN-PROVED` (separation witness) + `EMPIRICAL` (Wilson 95% CI, McNemar, Holm–Bonferroni) | `lean/PlanariaProofs/StratumAnastomosis.lean` (`zero_cliff_strict_separation`); `results/benchmarks.json` (`survivalCurve` @ `dropPct=80`); `test/verify.mjs` Suite 06 | Re-running `npm run benchmark` and observing equal-storage `RS(192,48)` or `LINBIN01` achieving non-inferior survival at 80% erasure, or Holm–Bonferroni $p_{\text{Holm}} \ge 0.05$. |
-| **C05** | Whenever Stratum-0 Stem Nucleus retains $\ge 2$ authentic cells, PVM-32 vascular anastomosis (`resolveOrgan` / `resolveRenderer`) NEVER crashes across any amputation of Bundles 1–6 and never invokes Bundle 0 (`KERNEL`) or Bundle 6 (`GENOME`) via `ORGAN_CALL`; Lean's `viabilityLevel` matches `src/core/hbin.js` Step 4 bit-for-bit. | `LEAN-PROVED` + `SYSTEM-TEST` | `lean/PlanariaProofs/StratumAnastomosis.lean` (`resolveOrgan_zero_crash_safety`, `viability_s3_without_b2_matches_hbin`); `test/verify.mjs` Suites 09 & 20 | Any valid shard profile with $b_0 \ge 2$ that causes an unhandled VM crash, executes Bundle 6 as code, or yields a different `maxViableStratum` between JS and Lean. |
-| **C06** | Under collision-resistant SHA-256 Merkle binding with a pinned lineage root (`pinnedRootHex`), `merkleQuarantine` admits zero forged Byzantine Trojan cells and preserves 100% of authentic cells; without a pinned root, ties fail closed (`none`) and majority Sybil floods override unpinned quorum (explicit threat boundary). | `LEAN-PROVED` (with non-vacuity witnesses) + `SYSTEM-TEST` + `EMPIRICAL` | `lean/PlanariaProofs/ByzantineImmune.lean` (`merkle_quarantine_zero_contamination`, `unpinned_quorum_honest_majority`, `unpinned_quorum_tie_fail_closed`, `unpinned_quorum_sybil_counterexample`); `test/verify.mjs` Suites 08 & 12; `examples/02-byzantine-quarantine.mjs` | Any RS-valid forged Trojan cell with a non-matching Merkle root entering the Cauchy decoder under pinned-root mode, OR an exact-tie unpinned stream electing an arbitrary root. |
-| **C07** | Cross-species Xenografting (`allowXenograft: true`) preserves host lineage sovereignty (Bundles 0 and 6 are immutable; dead hosts with $b_0 < 2$ never graft) and enforces ABI-signature and bundle-ID equality; valid cross-species chimeras execute deterministically inside PVM-32's `& 0xFFF` RAM sandbox and bounded instruction budget with zero traps. | `LEAN-PROVED` + `SYSTEM-TEST` + `EMPIRICAL` | `lean/PlanariaProofs/XenograftABI.lean` (`pvm32_ram_bounds_invariant`, `pvm32_bounded_termination`, `xenograft_sovereign_b0_b6_immutable`, `xenograft_abi_safety`); `test/verify.mjs` Suites 10, 20 & 26; `examples/03-xenograft-chimera.mjs`; `results/benchmarks.json` (`xenograftMatrix`) | Any donor overwriting host B0/B6, grafting onto a dead host, mismatching ABI signature, escaping 4,096-word RAM bounds, or hanging beyond `maxInsnBudget`. |
-| **C08** | All 7 core 4-qubit complex gates (`X`, `Y`, `Z`, scaled `H`, `CNOT`, `CZ`, `SWAP`) conserve statevector norm identically across all 16 basis amplitudes; `QuantumRegister` achieves Tsirelson's $2\sqrt{2}$ Horodecki CHSH bound on Bell states and $|M_4| = 4.0$ on 4-qubit GHZ states; `TemporalEngine` provides bounded 360-frame lossless rewind without skill-point duplication. | `LEAN-PROVED` + `SYSTEM-TEST` | `lean/PlanariaProofs/QuantumTemporal.lean` (`pauliX4Q..swap4Q`, `snapshot_buffer_capacity_and_exact_pop`); `test/verify.mjs` Suites 13, 14, 25, 26 & 27 | Any gate sequence drifting from unit norm beyond floating-point tolerance ($10^{-12}$), separable state exceeding $|S| > 2.0$, or rewind failing to restore skills/state snapshots. |
-| **C09** | The discrete reachable cross-product of PLANARIA's 1/1 procedural generator (`80,640` weapons $\times$ `3,072` armors $\times$ `25,920` reachable NPCs) equals exactly `6,421,059,993,600` ($> 6.42 \times 10^{12}$) before continuous stat gradients and 64-bit SHA-256 lineage IDs. | `LEAN-PROVED` + `SYSTEM-TEST` | `lean/PlanariaProofs/QuantumTemporal.lean` (`combinatorial_1of1_space_exceeds_6_trillion`); `src/world/generator.js`; `test/verify.mjs` Suite 15 | Any unreachable archetype/rarity pair counted in `combinatorialSpaceMetrics()`, or arithmetic mismatch between JS and Lean. |
-| **C10** | All 70 formal theorems in `lean/Solution.lean` match the standalone `lean/Challenge.lean` specification verbatim, depend ONLY on `[propext, Classical.choice, Quot.sound]` (zero `sorryAx`, zero `Lean.ofReduceBool`, zero `Lean.trustCompiler`), and pass independent multi-kernel verification (`leanchecker`, `leanchecker-paranoid`, `nanoda_bin`, `con-leche --verified`, `con-ron --verified`, plus `lean4lean` in Linux CI `lake comparator --paranoid`). | `LEAN-PROVED` (6-kernel) | `lean/Challenge.lean`, `lean/Solution.lean`, `lean/comparator.json`, `results/lean4-audit.txt`, `.github/workflows/ci.yml` | Any forbidden axiom appearing in `#print axioms`, any `lake comparator --paranoid` mismatch, or any kernel rejecting the exported NDJSON. |
+| **C01** | PLANARIA's exact executable $\mathrm{GF}(2^8)$ arithmetic modulo `0x11D` forms a characteristic-2 field and decodes every 2-cell Cauchy Stratum-0 pair losslessly across all $256^2$ byte inputs and all distinct coordinates $x_0 \neq x_1 \in [2, 255]$. | `[Theorem — Lean 4.35.0]` + `[System-Test — JS + Python Oracle]` | `lean/PlanariaProofs/GF256.lean` (`gf256Field`, `gf256_cauchy2_exact_decode`, `gf256_cauchy2_nonvacuous_witness`); `AdversarialTests.lean` (`refute_gf256_zero_invertible`); `test/verify.mjs` Suites 01 & 25; `reference/planaria_oracle.py` | Finding any $(a,b,c) \in [0,255]^3$ violating a field axiom, any $a \in [1,255]$ with $a \cdot a^{-1} \neq 1$, or any distinct $x_0, x_1 \ge 2$ failing lossless Cauchy decode. |
+| **C02** | Any zero-overlap 50/50 bisection of a pristine 98,304 B `.hbin` (including unaligned prime byte offsets such as `49,177`) produces two disjoint halves that BOTH decode to Stratum 3 and independently regenerate a bit-exact SHA-256 copy of the original 98,304 B binary. | `[Theorem — Lean 4.35.0]` + `[System-Test — JS + Python Oracle]` + `[Empirical]` | `lean/PlanariaProofs/MitosisBounds.lean` (`planaria_schedule_nodup_and_sorted_halves`, `mitosis_unaligned_cut_guarantee`, `mitosis_strict_impossibility_witness`); `AdversarialTests.lean` (`refute_mitosis_below_2k`, `refute_unaligned_cut_without_margin`); `test/verify.mjs` Suite 04; `reference/planaria_oracle.py`; `results/benchmarks.json` (`mitosisResults`) | Any balanced cut offset $c \in [48701, 49597]$ where either disjoint half fails to decode to Stratum 3 or regenerates a single byte differing from the original SHA-256 digest. |
+| **C03** | Every 512 B `.hbin` cell repairs up to 8 arbitrary byte errors per RS(254,238) lane and up to 16 contiguous burst error bytes across the 508 B interleaved payload; 17+ contiguous burst bytes strictly exceed the unique decoding radius $t = 8$ in at least one lane. | `[Theorem — Lean 4.35.0]` + `[System-Test — JS + Python Oracle]` + `[Empirical]` | `lean/PlanariaProofs/ByzantineImmune.lean` (`interleaved_burst_16_even_odd_bound`, `interleaved_burst_17_exceeds_radius`, `rs_unique_correction_ball_nonvacuous`); `AdversarialTests.lean` (`refute_interleaved_burst_17_safe`); `test/verify.mjs` Suites 02 & 07; `scripts/fuzz.mjs`; `results/benchmarks.json` (`radiationSweep`) | A $\le 16$ B contiguous burst within the 508 B RS body failing exact repair, OR a 17 B contiguous burst fitting with $\le 8$ errors in both lanes. |
+| **C04** | Under 80% uniform random cell erasure (only ~20% of the binary remaining), PLANARIA achieves strictly higher bootable survival than BOTH a traditional linear binary (`LINBIN01`), a single-stratum `RS(40,16)` archive, AND an equal-storage flat `RS(192,48)` monolithic archive (identical 96 KiB footprint & 48-chunk raw payload capacity), with $p_{\text{Holm}} < 10^{-6}$ (paired McNemar exact test, $n = 40$ paired seeds). | `[Theorem — Lean 4.35.0]` (separation witness) + `[Empirical — Paired Monte Carlo]` (Wilson 95% CI, McNemar, Holm–Bonferroni) | `lean/PlanariaProofs/StratumAnastomosis.lean` (`zero_cliff_strict_separation`); `results/benchmarks.json` (`survivalCurve` @ `dropPct=80`); `test/verify.mjs` Suite 06 | Re-running `npm run benchmark` and observing equal-storage `RS(192,48)` or `LINBIN01` achieving non-inferior survival at 80% erasure, or Holm–Bonferroni $p_{\text{Holm}} \ge 0.05$. |
+| **C05** | Whenever Stratum-0 Stem Nucleus retains $\ge 2$ authentic cells, PVM-32 vascular anastomosis (`resolveOrgan` / `resolveRenderer`) NEVER crashes across any amputation of Bundles 1–6 and never invokes Bundle 0 (`KERNEL`) or Bundle 6 (`GENOME`) via `ORGAN_CALL`; Lean's `viabilityLevel` matches `src/core/hbin.js` Step 4 bit-for-bit. | `[Theorem — Lean 4.35.0]` + `[System-Test]` | `lean/PlanariaProofs/StratumAnastomosis.lean` (`resolveOrgan_zero_crash_safety`, `anastomosis_monotonicity_witness`, `viability_s3_without_b2_matches_hbin`); `AdversarialTests.lean` (`refute_anastomosis_dead_stem_safe`); `test/verify.mjs` Suites 09, 20 & 26 | Any valid shard profile with $b_0 \ge 2$ that causes an unhandled VM crash, executes Bundle 6 as code, or yields a different `maxViableStratum` between JS and Lean. |
+| **C06** | Under collision-resistant SHA-256 Merkle binding with a pinned lineage root (`pinnedRootHex`), `merkle_path_collision_free_binding` binds BOTH leaf and full sibling path, and `merkleQuarantine` admits zero forged Byzantine Trojan cells while preserving 100% of authentic cells; without a pinned root, arbitrary-position majorities elect uniquely, arbitrary-list ties fail closed (`none`), and majority Sybil floods override unpinned quorum (`[Scope Boundary]`). | `[Theorem — Lean 4.35.0]` + `[System-Test]` + `[Empirical]` + `[Scope Boundary]` | `lean/PlanariaProofs/ByzantineImmune.lean` (`merkle_path_collision_free_binding`, `merkle_quarantine_zero_contamination`, `unpinned_quorum_honest_majority`, `unpinned_quorum_honest_majority_witness`, `unpinned_quorum_tie_fail_closed`, `unpinned_quorum_sybil_counterexample`); `AdversarialTests.lean` (`refute_unpinned_quorum_tie_elects`); `test/verify.mjs` Suites 08, 12 & 26; `examples/02-byzantine-quarantine.mjs` | Any RS-valid forged Trojan cell with a non-matching Merkle root entering the Cauchy decoder under pinned-root mode, OR an exact-tie / single-cell unpinned stream electing an arbitrary root. |
+| **C07** | Cross-species Xenografting (`allowXenograft: true`) preserves host lineage sovereignty (Bundles 0 and 6 are immutable; dead hosts with $b_0 < 2$ refuse all grafts via `applyXenograftWithStem`) and enforces ABI-signature and bundle-ID equality; valid cross-species chimeras execute deterministically inside PVM-32's `& 0xFFF` RAM sandbox and bounded instruction budget with transactional trap rollback and zero traps. | `[Theorem — Lean 4.35.0]` + `[System-Test]` + `[Empirical]` | `lean/PlanariaProofs/XenograftABI.lean` (`pvm32_ram_bounds_invariant`, `pvm32_bounded_termination`, `xenograft_sovereign_b0_b6_immutable`, `xenograft_abi_safety`, `xenograft_dead_host_refused`, `xenograft_dead_host_witness`); `AdversarialTests.lean` (`refute_xenograft_replaces_b0`); `test/verify.mjs` Suites 10, 20 & 26; `examples/03-xenograft-chimera.mjs`; `results/benchmarks.json` (`xenograftMatrix`) | Any donor overwriting host B0/B6, grafting onto a dead host, mismatching ABI signature, escaping 4,096-word RAM bounds, or hanging beyond `maxInsnBudget`. |
+| **C08** | All 7 core 4-qubit complex gates (`X`, `Y`, `Z`, scaled `H`, `CNOT`, `CZ`, `SWAP`) conserve statevector norm identically across all 16 basis amplitudes; `QuantumRegister` achieves Tsirelson's $2\sqrt{2}$ Horodecki CHSH bound on Bell states and $|M_4| = 4.0$ on 4-qubit GHZ states (cross-checked in Python 3); `TemporalEngine` provides bounded 360-frame lossless rewind without skill-point or inventory duplication. | `[Theorem — Lean 4.35.0]` + `[System-Test — JS + Python Oracle]` | `lean/PlanariaProofs/QuantumTemporal.lean` (`pauliX4Q..swap4Q`, `snapshot_buffer_capacity_and_exact_pop`); `AdversarialTests.lean` (`refute_hadamard_preserves_unscaled_norm`); `test/verify.mjs` Suites 13, 14, 25, 26 & 27; `reference/planaria_oracle.py`; Mutants `M08`, `M09`, `M12` | Any gate sequence drifting from unit norm beyond floating-point tolerance ($10^{-12}$), separable state exceeding $|S| > 2.0$, or rewind failing to restore skills, weapons, armors, or RNG state. |
+| **C09** | The discrete reachable cross-product of PLANARIA's 1/1 procedural generator (`80,640` weapons $\times$ `3,072` armors $\times$ `25,920` reachable NPCs) equals exactly `6,421,059,993,600` ($> 6.42 \times 10^{12}$) before continuous stat gradients and 64-bit SHA-256 lineage IDs across 24 orders of magnitude (`6` scale realms). | `[Theorem — Lean 4.35.0]` + `[System-Test]` | `lean/PlanariaProofs/QuantumTemporal.lean` (`combinatorial_1of1_space_exceeds_6_trillion`); `src/world/generator.js`; `test/verify.mjs` Suite 15 | Any unreachable archetype/rarity pair counted in `combinatorialSpaceMetrics()`, or arithmetic mismatch between JS and Lean. |
+| **C10** | All **85 formal theorems** in `lean/Solution.lean` (7 pure modules with `autoImplicit = false` & `relaxedAutoImplicit = false`, including 10 non-vacuity witnesses and 8 adversarial false-variant refutations) match the standalone `lean/Challenge.lean` specification verbatim, depend ONLY on `[propext, Classical.choice, Quot.sound]` (zero `sorryAx`, zero `Lean.ofReduceBool`, zero `Lean.trustCompiler`, zero `_native`), pass all 6 independent kernels + live negative `lake comparator --paranoid` tamper rejection in CI, and match `blueprint/blueprint.json` 1:1. | `[Theorem — Lean 4.35.0]` (6-kernel Palomar) | `lean/Challenge.lean`, `lean/Solution.lean`, `lean/comparator.json`, `results/lean4-audit.txt`, `results/lean4-multi-kernel.txt`, `blueprint/blueprint.json`, `scripts/check-readme-axioms.mjs`, `.github/workflows/ci.yml` | Any forbidden axiom appearing in `#print axioms`, any `lake comparator --paranoid` mismatch, failure of the negative tamper test to reject a mutated challenge, or any kernel rejecting the exported NDJSON. |
 
 ---
 <!-- FILE: LIMITATIONS.md -->
 
 # LIMITATIONS.md — Honest Boundaries, Real-vs-Metaphor & Open Dilemmas
 
-This document states explicitly what **PLANARIA v2.3.0** does, what it does **NOT** do, where its engineering and mathematical guarantees end, and which terms are computational metaphors rather than physical or biological claims.
+This document states explicitly what **PLANARIA v2.4.0** does, what it does **NOT** do, where its engineering and mathematical guarantees end, and which terms are computational metaphors rather than physical or biological claims.
 
 ## 1. Real vs. Metaphor Boundary (Strict Epistemic Discipline)
 
 | Term Used in PLANARIA | What Is **REAL** (Verified Code & Math) | What Is **METAPHOR / NOT CLAIMED** |
 | :--- | :--- | :--- |
-| **Planarian Mitosis / Regeneration** | Deterministic Cauchy MDS erasure coding over $\mathrm{GF}(2^8)$ with a zero-tie integer placement schedule so two disjoint 50% byte halves independently reconstruct 100% of the 98,304 B binary. | **NOT** wet-lab developmental biology, bioelectricity, stem-cell morphogenesis, or a solution to Mega-Atlas `BIO-031` / `SUB-001`. |
+| **Planarian Mitosis / Regeneration** | Deterministic Cauchy MDS erasure coding over $\mathrm{GF}(2^8)$ with an exact-integer zero-tie placement schedule so two disjoint 50% byte halves independently reconstruct 100% of the 98,304 B binary. | **NOT** wet-lab developmental biology, bioelectricity, stem-cell morphogenesis, or a solution to Mega-Atlas `BIO-031` / `SUB-001`. |
 | **Living Species / Neural / Organism** | Four deterministic PVM-32 bytecode programs (`QUANTUM_CHRONICLE`, `AEGIS_DRIFT`, `SYNTH_REACTOR`, `CIPHER_VAULT`) executing inside a 4,096-word sandboxed VM with reactive AI heuristics (`playerProfile` EMA). | **NOT** biological life, sentience, autonomous self-replicating malware, or trained deep neural networks. |
-| **Vascular Anastomosis** | Explicit software fallback table (`resolveOrgan`) routing `ORGAN_CALL` from higher strata (S3/S2) down to lower strata (S1/S0) or no-op stubs when bundles lack rank $k$. | **NOT** surgical biology or general arbitrary x86/ARM binary hot-patching. |
+| **Vascular Anastomosis** | Explicit software fallback table (`resolveOrgan`) routing `ORGAN_CALL` from higher strata (S3/S2) down to lower strata (S1/S0) or no-op stubs when bundles lack rank $k$, with transactional RAM rollback on traps. | **NOT** surgical biology or general arbitrary x86/ARM binary hot-patching. |
 | **Byzantine Immune System** | Depth-8 SHA-256 Merkle authentication filtering cells against `pinnedRootHex` (or strict unique-majority quorum $\ge 2$) prior to Cauchy matrix inversion. | **NOT** an adaptive biological immune system; without `pinnedRootHex`, a coordinated majority Sybil flood overrides unpinned quorum (explicitly proved in `unpinned_quorum_sybil_counterexample`). |
-| **4-Qubit Quantum Register / CHSH / WKB** | Exact classical simulation of a 16-amplitude complex statevector (`Float64Array`), exact Horodecki $3\times 3$ correlation-tensor CHSH, exact 4-qubit Mermin $M_4$, Werner depolarizing channel, and textbook 1D rectangular-barrier WKB transmission formula. | **NOT** quantum hardware, physical entanglement, or new quantum physics; simulation scales as $O(2^n)$ and is capped at $n = 4$ qubits ($16$ complex amplitudes). |
-| **6 Orders of Magnitude ($10^{-15}\text{ m} \to 10^9\text{ m}$)** | Six procedurally themed 3D WebGL2 visual/audio/tunnel-boost stage biomes with logarithmic scale labels. | **NOT** a multi-scale relativistic/QFT physics engine; spatial coordinates live in a normalized $[-34, 34]$ arena coordinate system. |
-| **Unsolved Problems Mega-Atlas** | Audited against all **1,900** problems in `0thernes/unsolved-problems-mega-atlas`. | **Verdict: `0 / 1,900` open problems solved.** PLANARIA is a systems engineering & formal-verification artifact adjacent to `SYS-045`, `CS-053`, and `AI-005`. |
+| **4-Qubit Quantum Register / CHSH / WKB** | Exact classical simulation of a 16-amplitude complex statevector (`Float64Array`), exact Horodecki $3\times 3$ correlation-tensor CHSH, exact 4-qubit Mermin $|M_4| = 4.0$, Werner depolarizing channel, and textbook 1D rectangular-barrier WKB transmission formula. | **NOT** quantum hardware, physical entanglement, or new quantum physics; simulation scales as $O(2^n)$ and is capped at $n = 4$ qubits ($16$ complex amplitudes). |
+| **24 Orders of Magnitude across 6 Scale Realms ($10^{-15}\text{ m} \to 10^9\text{ m}$)** | Six procedurally themed 3D WebGL2 visual/audio/tunnel-boost stage realms spanning logarithmic physical scale labels from femtometers to gigameters. | **NOT** a multi-scale relativistic/QFT physics engine; spatial coordinates live in a normalized $[-34, 34]$ arena coordinate system. |
+| **Unsolved Problems Mega-Atlas** | Programmatically audited against all **1,900** problems in `0thernes/unsolved-problems-mega-atlas` ([docs/MEGA_ATLAS_CROSSCHECK.md](docs/MEGA_ATLAS_CROSSCHECK.md)). | **Verdict: `0 / 1,900` open problems solved.** PLANARIA is a systems engineering & formal-verification artifact adjacent to `SYS-045`, `CS-053`, `AI-005`, `BIO-031`, and `SUB-001`. |
 
-## 2. Technical & Cryptographic Limitations
+## 2. Technical, Storage & Cryptographic Limitations
 
-1. **4× Storage Overhead (192 coded cells / 48 source chunks):**
-   Holographic survivability and 50/50 mitosis require $4\times$ payload expansion ($15{,}936\text{ B}$ raw bytecode capacity inside a $98{,}304\text{ B}$ `.hbin` file). PLANARIA is designed for compact, mission-critical, high-survivability micro-executables, NOT multi-gigabyte desktop applications.
+1. **Exact Storage Expansion Ratios (Transparent Overhead Disclosure):**
+   - **Cell-count expansion:** `4.0×` (`192` coded cells / `48` source chunks).
+   - **Canonical file vs. raw payload capacity:** `6.17×` (`98,304 B` fixed `.hbin` container / `15,936 B` maximum raw payload across all 7 bundles, due to inner RS parity, 128 B Merkle proofs, 16 B headers, and 4 B sync words).
+   - **Canonical file vs. actual compiled species bytecode:** `24.6×` (`AEGIS_DRIFT`, `4,000 B` bytecode) to `57.7×` (`QUANTUM_CHRONICLE`, `1,704 B` bytecode) because `.hbin` is a fixed-size 96 KiB container reserving headroom for larger strata.
+   PLANARIA is designed for compact, mission-critical, high-survivability micro-executables, NOT multi-gigabyte desktop applications.
 2. **Sybil Majority Boundary in Unpinned Mode:**
    When `pinnedRootHex` is NOT supplied to `decodeHbin()`, an adversary who injects strictly more RS-valid forged cells under one coordinated fake Merkle root than surviving authentic host cells will win unpinned quorum election (`unpinned_quorum_sybil_counterexample`). For hostile channels, callers MUST pin `pinnedRootHex` (or verify against a signed manifest).
 3. **128-Bit Truncated Merkle Nodes:**
-   To fit an 8-level Merkle inclusion proof inside each 512 B cell ($8 \times 16 = 128\text{ B}$), internal Merkle digests truncate FIPS 180-4 SHA-256 to 128 bits. This provides 128-bit second-preimage resistance and 64-bit birthday collision resistance — strong for single-organism forensic integrity, but below 256-bit post-quantum collision margins.
-4. **JavaScript-to-Lean Extraction Gap:**
-   The 70 Lean 4.35.0 theorems verify mathematical models of GF(2^8), Cauchy 2×2 decoding, the integer placement schedule, 4-stratum viability, RS(254,238) burst bounds, Merkle quarantine, unpinned quorum, `BitVec 32` RAM masking, and 4-qubit unitarity. The JavaScript runtime (`src/*.js`) is NOT automatically extracted from Lean; correspondence between JS and Lean is maintained via statement-fidelity audits, differential tests, and 10/10 mutation testing (`docs/reviews/2026-11-25-10-pass-red-team-audit.md`).
+   To fit an 8-level Merkle inclusion proof inside each 512 B cell ($8 \times 16 = 128\text{ B}$), internal Merkle digests truncate FIPS 180-4 SHA-256 to 128 bits. This provides 128-bit second-preimage resistance and **64-bit birthday collision resistance** — strong for single-organism forensic integrity, but below 256-bit post-quantum collision margins.
+4. **JavaScript-to-Lean Extraction Gap & Model Boundaries:**
+   The **85 Lean 4.35.0 theorems** verify mathematical and protocol models of $\mathrm{GF}(2^8)$, Cauchy $2\times 2$ decoding, the integer placement schedule, 4-stratum viability, RS(254,238) burst bounds, Merkle path commitment & quarantine, arbitrary-list unpinned quorum, `BitVec 32` RAM masking, dead-host xenograft refusal, 4-qubit complex unitarity, and a list-based 360-frame snapshot stack (`pushSnapshot`/`popSnapshot`).
+   - The JavaScript runtime (`src/*.js`) is **not** extracted from Lean; in particular, `TemporalEngine` uses an $O(1)$ circular `RingBuffer` (vs. Lean's functional `List.take 360`), and `sha256.js` uses 128-bit truncated SHA-256 (vs. Lean's abstract injective `hashPair` with `pow2Pair` witness).
+   - Runtime correspondence is bridged via the **30-suite** test harness (`test/verify.mjs`), **12/12** mutation testing (`scripts/mutation-test.mjs`), **2,000-case** seeded fuzzer (`scripts/fuzz.mjs`), clean-room **Python 3 differential oracle** (`reference/planaria_oracle.py`), and Statement-Fidelity Audit Table (`docs/reviews/2026-11-25-10-pass-red-team-audit.md`).
 5. **General $k \times k$ Cauchy Non-Singularity:**
-   Lean 4 proves universal $2 \times 2$ Cauchy non-singularity and exact decoding (`cauchy2_exact_decode`, `gf256_cauchy2_exact_decode` for Stratum 0 $k = 2$). Higher bundles ($k \in \{4, 6, 8, 16\}$) rely on the classical Cauchy determinant theorem in prose and empirical property-based testing across 25+ randomized $(k, n)$ configurations in Suite 25 (not yet generalized to arbitrary $k \times k$ determinants in pure zero-Mathlib Lean 4).
+   Lean 4 proves universal $2 \times 2$ Cauchy non-singularity and exact decoding (`cauchy2_exact_decode`, `gf256_cauchy2_exact_decode` for Stratum 0 $k = 2$). Higher bundles ($k \in \{4, 6, 8, 16\}$) rely on the classical Cauchy determinant theorem in prose, randomized property tests across 25+ $(k, n)$ configurations in Suite 25, and independent Python 3 Gauss-Jordan verification in `reference/planaria_oracle.py`.
 6. **Desktop-First Browser Requirements & Single-Machine Benchmarks:**
-   The Studio 3D viewport requires WebGL2 (falling back gracefully to 2D PVM-32 + Tissue Surgery when unavailable). Timing benchmarks in `results/benchmarks.json` reflect one workstation (CPU/Node version recorded in JSON) and are not cross-architecture hardware guarantees.
+   The Studio 3D viewport requires WebGL2 (falling back gracefully to 2D PVM-32 + Tissue Surgery when unavailable). Timing benchmarks in `results/benchmarks.json` reflect one workstation (CPU/Node version recorded in JSON) and are not cross-architecture hardware guarantees. Note also that the Equal-Storage `RS(192, 48)` baseline in Experiment 1 evaluates the exact MDS rank threshold (`authenticCells >= 48`) on the same paired erasure patterns as `.hbin` rather than inverting a $48 \times 48$ matrix per trial; latency numbers therefore reflect PLANARIA's real full Cauchy decode.
 
 ## 3. Open Design Dilemmas (Logged per Build Standard R7 & R8)
 
 - **Dilemma D1 — Non-Commercial License vs. OSI/JOSS/Mathlib Eligibility:**
-  `LICENSE` uses the owner-mandated *Cosmogonic License — Non-Commercial Research & Play* (per Turn-1 explicit instruction, which takes precedence under Hard Rule `R8`). Because non-commercial clauses are not OSI-approved, PLANARIA is ineligible for JOSS submission or upstream Mathlib inclusion unless dual-licensed (e.g., Apache-2.0 / MIT) by the owner in a future release. See [ADR-0004](docs/adr/0004-non-commercial-license-vs-osi-dilemma.md).
+  `LICENSE` uses the owner-mandated *Cosmogonic License — Non-Commercial Research & Play* (per Turn-1 explicit instruction, which takes precedence under Hard Rule `R8`; Build Standard audit tooling is explicitly carved out as CC BY 4.0). Because non-commercial clauses are not OSI-approved, PLANARIA is ineligible for JOSS submission or upstream Mathlib inclusion unless dual-licensed (e.g., Apache-2.0 / MIT) by the owner in a future release. See [ADR-0004](docs/adr/0004-non-commercial-license-vs-osi-dilemma.md).
 - **Dilemma D2 — Ephemeral vs. Persistent Attestation Signing:**
   Running `npm run benchmark` without `PLANARIA_SIGNING_KEY_PEM` produces an explicitly labeled `ephemeral-self-consistency-seal` Ed25519 signature (proving internal bundle consistency only). External release authenticity relies on GitHub Release `SHA256SUMS`, SLSA provenance (`actions/attest-build-provenance@v4`), Git commit hashes, and Software Heritage snapshots.
 
 ---
 <!-- FILE: REPLICATION.md -->
 
-# REPLICATION.md — Clean-Clone Reproduction & Independent Replication Protocol
+# REPLICATION.md — Clean-Clone Reproduction & Independent Replication Protocol (`v2.4.0`)
 
-This protocol lets any independent engineer or academic reviewer verify **every single claim, test, mutant, statistical benchmark, Lean 4.35.0 proof, and PDF paper** from a clean clone using only open-source toolchains.
+This protocol lets any independent engineer or academic reviewer verify **every single claim, test, mutant, fuzz run, cross-language Python oracle, statistical benchmark, Lean 4.35.0 proof, interactive Blueprint, citation DOI, and PDF paper** from a clean clone using only open-source toolchains.
 
 ## 1. Prerequisites
 
 | Tool | Required Version | Purpose | Required For |
 | :--- | :--- | :--- | :--- |
-| **Node.js** | `>= 20.0.0` (verified on `v25.8.2` & CI `v22`) | Runtime, compiler, VM, 28 suites, mutation suite, benchmarks (zero npm deps!) | Core build, tests, Studio |
-| **Lean 4 (`elan`)** | `leanprover/lean4:v4.35.0` (pinned in `lean/lean-toolchain`) | 70 formal proofs + 6-kernel verification + Palomar comparator | Formal verification |
-| **bubblewrap (`bwrap`)** | Linux only (`sudo apt-get install -y bubblewrap`) | Sandboxed `lake check --paranoid` & `lake comparator --paranoid` | Linux 6-kernel sandbox |
+| **Node.js** | `>= 20.0.0` (verified on `v25.8.2` & CI `v22`) | Runtime, compiler, VM, 30 suites, 12-mutant suite, 2,000-case fuzzer, Blueprint, benchmarks (zero npm deps!) | Core build, tests, Studio |
+| **Python 3** | `>= 3.10` (stdlib only, zero pip packages) | Clean-room cross-language differential oracle (`reference/planaria_oracle.py`) | Cross-language verification |
+| **Lean 4 (`elan`)** | `leanprover/lean4:v4.35.0` (pinned in `lean/lean-toolchain`) | 85 formal proofs (`autoImplicit = false`) + 6-kernel verification + Palomar comparator | Formal verification |
+| **bubblewrap (`bwrap`)** | Linux only (`sudo apt-get install -y bubblewrap`) | Sandboxed `lake check --paranoid` & `lake comparator --paranoid` (+ negative tamper check) | Linux 6-kernel sandbox |
 | **Tectonic** | `>= 0.15` (optional) | Recompile `paper/main.tex` -> `dist/Donahue_2026_planaria.pdf` | White paper PDF build |
 
 ## 2. Exact Clean-Clone Reproduction Commands
@@ -193,35 +209,44 @@ cd planaria
 # 1. Deterministic build of all 4 living .hbin organisms (98,304 B each)
 npm run build
 
-# 2. Full 28-suite verification, property-based, metamorphic & regression harness
+# 2. Full 30-suite verification, property-based, metamorphic, DSP & regression harness
 npm test
 
-# 3. Static analysis, security-sink, placeholder & citation checks
-npm run lint
-npm run check:citations
+# 3. Clean-room Python 3 cross-language differential oracle (768 cells + mitosis + 4Q CHSH/Mermin)
+python3 reference/planaria_oracle.py
 
-# 4. Surgical mutation testing (10 planted mutants -> expect 10/10 = 100.0% KILLED)
+# 4. Deterministic 2,000-case adversarial fuzzer (decodeHbin, Plang, RS, PVM-32)
+npm run fuzz
+
+# 5. Surgical mutation testing (12 planted mutants -> expect 12/12 = 100.0% KILLED)
 npm run mutate
 
-# 5. Reproducible 4-architecture Monte Carlo + Wilson 95% CI + McNemar + Holm-Bonferroni benchmarks
+# 6. Static analysis, cross-doc Lean theorem linter, README axiom check, Blueprint check & live Crossref DOI audit
+npm run lint
+npm run check:axioms
+npm run blueprint && npm run check:blueprint
+npm run check:citations -- --live
+
+# 7. Reproducible 4-architecture Monte Carlo + Wilson 95% CI + McNemar + Holm-Bonferroni benchmarks
 npm run benchmark
 
-# 6. Pure Lean 4.35.0 build & verbatim 70-theorem #print axioms audit
+# 8. Pure Lean 4.35.0 build & verbatim 85-theorem #print axioms audit (autoImplicit = false)
 cd lean
 lake clean && lake build
-lake env lean PlanariaProofs.lean
+lake build Challenge
+lake env lean VerifyAxioms.lean
 lake env leanchecker --fresh Solution
 lake env leanchecker-paranoid --fresh Solution
 
-# 7. Full 6-kernel sandboxed verification & Palomar Challenge/Solution comparator (Linux with bwrap)
+# 9. Full 6-kernel sandboxed verification & Palomar Challenge/Solution comparator (Linux with bwrap)
 lake check --paranoid
 lake comparator --config comparator.json --paranoid
 cd ..
 
-# 8. Optional: recompile AMS-LaTeX White Paper PDF
-tectonic -X compile paper/main.tex --outdir dist
+# 10. Optional: recompile AMS-LaTeX White Paper PDF
+npm run paper
 
-# 9. Launch live 3D WebGL2 Studio on http://127.0.0.1:4174/
+# 11. Launch live 3D WebGL2 Studio (http://127.0.0.1:4174/) & Proof Blueprint (http://127.0.0.1:4174/blueprint/)
 npm start
 ```
 
@@ -230,53 +255,57 @@ Or run the full automated pipeline via `just reproduce` (or `./scripts/dev.sh re
 ## 3. Expected Headline Outputs (Pass/Fail Acceptance Criteria)
 
 - `npm run build`: writes 4 deterministic 98,304 B binaries matching `artifacts/manifest.json` SHA-256 digests bit-for-bit.
-- `npm test`: `28/28 verification suites PASSED.` (exit code `0`).
-- `npm run mutate`: `MUTATION SCORE: 10/10 (100.0%) KILLED | 0 SURVIVED` (exit code `0`).
+- `npm test`: `30/30 verification suites PASSED.` (exit code `0`).
+- `python3 reference/planaria_oracle.py`: `100% CROSS-LANGUAGE PARITY (768 cells, 4 species, 0 mismatches).`
+- `npm run fuzz`: `2000/2000 cases PASSED (0 crashes, 0 hangs)`.
+- `npm run mutate`: `MUTATION SCORE: 12/12 (100.0%) KILLED | 0 SURVIVED`.
+- `npm run check:axioms` & `npm run check:blueprint`: `85/85` theorems matched 1:1 with `0` forbidden axioms.
 - `npm run benchmark`: at 80% uniform cell erasure ($n = 40$ paired seeds), `Linear = 0.0%`, `RS(40,16) = 0.0%`, `RS(192,48)-Flat = 0.0%`, `PLANARIA >= 95%` with Holm–Bonferroni $p_{\text{Holm}} < 10^{-6}$.
-- `lean/`: `70` audited `#print axioms` lines containing ONLY subsets of `[propext, Classical.choice, Quot.sound]`; zero `sorryAx` / `ofReduceBool` / `trustCompiler`; exit code `0` across all 6 kernels (`leanchecker`, `leanchecker-paranoid`, `lean4lean`, `nanoda_bin`, `con-leche --verified`, `con-ron --verified`) and `lake comparator --paranoid`.
+- `lean/`: `85` audited `#print axioms` lines containing ONLY subsets of `[propext, Classical.choice, Quot.sound]`; zero `sorryAx` / `ofReduceBool` / `trustCompiler` / `_native`; exit code `0` across all 6 kernels (`leanchecker`, `leanchecker-paranoid`, `lean4lean`, `nanoda_bin`, `con-leche --verified`, `con-ron --verified`) and `lake comparator --paranoid`.
 
 ## 4. Replication Log
 
-> **Honest Status:** Self-replications across local Windows and GitHub Actions multi-OS runners are recorded below. **Independent third-party external replication has not yet been submitted** — community replication reports are warmly welcomed via GitHub Issues (`bug`/`issue` or `question` template).
+> **Honest Status:** Self-replications across local Windows and GitHub Actions multi-OS runners are recorded below. **Independent third-party external replication has not yet been submitted** — community replication reports are warmly welcomed via GitHub Issues (`question` or `falsification` template).
 
 | Date | Replicator | Environment | Commit / Tag | Outcome | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 2026-11-25 | Alexander S. Donahue (author, self-replication) | Windows 11 x64, Node v25.8.2, Lean 4.35.0, Tectonic | `v2.3.0` | PASS (28/28 suites, 10/10 mutants, 5/6 local kernels; 6/6 on Linux CI) | `lake comparator` bwrap sandbox verified on Ubuntu CI runner. |
-| 2026-11-25 | GitHub Actions CI (automated clean-clone) | `ubuntu-latest`, `macos-latest`, `windows-latest` (Node 22 + Lean 4.35.0 + `bwrap`) | `v2.3.0` | Automated CI verification on push | Verifies all 6 kernels + `lake comparator --paranoid` inside `bwrap` sandbox. |
+| 2026-11-25 | Alexander S. Donahue (author, self-replication) | Windows 11 x64, Node v25.8.2, Python 3.12, Lean 4.35.0, Tectonic | `v2.4.0` | PASS (30/30 suites, 12/12 mutants, 2,000/2,000 fuzz, 768/768 Python oracle cells, 85/85 Lean theorems) | Local `leanchecker` + `leanchecker-paranoid` passed; 6-kernel `bwrap` sandbox verified on Ubuntu CI. |
+| 2026-11-25 | GitHub Actions CI (automated clean-clone) | `ubuntu-latest`, `macos-latest`, `windows-latest` (Node 22 + Python 3 + Lean 4.35.0 + `bwrap`) | `v2.4.0` | Automated CI verification on push | Verifies all 6 kernels + `lake comparator --paranoid` + negative tampering rejection + SLSA provenance. |
 
 ---
 <!-- FILE: docs/architecture.md -->
 
-# PLANARIA Architecture (`v2.3.0`)
+# PLANARIA Architecture (`v2.4.0`)
 
 ## System Overview
 
-PLANARIA replaces monolithic header-dependent executables with **headerless, spatially stratified holographic cellular binaries (`.hbin`)** paired with a fault-isolated register virtual machine (`PVM-32`) capable of autonomous multi-stratum control-flow anastomosis. Every byte of a compiled `98,304`-byte `.hbin` organism consists exclusively of `192` self-synchronizing `512`-byte cellular frames arranged via an arithmetic coprime scatter schedule so that arbitrary spatial cuts partition the organism with zero byte overlap while preserving full algebraic reconstructibility.
+PLANARIA replaces monolithic header-dependent executables with **headerless, spatially stratified holographic cellular binaries (`.hbin`)** paired with a fault-isolated register virtual machine (`PVM-32`) capable of autonomous multi-stratum control-flow anastomosis. Every byte of a compiled `98,304`-byte `.hbin` organism consists exclusively of `192` self-synchronizing `512`-byte cellular frames arranged via an exact-integer low-discrepancy placement schedule (`PLACEMENT_SCHEDULE`) so that arbitrary 50/50 spatial cuts (including prime unaligned byte offsets) partition the organism with zero byte overlap while preserving full algebraic reconstructibility.
 
 ```text
   .plang Source (4 Living Species)
         │  src/compiler/{lexer,parser,codegen,isa}.js
         ▼
-  7 Organ Bundles (B0..B6: Stem, CoreLogic, PrimaryGfx, HdFx, AudioSynth, StateSchema, Genome)
-        │  src/core/{gf256,cauchy,rs,sha256,hbin}.js
+  7 Organ Bundles (exact BUNDLE_SPECS in src/core/hbin.js, total k=48, n=192):
+    ├── Stratum 0: B0 S0_STEM_NUCLEUS   (k=2,  n=24, cap=664 B)   [sovereign, 91.7% loss tol]
+    ├── Stratum 1: B1 S1_CORE_LOGIC     (k=4,  n=24, cap=1,328 B) [xenograftable]
+    │              B2 S1_WIREFRAME      (k=4,  n=24, cap=1,328 B) [xenograftable]
+    ├── Stratum 2: B3 S2_CORTEX_RENDER  (k=8,  n=32, cap=2,656 B) [xenograftable]
+    │              B4 S2_SYNTH_AUDIO    (k=6,  n=24, cap=1,992 B) [xenograftable]
+    └── Stratum 3: B5 S3_ORGANISM_FX    (k=16, n=40, cap=5,312 B) [xenograftable]
+                   B6 S3_GENOME_LEDGER  (k=8,  n=24, cap=2,656 B) [sovereign, non-executable]
+        │  Each 512 B Cell = 4 B Sync ('PLN\xB7') + 2x Interleaved RS(254,238) (508 B)
+        │                  = 476 B Body (16 B Header + 332 B Cauchy Shard + 8x16 B Merkle Proof) + 32 B Parity
         ▼
-  4-Stratum Progressive Cauchy MDS Encoding over GF(2^8) [poly 0x11D]
-    ├── Stratum 0 (B0, k=4)  -> 36 cells  [min survival: 2.08% ideal / ~12% spatial cut]
-    ├── Stratum 1 (B1, k=8)  -> 40 cells  [min survival: 4.17% ideal / ~18% spatial cut]
-    ├── Stratum 2 (B2, k=16) -> 48 cells  [min survival: 8.33% ideal / ~28% spatial cut]
-    └── Stratum 3 (B3..B6)   -> 68 cells  [full HD/Audio/Genome regeneration at 50% mitosis]
-        │  Each 512 B Cell = 4 B Sync ('PLN\xB7') + 2x Interleaved RS(254,238)
-        │                  = 476 B Payload (Header + 332 B Cauchy Shard + 8x16 B Merkle Proof)
-        ▼
-  192-Cell Scatter-Scheduled .hbin Binary (98,304 B)
-        │  decodeHbin() -> Sync Scan + Iterative Backward Flywheel + RS(254,238) Repair
-        │               -> Depth-8 Domain-Separated SHA-256-128 Merkle Quarantine
+  192-Cell Exact-Integer Placement Scheduled .hbin Binary (98,304 B)
+        │  decodeHbin() -> Fuzzy Sync Scan (<=3b) + Dense-Flood Guard + ±512 B Cadence Flywheel
+        │               -> 2x Interleaved RS(254,238) Repair (<=8 B/lane, 16 B burst)
+        │               -> Depth-8 Domain-Separated SHA-256-128 Merkle Quarantine (0x00/0x01/0x02)
         │               -> GF(2^8) Cauchy MDS Recovery + Optional ABI-Verified Xenografting
         ▼
   PVM-32 Sandboxed Virtual Machine (src/vm/pvm32.js)
-    ├── 32x32-bit regs (r0=0, r1..r7 ABI, r8..r17 scratch, r18..r29 locals, r30/r31 frame)
-    ├── 4,096-word RAM strictly masked (& 0xFFF), bounded instruction fuel per frame
-    ├── ORGAN_CALL descending anastomosis (S3 -> S2 -> S1 -> S0 fallback)
+    ├── 32x32-bit regs (r0=0, r1..r7 ABI, r8..r17 scratch, r18..r31 callee/local frame)
+    ├── 4,096-word RAM strictly masked (& 0xFFF), 16,000-insn default fuel + proportional blitter fuel
+    ├── Transactional RAM & voice rollback on organ traps; ORGAN_CALL descending anastomosis
     └── Live coupling to 4-Qubit Register + Temporal RingBuffer + WebGL2 3D + 48 kHz AudioWorklet
 ```
 
@@ -284,45 +313,51 @@ PLANARIA replaces monolithic header-dependent executables with **headerless, spa
 
 | Module | Responsibility | Key Invariants |
 |---|---|---|
-| `gf256.js` | $\mathrm{GF}(2^8)$ arithmetic (`0x11D`, generator `0x02`) | Exhaustively verified over all $65{,}536$ pairs (`Suite 01`, `GF256.lean`) |
-| `rs.js` | Interleaved `RS(254, 238)` Berlekamp–Massey / Chien / Forney | Repairs $\le 8$ random errors/lane ($16$ B contiguous burst per cell); strictly rejects $9+$ errors/lane (`Suite 02`) |
-| `cauchy.js` | Systematic-free Cauchy MDS over $\mathrm{GF}(2^8)$ ($C_{i,j} = (x_i \oplus y_j)^{-1}$) | Any $k$ distinct `evalX` shards invert losslessly (`k <= 128`, deduplicated); 2x2 singularity impossible (`GF256.lean`) |
-| `sha256.js` | Pure JS FIPS 180-4 SHA-256 + Depth-8 Merkle tree (`0x00` leaf / `0x01` internal) | Bit-exact parity with Node OpenSSL (`Suite 03`, `Suite 25`); second-preimage domain separation (`ByzantineImmune.lean`) |
-| `hbin.js` | 192-cell scatter scheduler, self-sync scanner, backward flywheel, Merkle quarantine, xenograft engine | Zero-overlap exact/prime mitosis (`MitosisBounds.lean`), O(1) sync-flood rejection, dead-host xenograft refusal, lexical donor tie-break |
-| `torture.js` | Deterministic damage injectors (bisection, trisection, bit-rot, burst, unaligned shift, Trojan, overlap-eclipse) | Exact seeded PRNG (`mulberry32`) for paired Monte Carlo comparisons |
+| `gf256.js` | $\mathrm{GF}(2^8)$ arithmetic (`0x11D`, generator `0x02`) | Exhaustively verified over all $65{,}536$ pairs & $16{,}777{,}216$ triples (`Suite 01`, `Planaria.GF256`) |
+| `rs.js` | 2-way interleaved `RS(254, 238)` Berlekamp–Massey / Chien / Forney | Repairs $\le 8$ random errors/lane ($16$ B contiguous burst per cell); strictly rejects $9+$ errors/lane (`Suite 02`, `Planaria.Byzantine`) |
+| `cauchy.js` | Systematic-free Cauchy MDS over $\mathrm{GF}(2^8)$ ($C_{i,j} = (x_i \oplus y_j)^{-1}$) | Any $k$ distinct `evalX` shards invert losslessly (`k <= 128`, deduplicated); $2\times 2$ non-singularity proved universally (`Planaria.GF256.gf256_cauchy2_exact_decode`) |
+| `sha256.js` | Pure JS FIPS 180-4 SHA-256 + Depth-8 Merkle tree (`0x00` leaf / `0x01` internal / `0x02 \|\| "PLN\0"` empty) | Bit-exact parity with Node OpenSSL & Python `hashlib` (`Suite 03`, `reference/planaria_oracle.py`); full-path commitment (`Planaria.Byzantine.merkle_path_collision_free_binding`) |
+| `hbin.js` | 192-cell `PLACEMENT_SCHEDULE`, fuzzy sync scanner, dense-flood guard, ±512 B flywheel, Merkle quarantine, xenograft engine | Zero-overlap exact/prime mitosis (`Planaria.Mitosis`), 1-cell unpinned fail-closed quorum, dead-host xenograft refusal (`Planaria.Xenograft.xenograft_dead_host_refused`), deterministic code-point donor tie-break |
+| `torture.js` | Deterministic damage injectors (bisection, trisection, bit-rot, burst, unaligned shift, Trojan, overlap-eclipse, flywheel amputation) | Exact seeded Mulberry32 PRNG for paired Monte Carlo comparisons |
 
-### Scatter Schedule Geometry (`CELL_SCHEDULE`)
+### Exact-Integer Placement Schedule (`PLACEMENT_SCHEDULE`)
 
-Each of the `192` cells `(bundleId, shardIdx)` receives a deterministic sort key `key = (73 * idx + 19 * bundleId + 11) mod 192` and is placed in ascending lexicographic order of `(key, bundleId, shardIdx)`. Because `gcd(73, 192) = 1`, the schedule is a bijection (`MitosisBounds.lean: planaria_schedule_nodup_and_sorted_halves`). Every bundle's parity shards distribute uniformly across both the left half (`slots 0..95`) and right half (`slots 96..191`), guaranteeing that EVERY bundle has at least `k` shards on BOTH sides of any exact half-cut (`Suite 04` and `MitosisBounds.lean: planaria_zero_overlap_mitosis`).
+Every cell `(bundleId b, cellInBundle i)` across all 7 bundles `(k, n_b) ∈ {(2,24),(4,24),(4,24),(8,32),(6,24),(16,40),(8,24)}` receives the exact integer numerator:
+
+```text
+posNum(b, i, n_b) = (14 * i + 2 * b + 1) * (480 / n_b)  ∈ (0, 6720)
+```
+
+Cells are placed in strictly ascending lexicographic order of `(posNum, b, i)` (zero IEEE-754 tie-break drift). Because `480 % n_b == 0` for every bundle and `posNum != 3360` for all 192 cells, slots `0..95` contain **exactly** `n_b / 2 >= k_b + 2` cells of every bundle and slots `96..191` contain **exactly** `n_b / 2 >= k_b + 2` cells (`Planaria.Mitosis.planaria_schedule_exact_halves`, `Planaria.Mitosis.planaria_schedule_nodup_and_sorted_halves`).
 
 ## Layer 2 — Plang Compiler & `PVM-32` Virtual Machine (`src/compiler/`, `src/vm/`)
 
-- **Plang Language (`lexer.js`, `parser.js`, `codegen.js`, `isa.js`):** Compiles structured 7-bundle living organisms (`programs/*.plang`) to fixed-width 32-bit RISC bytecode. Enforces `MAX_PARSE_DEPTH = 128`, `Map`-based symbol tables (immune to `Object.prototype` collisions), strict scratch-register overflow guard (`rR > 17`), deterministic `LI r1, 0` on bare `return;`, and unsigned 32-bit decimal/hex literal parsing with signed negation range checks.
-- **`PVM-32` (`pvm32.js`):** Deterministic 32-bit virtual machine with `& 0xFFF` RAM address sandboxing, exact `BigInt` integer square root (`ISQRT`), bounded per-frame fuel preventing infinite loops, strict Bundle 6 non-execution (`bundleCode[6] === null`), and `ORGAN_CALL` vascular anastomosis.
-- **Control Baseline (`linear-twin.js`):** `LINBIN01` traditional headered linear binary with SHA-256 integrity footer, plus equal-storage flat `RS(192, 48)` baseline in `scripts/benchmark.mjs` for rigorous ablation.
+- **Plang Language (`lexer.js`, `parser.js`, `codegen.js`, `isa.js`):** Compiles structured 7-bundle living organisms (`programs/*.plang`) to fixed-width 32-bit RISC bytecode. Enforces `MAX_PARSE_DEPTH = 128` across blocks, `else if`, and ternary chains, iterative AST `containsCall` + `MAX_AST_DEPTH = 256`, `Map`-based symbol tables (immune to `Object.prototype` collisions), strict scratch-register overflow guard (`rR > 17`), built-in constant/organ protection, deterministic `LI r1, 0` on bare `return;`, and strict signed 32-bit decimal range checks (hex `0x...` required for bit-patterns `> 2147483647`).
+- **`PVM-32` (`pvm32.js`):** Deterministic 32-bit virtual machine with `& 0xFFF` RAM address sandboxing, exact `BigInt` integer square root (`ISQRT`), default `16,000`-instruction per-frame budget + proportional blitter fuel (`GLOW` 128, `CLEAR` 64, `TRI` 4, `LINE` 2), transactional RAM/voice rollback on organ traps, strict Bundle 6 non-execution (`bundleCode[6] === null`), and `ORGAN_CALL` vascular anastomosis.
+- **Control Baselines (`linear-twin.js`, `scripts/benchmark.mjs`):** `LINBIN01` traditional headered linear binary with SHA-256 footer, plus single-stratum `RS(40,16)` and equal-storage flat `RS(192,48)` monolithic archive baselines.
 
 ## Layer 3 — 4-Qubit Quantum Engine, Temporal Causality & WebGL2 Studio (`src/quantum/`, `src/world/`, `src/web/`)
 
-- **Quantum Register (`qengine.js`):** Exact $2^4 = 16$-amplitude complex double-precision statevector supporting `X/Y/Z/H/S/T/RX/RY/RZ/CNOT/CZ/SWAP`, Werner depolarizing decoherence ($V = e^{-\gamma t} \to 0$), exact Horodecki $3\times 3$ correlation-tensor CHSH maximum $S_{\max} = 2\sqrt{\lambda_0 + \lambda_1}$ (reaching $2\sqrt{2}$ on Bell states), 4-qubit Mermin $|M_4|$ witness (reaching $8.0$ on $\mathrm{GHZ}_4$), WKB barrier tunneling, Heisenberg uncertainty, and Zeno suppression.
-- **Temporal Engine (`temporal.js`):** $O(1)$ circular 360-frame `RingBuffer` recording full deterministic snapshots (player kinematics, HP, XP, skills, chrono-energy, active NPCs, delayed echo shots, scale override) enabling causality-consistent rewind with zero skill-point duplication exploits.
-- **3D World & WebGL2 Renderer (`generator.js`, `game3d.js`, `renderer3d.js`, `audio-worklet.js`):** Deterministic 64-bit seeded 6-order stage & gear generator (`6.42T` reachable combinations), pure WebGL2 GLSL 300 es pipeline with CPU normal matrices and float64 phase reduction, plus a lock-free 48 kHz PolyBLEP `AudioWorklet` synthesizer coupled directly to `PVM-32` Bundle 4 registers.
+- **Quantum Register (`qengine.js`):** Exact $2^4 = 16$-amplitude complex double-precision statevector supporting `X/Y/Z/H/S/T/RX/RY/RZ/CNOT/CZ/SWAP`, Werner depolarizing decoherence ($V = e^{-\gamma t} \to 0$) honored during projective readout, exact Horodecki $3\times 3$ correlation-tensor CHSH maximum $S_{\max} = 2\sqrt{\lambda_0 + \lambda_1}$ (reaching $2\sqrt{2} \approx 2.8284$ on Bell states), 4-qubit Mermin $|M_4|$ witness (reaching **$|M_4| = 4.0$** on $\mathrm{GHZ}_4$), WKB barrier tunneling, Heisenberg uncertainty, and Zeno suppression.
+- **Temporal Engine (`temporal.js`):** $O(1)$ circular 360-frame `RingBuffer` recording full deep-copied world snapshots (player kinematics, HP, XP, skills, weapons, armors, indices, recent loot, player profile, deterministic Mulberry32 RNG state, quantum amplitudes & gate counter, active NPCs, delayed echo shots, chrono wells, echo clones) enabling causality-consistent rewind with zero inventory or skill-point exploits.
+- **3D World & WebGL2 Renderer (`generator.js`, `game3d.js`, `renderer3d.js`, `audio-worklet.js`):** Deterministic 64-bit seeded 6-realm stage & gear generator spanning 24 orders of magnitude (`6,421,059,993,600` reachable discrete combinations), pure WebGL2 GLSL 300 es pipeline with organ-amputation degradation (`S0`–`S3`), plus a lock-free 48 kHz PolyBLEP `AudioWorklet` synthesizer coupled to `PVM-32` Bundle 4.
 
-## Layer 4 — CLI, Hardened HTTP Server & Static Pages (`bin/`, `server.mjs`, `scripts/`)
+## Layer 4 — CLI, Hardened HTTP Server, Python Oracle & Static Pages (`bin/`, `server.mjs`, `reference/`, `scripts/`)
 
-- **CLI (`bin/planaria.mjs`):** 9 subcommands (`compile`, `inspect`, `run`, `bisect`, `fuse`, `heal`, `damage`, `xenograft`, `disasm`), strict flag validation, explicit `--allow-unpinned-xenograft` opt-in, and exit code `3` on VM traps.
-- **HTTP Server (`server.mjs`):** Zero-dependency static host bound to `127.0.0.1:4174` with `/healthz`, TOCTOU-safe `openSync`/`fstatSync`, symlink-escape protection, strict CSP, `X-Frame-Options: DENY`, `nosniff`, and static non-echoing 404 responses.
-- **Static Pages Builder (`scripts/build-pages.mjs`):** Assembles a subpath-safe `_site/` bundle for GitHub Pages with zero root-anchored asset URLs.
+- **CLI (`bin/planaria.mjs`):** 9 subcommands (`compile`, `inspect`, `run`, `bisect`, `fuse`, `heal`, `damage`, `xenograft`, `disasm`), 16 MiB bounded file reader, distinct-output guards, `--allow-partial`, `--include-sync`, `--allow-unpinned-xenograft`, exit code `2` on non-bootable organism, exit code `3` on VM traps.
+- **HTTP Server (`server.mjs`):** Zero-dependency static host bound to `127.0.0.1:4174` serving `/` (Studio), `/blueprint/` (Interactive Lean Blueprint), and `/healthz`, with TOCTOU-safe `openSync`/`fstatSync`, symlink-escape protection, strict CSP, `X-Frame-Options: DENY`, `nosniff`, `/src/web/index.html -> /` 302 redirect, and graceful `SIGINT`/`SIGTERM` shutdown.
+- **Clean-Room Python 3 Oracle (`reference/planaria_oracle.py`):** Independent pure-Python stdlib implementation decoding all 4 `.hbin` binaries (768 cells), unaligned mitosis (`49,177 B`), and 4-qubit CHSH/Mermin invariants.
 
-## Layer 5 — 6-Kernel Pure Lean 4.35.0 Proofs (`lean/`, `formalization.yaml`)
+## Layer 5 — 6-Kernel Pure Lean 4.35.0 Proofs & Interactive Blueprint (`lean/`, `blueprint/`, `formalization.yaml`)
 
-Six zero-Mathlib `module` files (`GF256`, `MitosisBounds`, `StratumAnastomosis`, `ByzantineImmune`, `XenograftABI`, `QuantumTemporal`) prove **70 theorems** using only Lean's standard axioms `[propext, Classical.choice, Quot.sound]`, exported via Palomar `Challenge.lean` / `Solution.lean` / `comparator.json` and independently checked across 6 distinct kernels (`lean4`, `leanchecker`, `leanchecker-paranoid`, `nanoda_bin`, `con-leche`, `con-ron`, plus `lean4lean` & `lake comparator --paranoid` in Ubuntu Linux CI).
+Seven zero-Mathlib `module` files (`GF256`, `MitosisBounds`, `StratumAnastomosis`, `ByzantineImmune`, `XenograftABI`, `QuantumTemporal`, `AdversarialTests`) built with `autoImplicit = false` & `relaxedAutoImplicit = false` prove **85 theorems** using only Lean's standard axioms `[propext, Classical.choice, Quot.sound]`, exported via Palomar `Challenge.lean` / `Solution.lean` / `comparator.json` and independently checked across 6 distinct kernels (`lean4`, `leanchecker`, `leanchecker-paranoid`, `nanoda_bin`, `con-leche`, `con-ron`, plus `lean4lean` & `lake comparator --paranoid` + negative tampering check in Ubuntu Linux CI) and visualized in `blueprint/index.html`.
 
 ---
 <!-- FILE: docs/benchmarks.md -->
 
-# Empirical Benchmarks & Performance Budgets (`v2.3.0`)
+# Empirical Benchmarks & Performance Budgets (`v2.4.0`)
 
-All measurements below are generated deterministically by [`scripts/benchmark.mjs`](../scripts/benchmark.mjs) (`schema: PLANARIA-BENCHMARKS-1.2`, pre-registered in [`docs/preregistration.md`](preregistration.md)) and stored verbatim in [`results/benchmarks.json`](../results/benchmarks.json).
+All measurements below are generated deterministically by [`scripts/benchmark.mjs`](../scripts/benchmark.mjs) (`schema: PLANARIA-BENCHMARKS-1.2`, pre-registered in [`docs/preregistration.md`](preregistration.md)) and stored verbatim in [`results/benchmarks.json`](../results/benchmarks.json), with longitudinal version tracking in [`results/bench-history.csv`](../results/bench-history.csv).
 
 **Reference Machine:** Node.js `v25.8.2` on Windows x64, Intel Core Ultra 9 275HX (24 cores), 47.4 GiB RAM.
 
@@ -330,10 +365,10 @@ All measurements below are generated deterministically by [`scripts/benchmark.mj
 
 ## 1. Paired 4-Architecture Random Erasure Survival Curve (`N = 40` Paired Seeds / Point)
 
-Compares `AEGIS_DRIFT.hbin` (`98,304` B) against three baselines evaluated on the **exact same 40 deterministic random seeds** per erasure threshold:
+Compares `AEGIS_DRIFT.hbin` (`98,304` B, `1,000` insns, `4,000` B code) against three baselines evaluated on the **exact same 40 deterministic random seeds** per erasure threshold:
 1. **`LINBIN01`**: Monolithic headered linear executable with SHA-256 footer.
 2. **`RS(40, 16)` Cliff**: Single-stratum flat erasure code ($40$ cells, $k = 16$).
-3. **Equal-Storage Flat `RS(192, 48)`**: Exact same `98,304` B file size and `192 × 512` B cell count as PLANARIA, using a flat $k = 48$ all-or-nothing threshold (`25%` cliff) to isolate **progressive stratification** from total byte budget.
+3. **Equal-Storage Flat `RS(192, 48)`**: Exact same `98,304` B file size and `192 × 512` B cell count as PLANARIA, evaluated via its exact MDS rank threshold (`authenticCells >= 48`, `25%` survival cliff) on the same paired erasure masks to isolate **progressive stratification** from total byte budget.
 
 | Erasure (%) | `LINBIN01` (%) [95% CI] | `RS(40,16)` (%) | Equal-Storage `RS(192,48)` (%) [95% CI] | **PLANARIA `.hbin`** (%) [95% CI] | Mean Cap. (%) | Stratum (`S3/S2/S1/S0`) | vs. `RS(192,48)` Cohen's $h$ | vs. `RS(192,48)` $p_{\text{Holm}}$ |
 |---:|---:|---:|---:|---:|---:|:---:|---:|---:|
@@ -357,12 +392,12 @@ Compares `AEGIS_DRIFT.hbin` (`98,304` B) against three baselines evaluated on th
 
 - **Contiguous Burst Radiation in ALL 192 Cells Simultaneously:**
   - `0..16 B/cell` (up to `3,072` corrupted bytes = `3.13%` file-wide): **192/192 cells repaired (100% SHA-256 exact regeneration)**; `LINBIN01` dies at `2 B/cell`.
-  - `18..22 B/cell` (past tight interleaved RS bound $2t = 16$): **0/192 cells repaired, 0 silent miscorrections** (confirms Theorem IV.5–IV.6).
+  - `18..22 B/cell` (past tight interleaved RS bound $2t = 16$): **0/192 cells repaired, 0 silent miscorrections** (confirms Theorem IV tight bounds and `AdversarialTests.lean`).
 - **Byzantine Trojan Flood (`1, 5, 20, 60, 192` forged RS-valid cells prepended):**
   - **Merkle Quarantine ON:** `100%` quarantined (`1/1`, `5/5`, `20/20`, `60/60`, `192/192`), `100%` exact SHA-256 match.
-  - **Merkle Quarantine OFF:** Even **1 single Trojan** poisons `470 / 472` bytes (`99.6%`) of `S0_STEM_NUCLEUS` (`469–472 B` across `1..192` Trojans).
+  - **Merkle Quarantine OFF:** Even **1 single Trojan** poisons `469 / 472` bytes (`99.4%`) of `S0_STEM_NUCLEUS` (`469–472 B` across `1..192` Trojans).
 - **Zero-Overlap Unaligned 50/50 Bisection (`49152, 49153, 49177, 48701, 49597, 49000`):**
-  - **100% (6/6 cut offsets)** regenerate SHA-256 bit-exact `98,304`-byte parent binaries from **BOTH** disjoint halves in `12.57–14.21 ms` combined.
+  - **100% (6/6 cut offsets)** regenerate SHA-256 bit-exact `98,304`-byte parent binaries from **BOTH** disjoint halves in `17.17–21.28 ms` combined (`49177`: `20.20 ms`, also verified bit-exact in `reference/planaria_oracle.py`).
 - **Full 5-Chimera Cross-Species Xenograft Matrix (`60` frames each):**
   - `AEGIS_DRIFT × SYNTH_REACTOR (S2 Render+Audio)` — Bootable S3, Host B0 Sovereign, **0 traps**
   - `AEGIS_DRIFT × CIPHER_VAULT (S2 Render+Audio)` — Bootable S3, Host B0 Sovereign, **0 traps**
@@ -372,18 +407,75 @@ Compares `AEGIS_DRIFT.hbin` (`98,304` B) against three baselines evaluated on th
 
 ---
 
-## 3. Performance Budgets & Latency Tracking (`A37`, `B27`)
+## 3. Performance Budgets & Longitudinal Tracking (`A37`, `B27`)
 
-| Metric | Target Budget (`A37`) | Measured `v2.3.0` | Spread (`IQR` / `p95`) | Status |
+| Metric | Target Budget (`A37`) | Measured `v2.4.0` | Spread (`IQR` / `p95`) | Status |
 |---|---:|---:|---:|:---:|
-| Compile all 4 `.plang` species (`npm run build`) | `< 200 ms` | **40.3 ms** | — | PASS |
-| Full `.hbin` decode (`n = 40`) | median `< 25 ms`, p95 `< 60 ms` | **5.994 ms** (mean `5.998 ms`) | IQR `0.268 ms`, p95 `6.526 ms` | PASS |
-| Dual 50/50 mitosis decode + regenerate | `< 40 ms` | **12.57–14.21 ms** | across 6 offsets | PASS |
-| `PVM-32` single frame execution (`n = 400`) | median `< 1.0 ms` (60 FPS = `16.67 ms`) | **0.041 ms** (mean `0.052 ms`) | IQR `0.006 ms`, p95 `0.111 ms` | PASS (`42.85 MIPS`) |
-| 16 KiB `PLN\xB7` sync-flood DoS decode (`Suite 26`) | `< 250 ms` | **< 10 ms** | O(1) bypass | PASS |
-| 28-suite verification harness (`npm test`) | `< 15 s` | **~1.9 s** | — | PASS |
-| 10-mutant mutation suite (`npm run mutate`) | `< 60 s`, `10/10` killed | **~20.2 s**, **10/10 (100.0%)** | — | PASS |
+| Compile all 4 `.plang` species (`npm run build`) | `< 200 ms` | **48.61 ms** | — | PASS |
+| Full `.hbin` decode (`n = 40`) | median `< 25 ms`, p95 `< 60 ms` | **9.669 ms** (mean `9.858 ms`) | IQR `1.217 ms`, p95 `12.891 ms` | PASS |
+| Dual 50/50 mitosis decode + regenerate | `< 40 ms` | **17.17–21.28 ms** | across 6 offsets | PASS |
+| `PVM-32` single frame execution (`n = 400`, transactional rollback ON) | median `< 1.0 ms` (60 FPS = `16.67 ms`) | **0.060 ms** (mean `0.088 ms`) | IQR `0.023 ms`, p95 `0.192 ms` | PASS (`28.04 MIPS`, `11,364 FPS`) |
+| 16 KiB `PLN\xB7` sync-flood DoS decode (`Suite 26`) | `< 250 ms` | **< 10 ms** | $O(1)$ bypass | PASS |
+| 30-suite verification harness (`npm test`) | `< 15 s` | **~2.7 s** | — | PASS |
+| 12-mutant mutation suite (`npm run mutate`) | `< 90 s`, `12/12` killed | **~26 s**, **12/12 (100.0%)** | — | PASS |
+| 2,000-case deterministic fuzzer (`npm run fuzz`) | `< 15 s`, `0` crashes | **~1.6 s**, **2,000/2,000 PASS** | — | PASS |
+| Clean-room Python 3 oracle (`reference/planaria_oracle.py`) | `< 15 s`, `100%` parity | **~1.2 s**, **768/768 cells PASS** | — | PASS |
 
-**Historical Trend (Report-Only Tracking, `B27`):**
+**Historical Trend (Tracked in [`results/bench-history.csv`](../results/bench-history.csv), `B27`):**
 - `v2.2.0`: Mean decode `8.96 ms`, `PVM-32` `27.02 MIPS` (`0.082 ms/frame`), 24 suites, 62 Lean theorems.
-- `v2.3.0`: Median decode `5.994 ms` (`-33.1%`), `PVM-32` `42.85 MIPS` (`0.041 ms/frame` median, `+58.6%`), 28 suites, `10/10` mutants killed, 70 Lean theorems across 6 kernels. Every Ubuntu CI push uploads `results/benchmarks.json` as a build artifact for ongoing regression comparison.
+- `v2.3.0`: Median decode `5.994 ms`, `PVM-32` `42.85 MIPS` (`0.041 ms/frame` median), 28 suites, `10/10` mutants killed, 70 Lean theorems across 6 kernels.
+- `v2.4.0`: Median decode `9.669 ms`, `PVM-32` `28.04 MIPS` (`0.060 ms/frame` median with **zero-allocation LIFO transactional RAM/voice rollback** active on every `ORGAN_CALL`, recovering from `12.17 MIPS` after replacing per-call `Int32Array` cloning), 30 suites, `12/12` mutants killed, 2,000 fuzz cases, Python 3 oracle parity, interactive Proof Blueprint, 85 Lean theorems across 6 kernels. Every Ubuntu CI push uploads `results/benchmarks.json` as a build artifact for ongoing regression comparison.
+
+---
+<!-- FILE: docs/MEGA_ATLAS_CROSSCHECK.md -->
+
+# Unsolved Problems Mega-Atlas Cross-Check (`PLANARIA v2.4.0`)
+
+- **Audit Date:** 2026-11-25
+- **Source Dataset:** [`0thernes/unsolved-problems-mega-atlas`](https://github.com/0thernes/unsolved-problems-mega-atlas) — `outputs/MegaAtlas_Unsolved_Problems_V2.json.gz`
+- **Total Problems Audited:** **1,900 / 1,900** (100% programmatic scan + manual review of top nearest neighbors)
+- **Solved Count (Strict Epistemic Verdict):** **`0 / 1,900`**
+
+---
+
+## Executive Verdict
+
+**PLANARIA v2.4.0 solves ZERO (`0 / 1,900`) open problems in the Unsolved Problems Mega-Atlas.**
+
+PLANARIA is an original computer-systems, binary-architecture, compiler, virtual-machine, and formal-verification engineering artifact (`Progressive Holographic Instruction Stratification`, `.hbin` format, `Plang`, `PVM-32` anastomosis, Merkle Byzantine quarantine, ABI-verified cross-species xenografting, and 85 pure Lean 4.35.0 formal theorems checked across 6 kernels). None of those systems achievements resolves an open conjecture in pure mathematics, theoretical computer science, quantum physics, or developmental biology.
+
+Publishing this explicit negative audit prevents claim inflation, respects Popperian falsifiability, and maps the exact distance between PLANARIA's verified engineering guarantees and adjacent open scientific frontiers.
+
+---
+
+## Programmatic Nearest-Neighbor Map (Top 19 Adjacent Problems of 1,900)
+
+Out of 1,900 catalogued open problems, programmatic keyword & domain scoring surfaced 49 thematic neighbors. The 19 closest entries (verbatim IDs and titles from `MegaAtlas_Unsolved_Problems_V2.json.gz`) are audited below:
+
+| Mega-Atlas ID | Verbatim Problem Title | PLANARIA Relationship | Solved? | Exact Gap Remaining |
+| :--- | :--- | :--- | :---: | :--- |
+| **`SUB-001`** | *Bioelectric Pattern Memory & Anatomical Target-Morphology Encoding in Planarian Regeneration* | Architectural inspiration & metaphor (binary mitosis / tissue map). | **NO** | Wet-lab planarian bioelectric voltage networks & cellular morphogenesis are biological phenomena, not erasure-coded byte arrays. |
+| **`BIO-031`** | *Mechanisms of Complete Whole-Body & Limb Regeneration (Planaria & Salamanders vs. Mammalian Scarring)* | Metaphorical framing for self-regenerating `.hbin` binaries. | **NO** | Does not model wet-lab cellular dedifferentiation, immune scarring, or vertebrate blastema biology. |
+| **`BIO-022`** | *Morphogenesis, Developmental Pattern Formation & Bioelectric Anatomical Target Memory* | Metaphorical framing only. | **NO** | Zero biological tissue simulation or gene-regulatory experimental evidence. |
+| **`CS-053`** | *Exact Capacity Region of Colluding, Coded & Byzantine Private Information Retrieval (PIR)* | Uses Cauchy MDS coding + Merkle Byzantine authentication (`src/core/`). | **NO** | PLANARIA provides authenticated integrity/erasure recovery, NOT information-theoretic query privacy or colluding-server PIR capacity theorems. |
+| **`CS-056`** | *Optimal Asynchronous Byzantine Consensus, MEV Elimination & Trustless Scalability* | Implements static-stream Merkle quarantine & fail-closed quorum (`electUnpinnedQuorum`). | **NO** | Not an asynchronous distributed consensus protocol across network replicas; unpinned quorum explicitly fails under $>50\%$ Sybil flooding. |
+| **`CS-061`** | *Optimal Constant-Rate Locally Testable Codes (LTCs) & Single-Shot Quantum LDPC Decoding* | Uses classical concatenated `RS(254,238)` + Cauchy MDS over $\mathrm{GF}(2^8)$. | **NO** | Classical MDS codes are neither constant-query LTCs nor quantum LDPC codes. |
+| **`AI-005`** | *Automated Formal Proof Fidelity Auditing (Lean 4 Kernel Verification vs. Human Statement Semantics)* | Applies best-practice manual statement-fidelity auditing + Palomar `Challenge`/`Solution` + 8 adversarial refutations. | **NO** | Demonstrates disciplined human-audited workflow for one repository, NOT a general automated semantic-fidelity verifier. |
+| **`AI-041`** | *Automated Red-Teaming & Formal Verification of Autonomous Cyber-Offense / Cyber-Defense Agents* | Uses deterministic fuzzing (`scripts/fuzz.mjs`), mutation testing (`12/12`), and 6-kernel Lean verification. | **NO** | Engineering hygiene for one VM/codec, not general autonomous cyber-agent verification. |
+| **`AI-045`** | *Open-Ended Artificial Life, Automated Environment Generation & Unbounded Novelty Creation* | Procedural `6.42T` gear/NPC/stage forge (`src/world/generator.js`). | **NO** | Finite combinatorial cross-product over hand-authored templates, not open-ended evolutionary novelty. |
+| **`SYS-045`** | *Formal Resilience & Graceful Degradation of Autonomous Systems Under Correlated Multi-Sensor Spoofing* | Closest engineering cousin: progressive 4-stratum graceful degradation + Byzantine spoofing quarantine. | **NO** | Scoped to static/executable byte streams in a sandboxed VM, not continuous-time physical multi-sensor cyber-physical control loops. |
+| **`SYS-024`** | *Byzantine-Resilient, Cyber-Attack-Proof Control of Distributed Cyber-Physical Systems* | Related resilience ethos (anastomosis + quarantine). | **NO** | Single-node bytecode execution; no physical plant dynamics or distributed real-time control loop. |
+| **`QC-004`** | *Real-Time Low-Latency Fault-Tolerant Decoding & Universal Logic on Good qLDPC Codes* | Simulates a 4-qubit classical register (`src/quantum/qengine.js`) and decodes classical RS/Cauchy codes. | **NO** | Classical 16-amplitude statevector simulation, not quantum error correction or physical qLDPC decoding. |
+| **`CM-050`** | *Programmable Active Metamaterials & Odd-Elastic Autonomous Self-Healing Solids* | Software analogue of physical self-healing structures. | **NO** | Digital byte reconstruction, not condensed-matter mechanics or active elastodynamics. |
+| **`ECON-038`** | *Reputation Systems, Sybil Resistance & Decentralized Trust Without Central Identity Authorities* | Exposes exact Sybil-override boundary in unpinned quorum (`unpinned_quorum_sybil_counterexample`). | **NO** | Explicitly requires an out-of-band pinned root (`pinnedRootHex`) against Sybil majorities; does not solve decentralized Sybil resistance. |
+| **`GR-046`** | *Non-Isometric Holographic Error-Correcting Codes & State-Dependent Interior Operators* | Shares the word "holographic" for distributed erasure coding. | **NO** | Classical $\mathrm{GF}(2^8)$ coding theory, completely unrelated to AdS/CFT quantum gravity or black-hole interiors. |
+| **`CS-011`** | *Constant-Depth Threshold Circuits ($\mathrm{TC}^0$ vs. $\mathrm{NC}^1$) & $\mathrm{NP}$ vs. $\mathrm{ACC}^0$ Separation* | None beyond complexity-theoretic background. | **NO** | No circuit lower bounds proved. |
+| **`CS-029`** | *Near-Native Efficiency & Circuit Privacy for Fully Homomorphic Encryption (FHE)* | None (integrity-only hashing, zero FHE). | **NO** | `.hbin` performs plaintext integrity authentication, not encrypted computation. |
+| **`SYS-007`** | *Real-Time Planetary-Scale 100%-Renewable Zero-Inertia AC-OPF Power-Grid & Supply-Chain Control* | None. | **NO** | Outside domain scope. |
+| **`SYS-018`** | *Autonomous Resilient Planetary & Deep-Sea Exploration Under Extreme Communication Latency & Darkness* | Potential future application domain for radiation-tolerant `.hbin` flight micro-kernels. | **NO** | Prototype software format only; no radiation-hardened flight hardware or physical field mission. |
+
+---
+
+## Reproducibility
+
+To reproduce this scan locally against `unsolved-problems-mega-atlas`, load `outputs/MegaAtlas_Unsolved_Problems_V2.json.gz` (1,900 entries) and compare against PLANARIA's formal claims ledger in [`CLAIMS.md`](../CLAIMS.md) and explicit boundaries in [`LIMITATIONS.md`](../LIMITATIONS.md).

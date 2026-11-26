@@ -157,7 +157,8 @@ export function gfPolyMulAsc(p, q, maxLen = undefined) {
   if (!p || !q || p.length === 0 || q.length === 0) {
     return new Uint8Array(0);
   }
-  const limit = maxLen === undefined ? (p.length + q.length - 1) : maxLen;
+  const naturalLen = p.length + q.length - 1;
+  const limit = maxLen === undefined ? naturalLen : Math.min(maxLen, naturalLen);
   if (!Number.isSafeInteger(limit) || limit <= 0) {
     return new Uint8Array(0);
   }

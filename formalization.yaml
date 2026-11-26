@@ -1,18 +1,26 @@
-schema_version: 1
+schema_version: 2
 project: PLANARIA
-version: "2.3.0"
+version: "2.4.0"
 author: "Alexander Stephen Donahue"
 orcid: "0009-0006-8168-9648"
 affiliation: "Independent Researcher (0thernes project), Spokane, WA, USA"
 toolchain: "leanprover/lean4:v4.35.0"
 mathlib_dependency: false
 module_system: true
+auto_implicit: false
+relaxed_auto_implicit: false
 lean_root: "lean"
 spec_module: "lean/PlanariaProofs/Spec.lean"
 challenge_module: "lean/Challenge.lean"
 solution_module: "lean/Solution.lean"
 comparator_config: "lean/comparator.json"
 audit_entrypoint: "lean/VerifyAxioms.lean"
+audit_transcript: "results/lean4-audit.txt"
+multi_kernel_transcript: "results/lean4-multi-kernel.txt"
+blueprint_url: "blueprint/index.html"
+blueprint_data: "blueprint/blueprint.json"
+differential_oracle: "reference/planaria_oracle.py"
+negative_comparator_ci_verified: true
 permitted_axioms:
   - propext
   - Quot.sound
@@ -21,11 +29,12 @@ forbidden_axioms:
   - sorryAx
   - Lean.ofReduceBool
   - Lean.trustCompiler
+  - _native
 kernels:
   - name: "Lean 4.35.0 reference kernel"
-    command: "lake build && lake env leanchecker --fresh PlanariaProofs"
+    command: "lake build && lake env leanchecker --fresh Solution"
   - name: "leanchecker-paranoid"
-    command: "lake env leanchecker-paranoid --fresh PlanariaProofs"
+    command: "lake env leanchecker-paranoid --fresh Solution"
   - name: "lean4lean"
     command: "lake check --paranoid"
   - name: "nanoda_bin (Rust)"
@@ -36,25 +45,30 @@ kernels:
     command: "lake check --paranoid"
 comparator_command_ci: "cd lean && lake comparator --config comparator.json --paranoid"
 comparator_command_local_windows: "cd lean && lake comparator --config comparator.json --paranoid --inadvisably-no-sandbox"
-theorem_count: 70
-non_vacuity_witness_count: 5
+theorem_count: 85
+non_vacuity_witness_count: 10
+adversarial_refutation_count: 8
 modules:
   - name: "PlanariaProofs.GF256"
     theorems: 16
-    scope: "Complete GF(2^8) mod 0x11D field axioms, universal Cauchy 2x2 non-singularity & lossless decode"
+    scope: "Complete GF(2^8) mod 0x11D field axioms, universal Cauchy 2x2 non-singularity & lossless decode + non-vacuity witness"
   - name: "PlanariaProofs.MitosisBounds"
-    theorems: 12
-    scope: "Zero-overlap mitosis sufficiency/impossibility, exact integer PLACEMENT_SCHEDULE Nodup + sorted halves, 512B cell budget"
+    theorems: 14
+    scope: "Zero-overlap mitosis sufficiency/impossibility, exact integer PLACEMENT_SCHEDULE Nodup + sorted halves, 512B cell budget + witnesses"
   - name: "PlanariaProofs.StratumAnastomosis"
-    theorems: 7
-    scope: "4-stratum viability lattice bit-exact to hbin.js, 6-organ anastomosis zero-crash, super-additive fusion, RS(40,16) & RS(192,48) separation"
+    theorems: 8
+    scope: "4-stratum viability lattice bit-exact to hbin.js, 6-organ anastomosis zero-crash, super-additive fusion, RS(40,16) & RS(192,48) separation + witness"
   - name: "PlanariaProofs.ByzantineImmune"
-    theorems: 16
-    scope: "Byte-list Hamming triangle, RS(254,238) radius t=8, tight 16B/17B/18B burst bounds, Merkle commitment, executable unpinned quorum (majority/tie/Sybil)"
+    theorems: 18
+    scope: "Byte-list Hamming triangle, RS(254,238) radius t=8, tight 16B/17B/18B burst bounds, full dual-path Merkle commitment, arbitrary-position & arbitrary-list unpinned quorum + witnesses"
   - name: "PlanariaProofs.XenograftABI"
-    theorems: 7
-    scope: "BitVec 32 RAM sandboxing, bounded fuel termination, B0/B6 host sovereignty, xenograft ABI safety"
+    theorems: 9
+    scope: "BitVec 32 RAM sandboxing, bounded fuel termination, B0/B6 host sovereignty, dead-host stem-viability refusal, xenograft ABI safety + witnesses"
   - name: "PlanariaProofs.QuantumTemporal"
     theorems: 12
     scope: "Full 4-qubit 16-amplitude complex unitarity (X/Y/Z/H/CNOT/CZ/SWAP), 360-frame rewind exactness, 6,421,059,993,600 reachable build space"
+  - name: "PlanariaProofs.AdversarialTests"
+    theorems: 8
+    scope: "Formal kernel-checked refutations (¬ P) of 8 deliberately weakened false variants across all six theorem families"
 statement_fidelity_audit: "docs/reviews/2026-11-25-10-pass-red-team-audit.md"
+submission_readiness_dossier: "docs/SUBMISSION_READINESS.md"

@@ -165,9 +165,15 @@ export function cauchyDecode(cells, k, shardSize, origLen) {
   for (const cell of cells) {
     if (!cell || !Number.isInteger(cell.evalX) || cell.evalX < k || cell.evalX > 255) continue;
     if (seen.has(cell.evalX)) continue;
-    if (!(cell.shard instanceof Uint8Array) || cell.shard.length !== shardSize) continue;
+    let shard;
+    try {
+      shard = toBytes(cell.shard);
+    } catch {
+      continue;
+    }
+    if (shard.length !== shardSize) continue;
     seen.add(cell.evalX);
-    unique.push(cell);
+    unique.push({ evalX: cell.evalX, shard });
     if (unique.length === k) break;
   }
 

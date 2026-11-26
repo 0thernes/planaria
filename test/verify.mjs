@@ -16,6 +16,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
+import vm from 'node:vm';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -66,6 +67,7 @@ import { createPlanariaServer } from '../server.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
+const VERSION = fs.readFileSync(path.join(ROOT, 'VERSION'), 'utf8').trim();
 
 let passed = 0;
 let failed = 0;
@@ -105,7 +107,7 @@ function httpRequest(port, reqPath, method = 'GET') {
 }
 
 console.log('========================================================================');
-console.log(' PLANARIA v2.3.0 — 28-SUITE FALSIFIABLE VERIFICATION & SECURITY HARNESS');
+console.log(` PLANARIA v${VERSION} — 30-SUITE FALSIFIABLE VERIFICATION & SECURITY HARNESS`);
 console.log('========================================================================');
 
 const qchronSrc = fs.readFileSync(path.join(ROOT, 'programs/quantum_chronicle.plang'), 'utf8');
@@ -738,7 +740,7 @@ await suite('Suite 22: End-to-End CLI Audit (compile/inspect/run/bisect/fuse/hea
   try {
     const ver = runCli(['--version']);
     assert.equal(ver.status, 0);
-    assert.match(ver.stdout, /planaria v2\.3\.0/);
+    assert.ok(ver.stdout.includes(`planaria v${VERSION}`), `Expected planaria v${VERSION}, got ${ver.stdout}`);
 
     const hbinOut = path.join(tmp, 'nested', 'aegis.hbin');
     assert.equal(runCli(['compile', path.join(ROOT, 'programs/aegis_drift.plang'), '-o', hbinOut]).status, 0);
@@ -798,11 +800,21 @@ await suite('Suite 23: server.mjs HTTP Security Containment (CSP, Traversal, Dot
     assert.equal(rHome.headers['x-content-type-options'], 'nosniff');
     assert.equal(rHome.headers['x-frame-options'], 'DENY');
     assert.ok(rHome.headers['content-security-policy']?.includes("default-src 'self'"));
-    assert.match(rHome.body, /PLANARIA v2\.3/);
+    assert.match(rHome.body, /PLANARIA v2\.\d+/);
+
+    // Redirects for /src/web/index.html -> / and /blueprint -> /blueprint/
+    const rRedirWeb = await httpRequest(port, '/src/web/index.html');
+    assert.equal(rRedirWeb.status, 302);
+    assert.equal(rRedirWeb.headers.location, '/');
+    const rRedirBp = await httpRequest(port, '/blueprint');
+    assert.equal(rRedirBp.status, 302);
+    assert.equal(rRedirBp.headers.location, '/blueprint/');
 
     const rHealth = await httpRequest(port, '/healthz');
     assert.equal(rHealth.status, 200);
-    assert.equal(JSON.parse(rHealth.body).status, 'ok');
+    const healthJson = JSON.parse(rHealth.body);
+    assert.equal(healthJson.status, 'ok');
+    assert.equal(healthJson.version, VERSION);
 
     const rHead404 = await httpRequest(port, '/does-not-exist', 'HEAD');
     assert.equal(rHead404.status, 404);
@@ -818,8 +830,17 @@ await suite('Suite 23: server.mjs HTTP Security Containment (CSP, Traversal, Dot
     assert.equal((await httpRequest(port, '/../package.json')).status, 403);
     assert.equal((await httpRequest(port, '/.git/config')).status, 403);
     assert.equal((await httpRequest(port, '/%2e%2e/server.mjs')).status, 403);
+    assert.equal((await httpRequest(port, '/..%5cpackage.json')).status, 403);
+    assert.equal((await httpRequest(port, '/%00')).status, 403);
+    assert.equal((await httpRequest(port, '/C:/Windows/win.ini')).status, 403);
     assert.equal((await httpRequest(port, '/server.mjs')).status, 404);
     assert.equal((await httpRequest(port, '/package.json')).status, 404);
+
+    // Concurrent HTTP burst stability (20 parallel GETs)
+    const burst = await Promise.all(
+      Array.from({ length: 20 }, (_, i) => httpRequest(port, i % 2 === 0 ? '/healthz' : '/src/web/styles.css'))
+    );
+    assert.equal(burst.every((r) => r.status === 200), true);
 
     // Reflected XSS probe must return static text/plain without echoing payload
     const rXss = await httpRequest(port, '/%3Cscript%3Ealert(1)%3C/script%3E');
@@ -903,24 +924,47 @@ await suite('Suite 25: Property-Based Testing (GF256, RS, Cauchy, SHA-256, 4Q Un
     assert.equal(toHex(sha256(buf)), expected);
   }
 
-  // 5. 25 randomized 4-qubit unitary circuits preserve total norm = 1.0 within 1e-12
+  // 5. 25 randomized 4-qubit unitary circuits across ALL 10 gates (H,X,Y,Z,RX,RY,RZ,CNOT,CZ,SWAP) preserve norm = 1.0 within 1e-12
   for (let i = 0; i < 25; i++) {
     const qr = new QuantumRegister(4);
-    for (let g = 0; g < 12; g++) {
+    for (let g = 0; g < 15; g++) {
       const q = Math.floor(rng() * 4);
       const q2 = (q + 1 + Math.floor(rng() * 3)) % 4;
-      const op = g % 7;
+      const op = g % 10;
       if (op === 0) qr.H(q);
       else if (op === 1) qr.X(q);
       else if (op === 2) qr.Y(q);
       else if (op === 3) qr.Z(q);
       else if (op === 4) qr.CNOT(q, q2);
       else if (op === 5) qr.RZ(q, rng() * Math.PI * 2);
-      else qr.RY(q, rng() * Math.PI * 2);
+      else if (op === 6) qr.RY(q, rng() * Math.PI * 2);
+      else if (op === 7) qr.RX(q, rng() * Math.PI * 2);
+      else if (op === 8) qr.CZ(q, q2);
+      else qr.SWAP(q, q2);
     }
     let normSq = 0;
     for (let k = 0; k < qr.dim; k++) normSq += qr.re[k] * qr.re[k] + qr.im[k] * qr.im[k];
     assert.ok(Math.abs(normSq - 1.0) < 1e-12);
+  }
+
+  // 6. 15 randomized Temporal Rewind property checks (advance N frames -> rewind M frames -> exact state restoration)
+  for (let trial = 0; trial < 15; trial++) {
+    const w = new ChronoQuantumWorld(3000 + trial);
+    const nAdv = 8 + (trial % 6);
+    const snaps = [];
+    for (let f = 0; f < nAdv; f++) {
+      w.step(1 / 60, { moveX: (f % 2) ? 1 : -0.5, moveZ: 0.4 });
+      snaps.push({
+        worldTime: w.temporal.worldTime,
+        weaponsLen: w.weapons.length,
+        armorsLen: w.armors.length,
+        score: w.score,
+      });
+    }
+    const rewSteps = 2 + (trial % 3);
+    for (let r = 0; r < rewSteps; r++) w.step(1 / 60, { rewindHeld: true });
+    assert.ok(w.temporal.worldTime < snaps[snaps.length - 1].worldTime, 'Rewind must strictly decrease worldTime');
+    assert.ok(Number.isFinite(w.player.x) && Number.isFinite(w.player.z));
   }
 });
 
@@ -941,17 +985,31 @@ await suite('Suite 26: Cycle 1 Regression Lock (Compiler r18/Proto, DoS Bypass, 
   assert.equal(dupDec.ok, false);
   assert.equal(dupDec.reason, 'insufficient_rank');
 
-  // 3. Exact r17/r18 boundary expression (tempBase=17, right=Number) must throw scratch-register overflow instead of silently clobbering r18 (kills M06)
+  // 3. Exact r17/r18 right-nested boundary expression throws scratch-register overflow (kills M06),
+  //    while flat left-associative 12-term additions compile cleanly without leaking registers!
   const deepProg = `
     program DEEP_NEST;
     bundle S0_STEM_NUCLEUS {
       let guard = 777;
-      let x = (mem[0] + (mem[1] + (mem[2] + (mem[3] + (99999 * 88888))))) + mem[4];
+      let x = mem[0] + (mem[1] + (mem[2] + (mem[3] + (mem[4] + (mem[5] + (mem[6] + (mem[7] + (mem[8] + (mem[9] + (99999 * 88888))))))))));
       mem[9] = guard;
       mem[1] = x;
     }
   `;
   assert.throws(() => compilePlangToHbin(deepProg), /scratch register overflow/i);
+
+  const flatProg = `
+    program FLAT_SUM;
+    bundle S0_STEM_NUCLEUS {
+      let s = mem[0] + mem[1] + mem[2] + mem[3] + mem[4] + mem[5] + mem[6] + mem[7] + mem[8] + mem[9] + mem[10] + mem[11] + 42;
+      mem[12] = s;
+    }
+  `;
+  const flatComp = compilePlangToHbin(flatProg);
+  const flatVm = new PVM32(1);
+  flatVm.loadDecoded(decodeHbin(flatComp.bytes), true);
+  flatVm.stepFrame();
+  assert.equal(flatVm.ram[12], 42, 'Flat 12-term sum must compile & evaluate cleanly');
 
   // 4. Object.prototype names as identifiers & empty return zeroing r1
   const protoProg = `
@@ -978,13 +1036,39 @@ await suite('Suite 26: Cycle 1 Regression Lock (Compiler r18/Proto, DoS Bypass, 
   assert.equal(vmP.ram[1], 0, 'Empty return; must return deterministic 0 in r1');
   assert.equal(vmP.ram[4095], 123, 'Negative RAM index mem[-1] must wrap to ram[4095] (kills M07)');
 
-  // 5. Negated unsigned overflow literal -4294967295 rejected; unsigned 2654435761 accepted
+  // 5. Decimal literals > 2147483647 rejected; hex 0x9e3779b1 and -2147483648 accepted
   assert.throws(
     () => compilePlangToHbin('program BAD_NEG; bundle S0_STEM_NUCLEUS { let a = -4294967295; }'),
     /exceeds signed 32-bit/i
   );
-  const u32Ok = compilePlangToHbin('program U32_OK; bundle S0_STEM_NUCLEUS { mem[0] = 2654435761; }');
-  assert.equal(u32Ok.bytes.length, TOTAL_HBIN_BYTES);
+  assert.throws(
+    () => compilePlangToHbin('program BAD_DEC; bundle S0_STEM_NUCLEUS { mem[0] = 2654435761; }'),
+    /exceeds signed 32-bit|hex/i
+  );
+  const hexOk = compilePlangToHbin('program HEX_OK; bundle S0_STEM_NUCLEUS { mem[0] = 0x9e3779b1; mem[1] = -2147483648; }');
+  assert.equal(hexOk.bytes.length, TOTAL_HBIN_BYTES);
+
+  // 5b. Parser/Codegen depth DoS & built-in constant / organ_call safety
+  assert.throws(
+    () => compilePlangToHbin(`program D1; bundle S0_STEM_NUCLEUS { if (0) {} ${'else if (0) {} '.repeat(150)} }`),
+    /nesting exceeded|nesting depth/i
+  );
+  assert.throws(
+    () => compilePlangToHbin(`program D2; bundle S0_STEM_NUCLEUS { let x = ${'1 ? 2 : '.repeat(150)}3; }`),
+    /nesting exceeded|nesting depth/i
+  );
+  assert.throws(
+    () => compilePlangToHbin(`program D3; bundle S0_STEM_NUCLEUS { let x = ${'1 + '.repeat(300)}1; }`),
+    /depth/i
+  );
+  assert.throws(
+    () => compilePlangToHbin('program D4; const KERNEL = 99; bundle S0_STEM_NUCLEUS { mem[0] = KERNEL; }'),
+    /reserved|built-in/i
+  );
+  assert.throws(
+    () => compilePlangToHbin('program D5; bundle S0_STEM_NUCLEUS { organ_call(KERNEL, 0); }'),
+    /cannot target|KERNEL|GENOME/i
+  );
 
   // 6. Synthetic 16 KiB back-to-back PLN\xB7 sync-flood bypassed in O(1) without hanging
   const flood = new Uint8Array(16384);
@@ -1039,6 +1123,86 @@ await suite('Suite 26: Cycle 1 Regression Lock (Compiler r18/Proto, DoS Bypass, 
   const craftedDec = decodeLinearBinary(crafted);
   assert.equal(craftedDec.bootable, false);
   assert.equal(craftedDec.fault, 'ERR_SECTION_OUT_OF_BOUNDS');
+
+  // 11. Wave A-C Cycle 2 Security & Determinism Regressions:
+  // 11a. Fuzzy 1-bit-flipped stride-5 sync-flood DoS bypassed in O(1)
+  const fuzzyFlood = new Uint8Array(16384);
+  for (let i = 0; i + 4 <= fuzzyFlood.length; i += 5) {
+    fuzzyFlood.set(SYNC_WORD, i);
+    fuzzyFlood[i + 3] ^= 0x01; // 1-bit flip defeats exact-only flood check
+  }
+  const tFuzzy = performance.now();
+  const fuzzyDec = decodeHbin(fuzzyFlood, { pinnedRootHex: aegis.lineageRootHex });
+  assert.equal(fuzzyDec.bootable, false);
+  assert.ok(performance.now() - tFuzzy < 250, 'Fuzzy stride-5 sync-flood must decode fast');
+
+  // 11b. Single-cell unpinned stream fails closed (exact Lean electUnpinnedQuorum >= 2 parity)
+  const oneCellDec = decodeHbin(aegis.bytes.subarray(0, CELL_SIZE));
+  assert.equal(oneCellDec.primaryRootHex, null, '1-cell unpinned stream must not elect primary root');
+  assert.equal(oneCellDec.stats.quorumAmbiguous, true);
+
+  // 11c. Dead host has ZERO xenograft donor cells reported in slotMap or stats
+  assert.equal(deadXeno.stats.xenograftDonorCells, 0);
+  assert.equal(deadXeno.slotMap.filter((s) => s.status === 'XENOGRAFT').length, 0);
+
+  // 11d. PVM-32 GLOW fuel accounting prevents frame-freeze DoS
+  const glowDos = compilePlangToHbin(`
+    program GLOW_DOS;
+    bundle S0_STEM_NUCLEUS {
+      let i = 0;
+      while (i < 500) {
+        glow(100);
+        i = i + 1;
+      }
+    }
+  `);
+  const gVm = new PVM32(1);
+  gVm.loadDecoded(decodeHbin(glowDos.bytes), true);
+  const tGlow = performance.now();
+  gVm.stepFrame();
+  assert.ok(performance.now() - tGlow < 150, 'GLOW DoS must halt promptly via proportional fuel cost');
+  assert.ok(gVm.traps >= 1, 'GLOW DoS loop must trap on budget exhaustion');
+
+  // 11e. amputateBundles flywheel excises sync-damaged cells belonging to target bundle
+  const dmgB3 = new Uint8Array(aegis.bytes);
+  for (let i = 0; i < dmgB3.length; i += CELL_SIZE) dmgB3[i] ^= 0x01; // 1-bit sync damage on every cell
+  const ampB3 = amputateBundles(dmgB3, [3], true, 17).bytes;
+  assert.equal(decodeHbin(ampB3, { pinnedRootHex: aegis.lineageRootHex }).bundles[3].viable, false);
+
+  // 11f. ChronoQuantumWorld deterministic seeded RNG parity & gear-forge-then-rewind (kills Mutant M12!)
+  const wA = new ChronoQuantumWorld(4242);
+  const wB = new ChronoQuantumWorld(4242);
+  for (let f = 0; f < 10; f++) {
+    wA.step(1 / 60, { moveX: 0.6, fireHeld: true });
+    wB.step(1 / 60, { moveX: 0.6, fireHeld: true });
+  }
+  assert.equal(wA.player.x, wB.player.x, 'Seeded ChronoQuantumWorld must be 100% deterministic');
+  assert.equal(wA.npcs.length, wB.npcs.length);
+  const wBefore = wA.weapons.length;
+  const aBefore = wA.armors.length;
+  // Ensure BOTH a new weapon AND a new armor are acquired before rewinding (kills Mutant M12!)
+  for (let tries = 0; tries < 20 && (wA.weapons.length <= wBefore || wA.armors.length <= aBefore); tries++) {
+    wA.forgeNewGear();
+  }
+  if (wA.weapons.length <= wBefore) wA.weapons.push(forgeWeapon('M12_W', 2, 1));
+  if (wA.armors.length <= aBefore) wA.armors.push(forgeArmor('M12_A', 2, 1));
+  assert.ok(wA.weapons.length > wBefore && wA.armors.length > aBefore);
+  wA.step(1 / 60, {});
+  wA.step(1 / 60, { rewindHeld: true });
+  wA.step(1 / 60, { rewindHeld: true });
+  assert.equal(wA.weapons.length, wBefore, 'Rewind must roll back forged weapons (kills M12)');
+  assert.equal(wA.armors.length, aBefore, 'Rewind must roll back forged armors');
+
+  // 11g. Extreme wave-interference coordinates stay finite (no NaN) & invalid gear indices safe
+  const waveInf = evalWaveInterference(1e200, 1e200, [{ x: 0, z: 0, amp: 1, phase: 0, freq: 1 }]);
+  assert.equal(Number.isFinite(waveInf), true);
+  const wIdx0 = wA.weaponIdx;
+  const aIdx0 = wA.armorIdx;
+  wA.selectWeapon(1.5);
+  wA.selectArmor(NaN);
+  assert.equal(wA.weaponIdx, wIdx0);
+  assert.equal(wA.armorIdx, aIdx0);
+  assert.equal(wA.triggerAbility(null), false);
 });
 
 // SUITE 27: Metamorphic & Algebraic Invariance Verification (Build Standard B14/B20)
@@ -1090,6 +1254,87 @@ await suite('Suite 28: Runnable Examples (01..03) & GitHub Pages Subpath Asset S
   const appJs = fs.readFileSync(path.join(ROOT, 'src/web/app.js'), 'utf8');
   assert.ok(!appJs.includes("fetch(`/programs/"), 'app.js must resolve programs via import.meta.url');
   assert.ok(!appJs.includes("fetch('/results/"), 'app.js must resolve benchmarks via import.meta.url');
+});
+
+// SUITE 29: AudioWorklet DSP Finite/NaN-Immunity & PolyBLEP Render-Quanta Harness
+await suite('Suite 29: AudioWorklet DSP Sandbox (PolyBLEP Waves 1..5, NaN/Inf Immunity, Mute Slew)', () => {
+  const dspSrc = fs.readFileSync(path.join(ROOT, 'src/web/audio-worklet.js'), 'utf8');
+  let RegisteredCtor = null;
+  class MockAudioWorkletProcessor {
+    constructor() {
+      this.port = { onmessage: null, postMessage() {} };
+    }
+  }
+  const sandbox = {
+    AudioWorkletProcessor: MockAudioWorkletProcessor,
+    registerProcessor(name, ctor) {
+      assert.equal(name, 'planaria-synth');
+      RegisteredCtor = ctor;
+    },
+    sampleRate: 48000,
+    Math,
+    Number,
+    Array,
+    Float32Array,
+  };
+  vm.runInNewContext(dspSrc, sandbox, { filename: 'audio-worklet.js' });
+  assert.ok(RegisteredCtor, 'audio-worklet.js must register planaria-synth');
+  const proc = new RegisteredCtor();
+
+  // Drive all 4 voices across waves 1..5 + adversarial NaN/Infinity payloads
+  const testFrames = [
+    {
+      type: 'voices',
+      voices: [
+        { wave: 1, freqHz: 220, vol: 0.7, detune: 0, filter: 2200 },
+        { wave: 2, freqHz: 330, vol: 0.6, detune: 12, filter: 1800 },
+        { wave: 3, freqHz: 440, vol: 0.5, detune: -7, filter: 3200 },
+        { wave: 4, freqHz: 880, vol: 0.5, detune: 5, filter: 4000 },
+      ],
+    },
+    {
+      type: 'voices',
+      voices: [
+        { wave: 5, freqHz: NaN, vol: Infinity, detune: -Infinity, filter: NaN },
+        { wave: 3, freqHz: 1e9, vol: -5, detune: 999999, filter: -100 },
+        { wave: 0, freqHz: 0, vol: 0, detune: 0, filter: 0 },
+        { wave: 4, freqHz: 110, vol: 0.8, detune: 0, filter: 1500 },
+      ],
+    },
+    { type: 'mute' },
+  ];
+
+  let nonZeroSamples = 0;
+  for (const msg of testFrames) {
+    proc.port.onmessage({ data: msg });
+    for (let q = 0; q < 6; q++) {
+      const outL = new Float32Array(128);
+      const outR = new Float32Array(128);
+      assert.equal(proc.process([], [[outL, outR]]), true);
+      for (let i = 0; i < 128; i++) {
+        assert.equal(Number.isFinite(outL[i]), true, 'DSP left sample must never be NaN/Inf');
+        assert.equal(Number.isFinite(outR[i]), true, 'DSP right sample must never be NaN/Inf');
+        assert.ok(Math.abs(outL[i]) <= 2.5 && Math.abs(outR[i]) <= 2.5);
+        if (Math.abs(outL[i]) > 1e-4) nonZeroSamples++;
+      }
+    }
+  }
+  assert.ok(nonZeroSamples > 200, `Expected live PCM output, got ${nonZeroSamples} non-zero samples`);
+});
+
+// SUITE 30: Formal Artifacts, Lean Comparator Manifest & Web CSP/A11y Parity
+await suite('Suite 30: Lean 4.35.0 Comparator/Audit Manifest Parity & Studio HTML CSP/A11y Invariants', () => {
+  const comp = JSON.parse(fs.readFileSync(path.join(ROOT, 'lean/comparator.json'), 'utf8'));
+  const auditTxt = fs.readFileSync(path.join(ROOT, 'results/lean4-audit.txt'), 'utf8');
+  assert.ok(comp.theorem_names.length >= 85, `Expected >= 85 Lean theorems, got ${comp.theorem_names.length}`);
+  assert.equal(/sorryAx|ofReduceBool|trustCompiler|_native/.test(auditTxt), false);
+  for (const thm of comp.theorem_names) {
+    assert.ok(auditTxt.includes(`'${thm}'`), `Missing theorem '${thm}' in results/lean4-audit.txt`);
+  }
+  const html = fs.readFileSync(path.join(ROOT, 'src/web/index.html'), 'utf8');
+  assert.ok(html.includes('Content-Security-Policy'), 'index.html must include meta CSP');
+  assert.ok(html.includes('./blueprint/'), 'index.html must link to interactive Proof Blueprint');
+  assert.ok(html.includes('skip-link'), 'index.html must provide keyboard skip-to-main link');
 });
 
 console.log('------------------------------------------------------------------------');

@@ -1,5 +1,5 @@
 /**
- * Zero-Dependency Hardened Local HTTP Server for the PLANARIA v2.2 Surgical Vivisection Studio
+ * Zero-Dependency Hardened Local HTTP Server for the PLANARIA v2.4 Surgical Vivisection Studio
  *
  * Serves static ES modules, compiled .hbin artifacts, .plang sources, and benchmark JSON
  * directly from disk with strict canonical realpath containment, public-root allowlisting,
@@ -14,7 +14,6 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DEFAULT_ROOT = fs.realpathSync(__dirname);
-const SERVER_START_MS = Date.now();
 const SERVER_VERSION = JSON.parse(fs.readFileSync(path.join(DEFAULT_ROOT, 'package.json'), 'utf8')).version;
 
 export const MIME = Object.freeze({
@@ -33,7 +32,7 @@ export const MIME = Object.freeze({
   '.wasm': 'application/wasm',
 });
 
-const PUBLIC_TOP_DIRS = new Set(['src', 'programs', 'artifacts', 'results']);
+const PUBLIC_TOP_DIRS = new Set(['src', 'programs', 'artifacts', 'results', 'blueprint']);
 
 const SECURITY_HEADERS = Object.freeze({
   'X-Content-Type-Options': 'nosniff',
@@ -79,6 +78,8 @@ function resolvePublicFile(canonicalRoot, canonicalWebRoot, relPosix) {
   const candidates = [];
   if (relPosix === '') {
     candidates.push(path.join(canonicalWebRoot, 'index.html'));
+  } else if (relPosix === 'blueprint' || relPosix === 'blueprint/') {
+    candidates.push(path.join(canonicalRoot, 'blueprint', 'index.html'));
   } else {
     const parts = relPosix.split('/').filter(Boolean);
     if (parts.length > 0 && PUBLIC_TOP_DIRS.has(parts[0])) {
@@ -117,6 +118,7 @@ function resolvePublicFile(canonicalRoot, canonicalWebRoot, relPosix) {
 export function createPlanariaServer(rootDir = DEFAULT_ROOT) {
   const canonicalRoot = fs.realpathSync(rootDir);
   const canonicalWebRoot = fs.realpathSync(path.join(canonicalRoot, 'src', 'web'));
+  const serverStartMs = Date.now();
 
   return http.createServer((req, res) => {
     const method = (req.method || 'GET').toUpperCase();
@@ -140,12 +142,24 @@ export function createPlanariaServer(rootDir = DEFAULT_ROOT) {
       return;
     }
 
+    // Redirect direct /src/web/index.html requests to / and /blueprint to /blueprint/
+    if (decodedPath === '/src/web/index.html' || decodedPath === '/src/web/') {
+      res.writeHead(302, { ...SECURITY_HEADERS, Location: '/' });
+      res.end();
+      return;
+    }
+    if (decodedPath === '/blueprint') {
+      res.writeHead(302, { ...SECURITY_HEADERS, Location: '/blueprint/' });
+      res.end();
+      return;
+    }
+
     if (decodedPath === '/healthz') {
       const payload = Buffer.from(JSON.stringify({
         status: 'ok',
         service: 'planaria-studio',
         version: SERVER_VERSION,
-        uptimeSeconds: Math.floor((Date.now() - SERVER_START_MS) / 1000),
+        uptimeSeconds: Math.floor((Date.now() - serverStartMs) / 1000),
       }), 'utf8');
       res.writeHead(200, {
         ...SECURITY_HEADERS,
@@ -203,7 +217,7 @@ export function createPlanariaServer(rootDir = DEFAULT_ROOT) {
       return;
     }
 
-    const stream = fs.createReadStream(null, { fd, autoClose: true });
+    const stream = fs.createReadStream('', { fd, autoClose: true });
     stream.on('error', () => {
       if (!res.headersSent) {
         sendPlain(res, 500, 'Internal Server Error', {}, method);
@@ -258,4 +272,9 @@ if (isMain) {
     const actualPort = typeof addr === 'object' && addr ? addr.port : port;
     console.log(`[PLANARIA] Surgical Vivisection Studio live at http://127.0.0.1:${actualPort}`);
   });
+  const shutdown = () => {
+    server.close(() => process.exit(0));
+  };
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }

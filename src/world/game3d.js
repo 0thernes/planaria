@@ -1,5 +1,5 @@
 /**
- * PLANARIA v2.0 — Live 3D Temporal-Quantum World & Adaptive Combat Simulation Engine
+ * PLANARIA v2.4 — Live 3D Temporal-Quantum World & Adaptive Combat Simulation Engine
  *
  * Bridges:
  *   - Real PLANARIA .hbin holographic organism state (Stratum 0..3, RS repairs, Byzantine
@@ -7,7 +7,7 @@
  *   - Real 4-Qubit Complex QuantumRegister (Superposition, Bell/GHZ Entanglement, CHSH,
  *     WKB Tunneling, Quantum Zeno Observer Gaze, Heisenberg Stance, Multi-Slit Wavefield)
  *   - Real TemporalEngine (360-frame Rewind, Chrono-Wells, Past-Timeline Echo Clones, Future Cones)
- *   - Endless 1/1 Procedural NPCs, Bosses, Weapons, Armors, Abilities, Skills & 6-Order Stages
+ *   - Endless 1/1 Procedural NPCs, Bosses, Weapons, Armors, Abilities, Skills & 6 Scale Realms
  */
 
 import {
@@ -33,6 +33,10 @@ import {
 export class ChronoQuantumWorld {
   constructor(seed = 2026) {
     this.seed = seed;
+    // Stateful deterministic Mulberry32 PRNG (snapshotted on rewind -> 100% reproducible simulation!)
+    const seedNum = Number.isFinite(Number(seed)) ? (Number(seed) >>> 0) : 2026;
+    this._rngState = (seedNum ^ 0x9e3779b9) >>> 0 || 1;
+    this._ghzMode = false;
     this.qReg = new QuantumRegister(4);
     this.temporal = new TemporalEngine(360);
 
@@ -144,6 +148,17 @@ export class ChronoQuantumWorld {
     this._spawnWave();
   }
 
+  getRngState() {
+    return this._rngState >>> 0;
+  }
+
+  _rand() {
+    let t = (this._rngState = (this._rngState + 0x6d2b79f5) >>> 0);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+
   get equippedWeapon() {
     return this.weapons[this.weaponIdx] || this.weapons[0];
   }
@@ -190,11 +205,11 @@ export class ChronoQuantumWorld {
       audioXenografted: b[4]?.source === 'XENOGRAFT',
     };
 
-    // Only apply Lindblad decoherence on NEW radiation repairs (prevents cumulative drain on UI refreshes!)
-    // MERKLE_IM armor halves Byzantine/radiation decoherence impact.
-    if (rsDelta > 0) {
-      const resist = this.equippedArmor.layer.id === 'MERKLE_IM' ? 0.35 : 1.0;
-      this.qReg.applyDecoherence(Math.min(0.4, (rsDelta / 8000) * resist));
+    // Apply Lindblad decoherence on NEW radiation repairs or explicit radiation trigger.
+    // MERKLE_IM armor provides full immunity to Byzantine/radiation decoherence bursts.
+    const effectiveRsDelta = options.radiationTriggered ? Math.max(rsDelta, newRsFixed) : rsDelta;
+    if (effectiveRsDelta > 0 && this.equippedArmor.layer.id !== 'MERKLE_IM') {
+      this.qReg.applyDecoherence(Math.min(0.4, effectiveRsDelta / 8000));
     }
     // Mitosis shockwave skill boost!
     if (options.mitosisTriggered) {
@@ -206,7 +221,7 @@ export class ChronoQuantumWorld {
 
   /** Equip weapon slot 0..3. */
   selectWeapon(idx) {
-    if (idx >= 0 && idx < this.weapons.length) {
+    if (Number.isInteger(idx) && idx >= 0 && idx < this.weapons.length) {
       this.weaponIdx = idx;
       this.pushEvent(`Equipped [${this.equippedWeapon.rarity.name}] ${this.equippedWeapon.name}`, 'gold');
     }
@@ -214,7 +229,7 @@ export class ChronoQuantumWorld {
 
   /** Equip armor slot. */
   selectArmor(idx) {
-    if (idx >= 0 && idx < this.armors.length) {
+    if (Number.isInteger(idx) && idx >= 0 && idx < this.armors.length) {
       this.armorIdx = idx;
       const ratio = this.player.shield / Math.max(1, this.player.maxShield);
       this.player.maxShield = this.equippedArmor.maxShield;
@@ -259,7 +274,16 @@ export class ChronoQuantumWorld {
       this.armors.push(a);
       this.armorIdx = this.armors.length - 1;
     } else {
-      this.armors[this.armorIdx] = a;
+      let replaceArmorIdx = this.armorIdx;
+      let lowestArmorRarity = this.armors[replaceArmorIdx].rarity.id;
+      for (let i = 0; i < this.armors.length; i++) {
+        if (this.armors[i].rarity.id < lowestArmorRarity) {
+          lowestArmorRarity = this.armors[i].rarity.id;
+          replaceArmorIdx = i;
+        }
+      }
+      this.armors[replaceArmorIdx] = a;
+      this.armorIdx = replaceArmorIdx;
     }
     this.player.maxShield = this.equippedArmor.maxShield;
     const mitosisBonus = this.skills.hol_mitosis > 0 ? this.skills.hol_mitosis * 12 : 0;
@@ -283,6 +307,7 @@ export class ChronoQuantumWorld {
     this.weapons[idxB].entangledPartner = this.weapons[idxA].lineageId;
     this.weapons[idxB].entangledMod = this.weapons[idxA].qMod;
     // Prepare maximally entangled Bell pair on qubits (0, 1) so CHSH |S| immediately peaks at 2*sqrt(2)!
+    this._ghzMode = false;
     this.qReg.prepareBellPair(0, 1);
     this.chshValue = this.qReg.computeCHSH(0, 1);
     this.merminValue = this.qReg.computeMermin4();
@@ -292,6 +317,7 @@ export class ChronoQuantumWorld {
 
   /** Trigger one of the 8 Quantum-Temporal Abilities (Q, E, R, T, F, V, X, C). */
   triggerAbility(key) {
+    if (typeof key !== 'string') return false;
     const k = key.toUpperCase();
     const def = ABILITIES.find((a) => a.key === k);
     if (!def) return false;
@@ -325,7 +351,9 @@ export class ChronoQuantumWorld {
         break;
       }
       case 'E': { // BELL / GHZ ENTANGLEMENT WEB (requires >= 2 targets; no self-entanglement!)
+        this._ghzMode = true;
         this.qReg.prepareGHZ();
+        this.chshValue = this.qReg.computeCHSH(0, 1);
         this.merminValue = this.qReg.computeMermin4();
         this.playerProfile.entangleCount++;
         const maxLinks = 3 + Math.floor(this.skills.ent_ghz / 2) + 1;
@@ -363,8 +391,8 @@ export class ChronoQuantumWorld {
       case 'V': { // BORN WAVEFUNCTION COLLAPSE SUPERNOVA!
         const entropy = this.qReg.basisEntropy();
         const chsh = Math.abs(this.qReg.computeCHSH(0, 1));
-        const m0 = this.qReg.measureQubit(0);
-        const m1 = this.qReg.measureQubit(1);
+        const m0 = this.qReg.measureQubit(0, this._rand());
+        const m1 = this.qReg.measureQubit(1, this._rand());
         const dmg = Math.round((75 + entropy * 45 + chsh * 38) * (1 + this.stage * 0.25));
         let hitCount = 0;
         // Snapshot array before damaging so MITOTIC splits aren't double-struck in the same wave!
@@ -381,17 +409,18 @@ export class ChronoQuantumWorld {
             this.npcs.splice(ni, 1);
           }
         }
+        this._ghzMode = false;
         this.qReg.prepareBellPair(0, 1);
         this.qReg.restoreCoherence(0.35);
         this.spawnBurst(this.player.x, this.player.y, this.player.z, [0.98, 0.75, 0.14], 42);
         this.pushEvent(`V · WAVEFUNCTION COLLAPSE |${m0.outcome}${m1.outcome}>: ${dmg} dmg to ${hitCount} targets (H=${entropy.toFixed(2)} bits)!`, 'gold');
         break;
       }
-      case 'X': { // SHIFT SCALE ORDER ACROSS 6 ORDERS OF MAGNITUDE
+      case 'X': { // SHIFT SCALE REALM ACROSS 24 ORDERS OF MAGNITUDE
         const cur = this.activeRealm.orderIdx;
         this.scaleOrderOverride = (cur + 1) % SCALE_REALMS.length;
         const r = this.activeRealm;
-        this.pushEvent(`X · SCALE ORDER SHIFT -> ${r.scaleLabel} (${r.name})!`, 'cyan');
+        this.pushEvent(`X · SCALE REALM SHIFT -> ${r.scaleLabel} (${r.name})!`, 'cyan');
         break;
       }
       case 'C': { // FORGE NEW 1/1 LOOT
@@ -412,6 +441,11 @@ export class ChronoQuantumWorld {
     this.stageSpec = buildStageSpec(this.stage, this.seed);
     this.npcs = [];
     this.projectiles = [];
+    this._delayedEchoShots = [];
+    this.bellBeams = [];
+    this.temporal.chronoWells = [];
+    this.temporal.echoClones = [];
+    this._ghzMode = false;
     this.qReg.prepareBellPair(0, 1);
     this.qReg.restoreCoherence(0.5);
     this.player.hp = this.player.maxHp;
@@ -456,17 +490,17 @@ export class ChronoQuantumWorld {
   spawnBurst(x, y, z, color, count = 14) {
     const nCount = this.reducedMotion ? Math.max(2, Math.floor(count * 0.35)) : count;
     for (let i = 0; i < nCount; i++) {
-      const th = Math.random() * Math.PI * 2;
-      const ph = (Math.random() - 0.3) * Math.PI;
-      const spd = 3 + Math.random() * 11;
+      const th = this._rand() * Math.PI * 2;
+      const ph = (this._rand() - 0.3) * Math.PI;
+      const spd = 3 + this._rand() * 11;
       this.particles.push({
         x, y, z,
         vx: Math.cos(th) * Math.cos(ph) * spd,
         vy: Math.sin(ph) * spd + 2,
         vz: Math.sin(th) * Math.cos(ph) * spd,
-        life: 0.35 + Math.random() * 0.55,
+        life: 0.35 + this._rand() * 0.55,
         maxLife: 0.9,
-        size: 0.18 + Math.random() * 0.25,
+        size: 0.18 + this._rand() * 0.25,
         color,
       });
     }
@@ -514,11 +548,12 @@ export class ChronoQuantumWorld {
       for (let i = 0; i < totalBolts; i++) {
         if (this.projectiles.length >= 240) break;
         const frac = totalBolts === 1 ? 0 : (i / (totalBolts - 1) - 0.5);
-        const jitter = (Math.random() - 0.5) * (1 - hStance.aimPrecision) * 0.16;
+        const jitter = (this._rand() - 0.5) * (1 - hStance.aimPrecision) * 0.16;
         const ang = aimYaw + frac * weapon.spread + jitter;
         const collapseScale = hasQ('COLLAPSE') ? 1 + this.qReg.basisEntropy() * 0.14 : 1.0;
+        const heisenCrit = hStance.critMultiplier * (1 + this.skills.sup_heisen * 0.08);
         const dmg = Math.round(
-          weapon.damage * hStance.critMultiplier * xenoBoost * ridgeBoost * echoScale * collapseScale *
+          weapon.damage * heisenCrit * xenoBoost * ridgeBoost * echoScale * collapseScale *
           (1 + this.skills.sup_clones * 0.15)
         );
         const effTunnel = (hasQ('TUNNEL') || hasQ('TUNNEL_CRIT')) ? Math.max(0.92, weapon.tunnelFactor) : weapon.tunnelFactor;
@@ -533,6 +568,8 @@ export class ChronoQuantumWorld {
           vz: Math.cos(ang) * weapon.speed,
           damage: dmg,
           life: 1.9,
+          maxLife: 1.9,
+          boomerFlipped: false,
           radius: weapon.frame.pattern === 'WAVE' ? 0.85 : 0.42,
           color: isEcho ? [0.13, 0.83, 0.93] : [...weapon.color],
           framePattern: weapon.frame.pattern,
@@ -542,7 +579,7 @@ export class ChronoQuantumWorld {
           tunnelEnergy: effTunnel + this.skills.sup_tunnel * 0.12,
           tunneled: false,
           splitDone: false,
-          pierce: weapon.frame.pattern === 'PIERCE' ? 3 : 0,
+          pierce: weapon.frame.pattern === 'PIERCE' ? 3 : (weapon.frame.pattern === 'BOOMER' ? 2 : 0),
           passedPillars: new Set(),
           hitIds: new Set(),
         });
@@ -566,7 +603,7 @@ export class ChronoQuantumWorld {
       dmg *= (1 - npc.adaptation.beamResist);
     }
     // Superposed NPCs have probabilistic dodge until collapsed (DECOHERE bypasses!)
-    if (npc.mutation === 'SUPERPOSED' && sourceTag !== 'COLLAPSE' && sourceTag !== 'DECOHERE' && Math.random() < 0.28) {
+    if (npc.mutation === 'SUPERPOSED' && sourceTag !== 'COLLAPSE' && sourceTag !== 'DECOHERE' && this._rand() < 0.28) {
       this.spawnBurst(npc.x, npc.y, npc.z, [0.13, 0.83, 0.93], 5);
       return;
     }
@@ -624,15 +661,18 @@ export class ChronoQuantumWorld {
     }
 
     // 1. TRUE LOSSLESS TEMPORAL REWIND MODE (Hold R!)
-    if (input.rewindHeld && this.temporal.chronoEnergy > 2 && this.temporal.snapshotCount > 2) {
+    if (input.rewindHeld && this.temporal.chronoEnergy > 2 && this.temporal.snapshotCount > 1) {
       this.temporal.rewinding = true;
-      this.temporal.chronoEnergy = Math.max(0, this.temporal.chronoEnergy - cdt * (26 * (1 - this.skills.chr_rewind * 0.18)));
+      this._bulletTimeActive = false;
+      const rewindDrain = 26 * Math.max(0.15, 1 - this.skills.chr_rewind * 0.16);
+      this.temporal.chronoEnergy = Math.max(0, this.temporal.chronoEnergy - cdt * rewindDrain);
       const snap = this.temporal.popRewindSnapshot();
       if (snap) {
         this.player = { ...this.player, ...snap.player };
         this.qReg.re.set(snap.qRe);
         this.qReg.im.set(snap.qIm);
         this.qReg.coherence = snap.qCoh;
+        this.qReg._gateCounter = snap.qGateCounter ?? 0;
         this.chshValue = this.qReg.computeCHSH(0, 1);
         this.merminValue = this.qReg.computeMermin4();
         this.npcs = snap.npcs.map((n) => ({
@@ -642,6 +682,22 @@ export class ChronoQuantumWorld {
           speed: Number.isFinite(n.speed) ? n.speed : (NPC_ARCHETYPES[n.archetypeIdx]?.speed || 6.0),
         }));
         this.projectiles = snap.projectiles;
+        if (Array.isArray(snap.weapons) && snap.weapons.length > 0) {
+          this.weapons = snap.weapons;
+          this.weaponIdx = Math.max(0, Math.min(this.weapons.length - 1, snap.weaponIdx ?? 0));
+        }
+        if (Array.isArray(snap.armors) && snap.armors.length > 0) {
+          this.armors = snap.armors;
+          this.armorIdx = Math.max(0, Math.min(this.armors.length - 1, snap.armorIdx ?? 0));
+        }
+        if (Array.isArray(snap.recentLoot)) this.recentLoot = snap.recentLoot;
+        if (Number.isInteger(snap.lootSeq)) this.lootSeq = snap.lootSeq;
+        if (snap.playerProfile) this.playerProfile = { ...snap.playerProfile };
+        if (Number.isInteger(snap.npcIdSeq)) this._npcId = snap.npcIdSeq;
+        if (Number.isInteger(snap.projIdSeq)) this._projId = snap.projIdSeq;
+        if (Number.isInteger(snap.rngState)) this._rngState = snap.rngState >>> 0;
+        this.particles = [];
+        this.bellBeams = [];
         this.score = snap.score;
         this.kills = snap.kills;
         this.xp = snap.xp;
@@ -651,7 +707,7 @@ export class ChronoQuantumWorld {
         if (snap.delayedEchoShots) {
           this._delayedEchoShots = snap.delayedEchoShots.map((s) => ({
             ...s,
-            origin: { ...s.origin },
+            origin: s.origin ? { ...s.origin } : { x: this.player.x, y: this.player.y, z: this.player.z },
           }));
         }
         if (snap.scaleOrderOverride !== undefined) {
@@ -681,7 +737,7 @@ export class ChronoQuantumWorld {
         this._bulletTimeActive = true;
       }
       this.temporal.globalTimeScale = 0.24;
-      const btDrain = 18 * Math.max(0.28, 1 - this.skills.chr_rewind * 0.18);
+      const btDrain = 18 * Math.max(0.15, 1 - this.skills.chr_rewind * 0.16);
       this.temporal.chronoEnergy = Math.max(0, this.temporal.chronoEnergy - cdt * btDrain);
     } else {
       if (this._bulletTimeActive) {
@@ -702,18 +758,25 @@ export class ChronoQuantumWorld {
     const wdt = cdt * Math.max(0.05, Math.abs(this.temporal.globalTimeScale));
 
     // Unitary continuous phase evolution driven by ALL 4 living .hbin species' PVM-32 RAM!
+    // In GHZ mode, balanced opposite-phase RZ(0, +d), RZ(3, -d) preserves |M4| = 4.0 exactly!
     const pvmEntropy = input.pvmRam
       ? (((input.pvmRam[11] || 0) ^ (input.pvmRam[1] || 0) ^ (input.pvmRam[3] || 0)) & 255) / 255
       : 0.3;
-    this.qReg.RZ(0, wdt * (1.2 + pvmEntropy));
-    this.qReg.RY(2, wdt * 0.85);
-    this.qReg.RZ(3, wdt * 1.4);
+    if (this._ghzMode) {
+      const phi = wdt * (1.2 + pvmEntropy);
+      this.qReg.RZ(0, phi);
+      this.qReg.RZ(3, -phi);
+    } else {
+      this.qReg.RZ(0, wdt * (1.2 + pvmEntropy));
+      this.qReg.RY(2, wdt * 0.85);
+      this.qReg.RZ(3, wdt * 1.4);
+    }
     this.chshValue = this.qReg.computeCHSH(0, 1);
     this.merminValue = this.qReg.computeMermin4();
 
-    // Process delayed Timeline-Echo weapon shots
+    // Process delayed Timeline-Echo weapon shots (dilated world time wdt)
     for (let i = this._delayedEchoShots.length - 1; i >= 0; i--) {
-      this._delayedEchoShots[i].delay -= cdt;
+      this._delayedEchoShots[i].delay -= wdt;
       if (this._delayedEchoShots[i].delay <= 0) {
         const s = this._delayedEchoShots.splice(i, 1)[0];
         this._fireWeaponFrom(s.origin, s.yaw, s.weapon, true);
@@ -723,7 +786,8 @@ export class ChronoQuantumWorld {
     // Passive coherence & shield recovery (boosted by RS_HEAL armor & hol_rs skill)
     const regen = (this.equippedArmor.regenRate + this.skills.hol_rs * 3.5) * cdt;
     this.player.shield = Math.min(this.player.maxShield, this.player.shield + regen);
-    this.qReg.restoreCoherence(cdt * (0.04 + this.skills.hol_rs * 0.025));
+    const rsArmorCohBoost = this.equippedArmor.layer.id === 'RS_HEAL' ? 0.06 : 0;
+    this.qReg.restoreCoherence(cdt * (0.04 + this.skills.hol_rs * 0.025 + rsArmorCohBoost));
 
     // Decay timers
     for (const k of Object.keys(this.abilityCooldowns)) {
@@ -759,11 +823,11 @@ export class ChronoQuantumWorld {
         aimYaw = Math.atan2(nearest.x - this.player.x, nearest.z - this.player.z);
         wantFire = true;
 
-        // Autopilot opportunistically triggers quantum abilities for awesome live demos!
-        if (this.abilityCooldowns.E <= 0 && this.npcs.length >= 3 && Math.random() < 0.015) this.triggerAbility('E');
-        else if (this.abilityCooldowns.Q <= 0 && Math.random() < 0.008) this.triggerAbility('Q');
-        else if (this.abilityCooldowns.T <= 0 && this.temporal.trailCount > 100 && Math.random() < 0.006) this.triggerAbility('T');
-        else if (this.abilityCooldowns.F <= 0 && Math.random() < 0.005) this.triggerAbility('F');
+        // Autopilot opportunistically triggers quantum abilities deterministically via this._rand()!
+        if (this.abilityCooldowns.E <= 0 && this.npcs.length >= 3 && this._rand() < 0.015) this.triggerAbility('E');
+        else if (this.abilityCooldowns.Q <= 0 && this._rand() < 0.008) this.triggerAbility('Q');
+        else if (this.abilityCooldowns.T <= 0 && this.temporal.trailCount > 100 && this._rand() < 0.006) this.triggerAbility('T');
+        else if (this.abilityCooldowns.F <= 0 && this._rand() < 0.005) this.triggerAbility('F');
       }
     }
 
@@ -813,6 +877,7 @@ export class ChronoQuantumWorld {
     // 3. UPDATE ADAPTIVE QUANTUM-TEMPORAL NPCs
     const lookDx = Math.sin(this.player.yaw);
     const lookDz = Math.cos(this.player.yaw);
+    let dilationAuraCount = 0;
 
     for (let i = this.npcs.length - 1; i >= 0; i--) {
       const n = this.npcs[i];
@@ -853,12 +918,11 @@ export class ChronoQuantumWorld {
         this.player.x -= (toNx / dist) * push;
         this.player.z -= (toNz / dist) * push;
       }
-      // DILATED_AURA NPC temporal affix: slows nearby player motion gently
+      // DILATED_AURA NPC temporal affix: accumulate bounded slowdown (never reverses player velocity!)
       if (n.temporalAffix === 'DILATED_AURA' && dist < 6.5) {
-        this.player.x -= this.player.vx * cdt * 0.25;
-        this.player.z -= this.player.vz * cdt * 0.25;
+        dilationAuraCount++;
       }
-      if ((n.adaptation.coherenceDrain > 0 || n.mutation === 'BYZANTINE') && !this.hbinState.immuneEnabled) {
+      if ((n.adaptation.coherenceDrain > 0 || n.mutation === 'BYZANTINE') && !this.hbinState.immuneEnabled && this.equippedArmor.layer.id !== 'MERKLE_IM') {
         this.qReg.applyDecoherence(cdt * 0.12);
       }
 
@@ -970,6 +1034,13 @@ export class ChronoQuantumWorld {
       }
     }
 
+    // Apply single bounded DILATED_AURA slowdown (capped at 65% reduction -> player NEVER walks backwards!)
+    if (dilationAuraCount > 0) {
+      const slowFrac = Math.min(0.65, 1 - Math.pow(0.75, dilationAuraCount));
+      this.player.x -= this.player.vx * cdt * slowFrac;
+      this.player.z -= this.player.vz * cdt * slowFrac;
+    }
+
     // Re-clamp player inside arena bounds after NPC close-repulse & dilation pushes!
     clampPlayerToArena();
 
@@ -980,8 +1051,24 @@ export class ChronoQuantumWorld {
       const zenoAura = (!p.fromPlayer && this.equippedArmor.layer.id === 'ZENO_AURA' && this._dist2(p, this.player) < 81) ? 0.62 : 1.0;
       const pdt = cdt * locF * zenoAura;
 
-      // Berry Phase homing curve for PHASE_SHIFT weapons (locks nearest living NPC)
-      if (p.fromPlayer && (p.qModId === 'PHASE_SHIFT' || p.entangledModId === 'PHASE_SHIFT') && this.npcs.length > 0) {
+      // Distinct weapon frame patterns (BOOMER mid-life reversal, ORBIT curved angular drift, LOCK mild tracking)
+      if (p.fromPlayer && p.framePattern === 'BOOMER' && !p.boomerFlipped && p.life < (p.maxLife || 1.9) * 0.52) {
+        p.boomerFlipped = true;
+        p.vx = -p.vx;
+        p.vz = -p.vz;
+        p.hitIds = new Set();
+      }
+      if (p.fromPlayer && p.framePattern === 'ORBIT') {
+        const angTurn = 1.65 * pdt;
+        const cs = Math.cos(angTurn), sn = Math.sin(angTurn);
+        const nvx = p.vx * cs - p.vz * sn;
+        const nvz = p.vx * sn + p.vz * cs;
+        p.vx = nvx;
+        p.vz = nvz;
+      }
+
+      // Berry Phase homing curve for PHASE_SHIFT / LOCK weapons (locks nearest living NPC)
+      if (p.fromPlayer && (p.qModId === 'PHASE_SHIFT' || p.entangledModId === 'PHASE_SHIFT' || p.framePattern === 'LOCK') && this.npcs.length > 0) {
         let tgt = null;
         let bestD2 = Infinity;
         for (const cand of this.npcs) {
@@ -996,7 +1083,8 @@ export class ChronoQuantumWorld {
           while (diff > Math.PI) diff -= Math.PI * 2;
           while (diff < -Math.PI) diff += Math.PI * 2;
           const spd = Math.hypot(p.vx, p.vz);
-          const newAng = curAng + Math.max(-2.6 * pdt, Math.min(2.6 * pdt, diff));
+          const turnRate = p.framePattern === 'LOCK' ? 3.2 : 2.6;
+          const newAng = curAng + Math.max(-turnRate * pdt, Math.min(turnRate * pdt, diff));
           p.vx = Math.sin(newAng) * spd;
           p.vz = Math.cos(newAng) * spd;
         }
@@ -1004,7 +1092,7 @@ export class ChronoQuantumWorld {
 
       p.x += p.vx * pdt;
       p.z += p.vz * pdt;
-      p.life -= cdt;
+      p.life -= pdt;
 
       // Mid-flight Planarian Mitosis temporal weapon mod!
       if (p.fromPlayer && p.tModId === 'MITOSIS' && !p.splitDone && p.life < 1.55 && this.projectiles.length < 240) {
@@ -1042,7 +1130,7 @@ export class ChronoQuantumWorld {
             pil.barrierV0,
             pil.radius * 0.35
           );
-          if (Math.random() < T) {
+          if (this._rand() < T) {
             p.passedPillars.add(pilIdx);
             if (!p.tunneled) {
               p.tunneled = true;
@@ -1096,10 +1184,24 @@ export class ChronoQuantumWorld {
             if (p.tModId === 'PARADOX' && this.temporal.echoClones.some((e) => Math.hypot(n.x - e.x, n.z - e.z) < 8)) {
               hitDmg = Math.round(hitDmg * 1.65);
             }
-            this._damageNPC(n, hitDmg, p.qModId, true, p.framePattern);
+            const hasMod = (id) => p.qModId === id || p.entangledModId === id;
+            const effTag = hasMod('DECOHERE') ? 'DECOHERE' : p.qModId;
+            this._damageNPC(n, hitDmg, effTag, true, p.framePattern);
+
+            // CHAIN frame pattern arcs 45% bonus shock to nearest secondary target
+            if (p.framePattern === 'CHAIN') {
+              const chainTgt = this.npcs.find((o) => o.id !== n.id && o.hp > 0 && this._dist2(o, n) < 100);
+              if (chainTgt) {
+                this.bellBeams.push({
+                  x0: n.x, y0: n.y, z0: n.z,
+                  x1: chainTgt.x, y1: chainTgt.y, z1: chainTgt.z,
+                  life: 0.25, color: [0.13, 0.83, 0.93],
+                });
+                this._damageNPC(chainTgt, Math.round(hitDmg * 0.45), effTag, false, p.framePattern);
+              }
+            }
 
             // Apply Quantum & Temporal weapon hit hooks (primary + entangled weapon mod!)
-            const hasMod = (id) => p.qModId === id || p.entangledModId === id;
             if (hasMod('ENTANGLE') || hasMod('GHZ_CASCADE')) {
               const others = this.npcs.filter((o) => o.id !== n.id && o.hp > 0);
               if (others.length >= 1) {
@@ -1198,19 +1300,26 @@ export class ChronoQuantumWorld {
   _damagePlayer(proj) {
     if (this.player.invulnTimer > 0) return;
     const hStance = heisenbergStance(this.player.heisenbergStance);
+    const dodgeCap = Math.min(0.90, 0.82 + this.skills.sup_heisen * 0.015);
     const totalDodge = Math.min(
-      0.82,
+      dodgeCap,
       this.equippedArmor.phaseDodge +
         hStance.evasionChance * (1 + this.skills.sup_heisen * 0.08) +
         (this.player.superposeTimer > 0 ? 0.35 : 0)
     );
-    if (Math.random() < totalDodge) {
+    if (this._rand() < totalDodge) {
       this.spawnBurst(this.player.x, this.player.y, this.player.z, [0.13, 0.83, 0.93], 6);
       return;
     }
 
-    // Retrocausal Hit-Rewind Armor Layer
-    if (this.equippedArmor.layer.id === 'TIME_UNDO' && this.player.undoHitCd <= 0 && this.player.shield < proj.damage) {
+    // Compute effective post-resistance damage BEFORE evaluating TIME_UNDO lethality!
+    const hasSrcId = proj.sourceNpcId !== undefined && proj.sourceNpcId !== null;
+    const attackerIsBoss = hasSrcId && this.npcs.some((n) => n.id === proj.sourceNpcId && n.isBoss);
+    const bossResist = (this.equippedArmor.layer.id === 'MERKLE_IM' && attackerIsBoss) ? 0.70 : 1.0;
+    const effDmg = (proj.damage * bossResist) / hStance.shieldDensity;
+
+    // Retrocausal Hit-Rewind Armor Layer: triggers ONLY on genuinely lethal hits!
+    if (this.equippedArmor.layer.id === 'TIME_UNDO' && this.player.undoHitCd <= 0 && (this.player.shield + this.player.hp) <= effDmg) {
       this.player.undoHitCd = 10.0;
       this.player.shield = Math.min(this.player.maxShield, this.player.shield + 45);
       this.pushEvent('ARMOR RETROCAUSAL UNDO: Lethal hit erased from timeline!', 'gold');
@@ -1223,17 +1332,13 @@ export class ChronoQuantumWorld {
     }
 
     // Bell-State Reflection Armor Layer: reflects exact 45% back to entangled attackers
-    if (this.equippedArmor.layer.id === 'BELL_REFL' && proj.sourceNpcId) {
+    if (this.equippedArmor.layer.id === 'BELL_REFL' && hasSrcId) {
       const attacker = this.npcs.find((n) => n.id === proj.sourceNpcId && n.hp > 0);
       if (attacker && attacker.entangledWith !== null) {
         this._damageNPC(attacker, Math.round(proj.damage * 0.45), 'BELL_REFL', false);
       }
     }
 
-    // MERKLE_IM Armor Layer: +30% boss resistance
-    const attackerIsBoss = proj.sourceNpcId && this.npcs.some((n) => n.id === proj.sourceNpcId && n.isBoss);
-    const bossResist = (this.equippedArmor.layer.id === 'MERKLE_IM' && attackerIsBoss) ? 0.70 : 1.0;
-    const effDmg = (proj.damage * bossResist) / hStance.shieldDensity;
     if (this.player.shield >= effDmg) {
       this.player.shield -= effDmg;
     } else {
@@ -1248,6 +1353,7 @@ export class ChronoQuantumWorld {
       this.player.hp = this.player.maxHp;
       this.player.shield = this.player.maxShield;
       this.player.invulnTimer = 2.0;
+      this._ghzMode = false;
       this.qReg.prepareBellPair(0, 1);
       this.pushEvent('PLANARIAN STEM REGENERATION: Emergency cellular reboot restored organism!', 'warn');
     }

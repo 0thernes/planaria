@@ -161,4 +161,17 @@ public theorem viability_s3_without_b2_matches_hbin :
     viabilityLevel ⟨2, 0, 0, 8, 0, 0, 0⟩ = 2 := by
   decide
 
+/-- Non-vacuity witness for Theorem III.3 (`anastomosis_monotonicity`):
+    recovering Bundle 3 (`0 -> 8`) upgrades renderer rank strictly from S1 Wireframe (2) to S2 Cortex (3). -/
+public theorem anastomosis_monotonicity_witness :
+    let p : ShardProfile := ⟨2, 0, 4, 0, 0, 0, 0⟩
+    let q : ShardProfile := ⟨2, 0, 4, 8, 0, 0, 0⟩
+    p.b0 ≤ q.b0 ∧ p.b2 ≤ q.b2 ∧ p.b3 ≤ q.b3 ∧
+    (resolveRenderer p).rank ≤ (resolveRenderer q).rank ∧
+    (resolveRenderer p).rank < (resolveRenderer q).rank :=
+  ⟨by decide, by decide, by decide,
+   anastomosis_monotonicity ⟨2, 0, 4, 0, 0, 0, 0⟩ ⟨2, 0, 4, 8, 0, 0, 0⟩
+     (by decide) (by decide) (by decide),
+   by decide⟩
+
 end Planaria.Anastomosis

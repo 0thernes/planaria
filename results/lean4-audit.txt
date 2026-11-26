@@ -16,6 +16,7 @@
 'Planaria.GF256.gf256_cauchy2_nonvacuous_witness' depends on axioms: [propext, Classical.choice, Quot.sound]
 'Planaria.Mitosis.mitosis_exact_sufficient' depends on axioms: [propext, Classical.choice, Quot.sound]
 'Planaria.Mitosis.mitosis_strict_impossibility' depends on axioms: [propext, Quot.sound]
+'Planaria.Mitosis.mitosis_strict_impossibility_witness' depends on axioms: [propext, Quot.sound]
 'Planaria.Mitosis.mitosis_unaligned_cut_guarantee' depends on axioms: [propext, Classical.choice, Quot.sound]
 'Planaria.Mitosis.planaria_all_7_bundles_mitosis_safe' does not depend on any axioms
 'Planaria.Mitosis.planaria_total_cells_exact' does not depend on any axioms
@@ -25,10 +26,12 @@
 'Planaria.Mitosis.planaria_cauchy_coord_disjoint' does not depend on any axioms
 'Planaria.Mitosis.planaria_payload_capacity_exact' does not depend on any axioms
 'Planaria.Mitosis.pigeonhole_two_way' depends on axioms: [propext, Quot.sound]
+'Planaria.Mitosis.pigeonhole_two_way_witness' depends on axioms: [propext, Quot.sound]
 'Planaria.Mitosis.trisection_synergy_recovery' depends on axioms: [propext, Classical.choice, Quot.sound]
 'Planaria.Anastomosis.anastomosis_zero_crash_safety' depends on axioms: [propext, Quot.sound]
 'Planaria.Anastomosis.resolveOrgan_zero_crash_safety' depends on axioms: [propext, Quot.sound]
 'Planaria.Anastomosis.anastomosis_monotonicity' depends on axioms: [propext, Quot.sound]
+'Planaria.Anastomosis.anastomosis_monotonicity_witness' depends on axioms: [propext, Quot.sound]
 'Planaria.Anastomosis.fusion_dominates_parents' depends on axioms: [propext, Classical.choice, Quot.sound]
 'Planaria.Anastomosis.fusion_strict_synergy_exists' does not depend on any axioms
 'Planaria.Anastomosis.zero_cliff_strict_separation' does not depend on any axioms
@@ -36,6 +39,7 @@
 'Planaria.Byzantine.hammingDist_triangle' depends on axioms: [propext, Classical.choice, Quot.sound]
 'Planaria.Byzantine.rs254_238_unique_decoding_radius' depends on axioms: [propext, Classical.choice, Quot.sound]
 'Planaria.Byzantine.rs_unique_correction_ball_disjoint' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Planaria.Byzantine.rs_unique_correction_ball_nonvacuous' depends on axioms: [propext, Classical.choice, Quot.sound]
 'Planaria.Byzantine.rs_interleaved_lane_geometry' depends on axioms: [propext, Classical.choice, Quot.sound]
 'Planaria.Byzantine.interleaved_burst_16_even_odd_bound' depends on axioms: [propext, Classical.choice, Quot.sound]
 'Planaria.Byzantine.interleaved_burst_17_exceeds_radius' depends on axioms: [propext, Classical.choice, Quot.sound]
@@ -46,6 +50,7 @@
 'Planaria.Byzantine.merkle_quarantine_preserves_authentic' depends on axioms: [propext]
 'Planaria.Byzantine.hashBinding_mixed_nonvacuous' depends on axioms: [propext]
 'Planaria.Byzantine.unpinned_quorum_honest_majority' depends on axioms: [propext, Quot.sound]
+'Planaria.Byzantine.unpinned_quorum_honest_majority_witness' depends on axioms: [propext, Quot.sound]
 'Planaria.Byzantine.unpinned_quorum_tie_fail_closed' depends on axioms: [propext, Quot.sound]
 'Planaria.Byzantine.unpinned_quorum_sybil_counterexample' does not depend on any axioms
 'Planaria.Byzantine.unauthenticated_poisoning_exists' depends on axioms: [propext, Quot.sound]
@@ -56,6 +61,8 @@
 'Planaria.Xenograft.xenograft_abi_safety' depends on axioms: [propext, Quot.sound]
 'Planaria.Xenograft.xenograft_improves_amputated_host' depends on axioms: [propext, Quot.sound]
 'Planaria.Xenograft.xenograft_improves_amputated_host_witness' depends on axioms: [propext, Quot.sound]
+'Planaria.Xenograft.xenograft_dead_host_refused' does not depend on any axioms
+'Planaria.Xenograft.xenograft_dead_host_witness' does not depend on any axioms
 'Planaria.QuantumTemporal.pauliX4Q_preserves_normSq4' depends on axioms: [propext, Quot.sound]
 'Planaria.QuantumTemporal.pauliY4Q_preserves_normSq4' depends on axioms: [propext, Quot.sound]
 'Planaria.QuantumTemporal.pauliZ4Q_preserves_normSq4' depends on axioms: [propext, Quot.sound]
@@ -68,3 +75,11 @@
 'Planaria.QuantumTemporal.temporal_rewind_exact_right_inv' depends on axioms: [propext, Quot.sound]
 'Planaria.QuantumTemporal.snapshot_buffer_capacity_and_exact_pop' depends on axioms: [propext]
 'Planaria.QuantumTemporal.combinatorial_1of1_space_exceeds_6_trillion' does not depend on any axioms
+'Planaria.Adversarial.refute_mitosis_below_2k' depends on axioms: [propext, Quot.sound]
+'Planaria.Adversarial.refute_unaligned_cut_without_margin' depends on axioms: [propext, Quot.sound]
+'Planaria.Adversarial.refute_interleaved_burst_17_safe' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Planaria.Adversarial.refute_anastomosis_dead_stem_safe' does not depend on any axioms
+'Planaria.Adversarial.refute_unpinned_quorum_tie_elects' depends on axioms: [propext, Quot.sound]
+'Planaria.Adversarial.refute_xenograft_replaces_b0' depends on axioms: [propext]
+'Planaria.Adversarial.refute_hadamard_preserves_unscaled_norm' depends on axioms: [propext, Quot.sound]
+'Planaria.Adversarial.refute_gf256_zero_invertible' depends on axioms: [propext, Quot.sound]

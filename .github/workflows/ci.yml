@@ -1,4 +1,4 @@
-name: PLANARIA CI (Cross-Platform Tests, 6-Kernel Lean 4.35, Paper & Security)
+name: PLANARIA CI (Cross-Platform Tests, 6-Kernel Lean 4.35, Oracle, Paper & Security)
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   node-matrix:
-    name: Build, 28 Suites, 10 Mutants & Benchmarks (${{ matrix.os }})
+    name: Build, 30 Suites, 12 Mutants, Fuzz & Python Oracle (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -23,15 +23,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Deterministic artifact build
         run: npm run build
-      - name: 28-suite verification, property-based & metamorphic harness
+      - name: 30-suite verification, AudioWorklet DSP, property-based & metamorphic harness
         run: npm test
-      - name: 10-mutant surgical mutation testing (100% kill target)
+      - name: 12-mutant surgical mutation testing (100% kill target)
         run: npm run mutate
-      - name: Static analysis, security-sink & citation hygiene
-        run: npm run lint && npm run check:citations
-      - name: Build static GitHub Pages bundle
+      - name: 2,000-case deterministic adversarial fuzzer
+        run: npm run fuzz
+      - name: Clean-room Python 3 differential oracle (768 cells, 4 species, mitosis, Bell/GHZ)
+        run: python reference/planaria_oracle.py
+      - name: Static analysis, theorem-drift, citations, axiom allowlist & Proof Blueprint 1:1
+        run: npm run lint && npm run check:citations && npm run check:axioms && npm run check:blueprint
+      - name: Build static GitHub Pages bundle (Studio + Proof Blueprint)
         run: npm run pages
       - name: Run 4-architecture statistical benchmarks (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
@@ -44,7 +51,7 @@ jobs:
           path: results/benchmarks.json
 
   lean-6kernel:
-    name: Pure Lean 4.35.0 — 70 Theorems & 6-Kernel Palomar Comparator
+    name: Pure Lean 4.35.0 — 85 Theorems, 6-Kernel Palomar & Negative Tamper
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,20 +61,38 @@ jobs:
         run: |
           curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-      - name: Build PlanariaProofs, Solution & Challenge (zero sorry/admit/native_decide)
+      - name: Build PlanariaProofs, Solution & Challenge + strict 85-theorem axiom allowlist
         working-directory: lean
         run: |
           lake build
           lake build Challenge
           lake env lean VerifyAxioms.lean > /tmp/lean4-audit.txt
           cat /tmp/lean4-audit.txt
-          COUNT=$(grep -cE "depends on axioms:|does not depend on any axioms" /tmp/lean4-audit.txt)
-          echo "Audited theorem count: $COUNT"
-          test "$COUNT" -eq 70
-          if grep -E "sorryAx|ofReduceBool|trustCompiler" /tmp/lean4-audit.txt; then
-            echo "FORBIDDEN AXIOM DETECTED" >&2
-            exit 1
-          fi
+          python3 - <<'PY'
+          import json, re, sys
+          allowed = {"propext", "Classical.choice", "Quot.sound"}
+          raw = open("/tmp/lean4-audit.txt", encoding="utf-8").read()
+          if re.search(r"sorryAx|ofReduceBool|trustCompiler|_native", raw):
+              sys.exit("FORBIDDEN AXIOM TOKEN DETECTED")
+          comp = json.load(open("comparator.json", encoding="utf-8"))
+          seen = {}
+          for line in raw.splitlines():
+              m = re.match(r"^'([^']+)'\s+depends on axioms:\s+\[([^\]]*)\]", line)
+              if m:
+                  axs = [a.strip() for a in m.group(2).split(",") if a.strip()]
+                  bad = [a for a in axs if a not in allowed]
+                  if bad:
+                      sys.exit(f"DISALLOWED AXIOM(S) on {m.group(1)}: {bad}")
+                  seen[m.group(1)] = axs
+              else:
+                  m0 = re.match(r"^'([^']+)'\s+does not depend on any axioms", line)
+                  if m0:
+                      seen[m0.group(1)] = []
+          missing = [t for t in comp["theorem_names"] if t not in seen]
+          if len(seen) != 85 or missing:
+              sys.exit(f"THEOREM COUNT/COVERAGE MISMATCH: seen={len(seen)} missing={missing}")
+          print(f"STRICT AXIOM ALLOWLIST PASS: {len(seen)}/85 theorems verified strictly within {sorted(allowed)}")
+          PY
       - name: Run independent paranoid & multi-kernel checks (lake check + comparator)
         working-directory: lean
         run: |
@@ -75,6 +100,23 @@ jobs:
           lake env leanchecker-paranoid --fresh Solution
           lake check --paranoid
           lake comparator --config comparator.json --paranoid
+      - name: Live negative tamper test (mutated Challenge.lean MUST be rejected by comparator)
+        working-directory: lean
+        run: |
+          rm -rf /tmp/neg-comparator
+          cp -a . /tmp/neg-comparator
+          sed -i 's/192 \* 512 = 98304/192 * 512 = 98305/' /tmp/neg-comparator/Challenge.lean
+          grep -q '192 \* 512 = 98305' /tmp/neg-comparator/Challenge.lean
+          (
+            cd /tmp/neg-comparator
+            lake build Challenge
+            if lake comparator --config comparator.json --paranoid; then
+              echo "FATAL: lake comparator --paranoid ACCEPTED tampered Challenge.lean!" >&2
+              exit 1
+            else
+              echo "PASS: live negative tamper test rejected mutated Challenge.lean as expected."
+            fi
+          )
 
   paper-pdf:
     name: AMS-LaTeX White Paper & Standalone arXiv Verification
@@ -98,7 +140,7 @@ jobs:
           ls -lh /tmp/arxiv-test/main.pdf
       - name: Generate CI SHA256SUMS and SLSA provenance attestation
         run: |
-          sha256sum artifacts/*.hbin dist/Donahue_2026_planaria.pdf dist/arxiv_submission.tar.gz > SHA256SUMS
+          sha256sum artifacts/*.hbin dist/Donahue_2026_planaria.pdf dist/arxiv_submission.tar.gz results/lean4-audit.txt results/lean4-multi-kernel.txt > SHA256SUMS
           cat SHA256SUMS
       - name: Attest build provenance (SLSA)
         uses: actions/attest-build-provenance@v4
@@ -108,6 +150,8 @@ jobs:
             artifacts/*.hbin
             dist/Donahue_2026_planaria.pdf
             dist/arxiv_submission.tar.gz
+            results/lean4-audit.txt
+            results/lean4-multi-kernel.txt
             SHA256SUMS
 
   audit-and-security:

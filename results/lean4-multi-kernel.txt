@@ -1,38 +1,38 @@
-# PLANARIA v2.3.0 — Multi-Kernel Lean 4.35.0 Verification Transcript
-# Toolchain: leanprover/lean4:v4.35.0 (Palomar verification stack)
-# Standalone specification: lean/Challenge.lean (0 project imports, 70 theorem specs)
-# Verified solution: lean/Solution.lean (0 sorry, 0 admit, 0 native_decide, 0 custom axioms)
-# Comparator manifest: lean/comparator.json (all 70 theorems)
+# PLANARIA v2.4.0 — Multi-Kernel Lean 4.35.0 Verification Transcript
+# Toolchain: leanprover/lean4:v4.35.0 (Palomar verification stack, autoImplicit=false, relaxedAutoImplicit=false)
+# Standalone specification: lean/Challenge.lean (imports ONLY zero-proof PlanariaProofs.Spec, 85 theorem specs)
+# Verified solution: lean/Solution.lean (7 pure modules incl. AdversarialTests.lean; 0 sorry, 0 admit, 0 native_decide, 0 custom axioms)
+# Comparator manifest: lean/comparator.json (all 85 theorems)
 # Formalization metadata: formalization.yaml
+# Interactive Proof Blueprint: blueprint/index.html & blueprint/blueprint.json (85/85 matched 1:1)
 
-[KERNEL 1/6] lean4 kernel (lake build + lake env lean VerifyAxioms.lean)
+[KERNEL 1/6] lean4 kernel (lake build + lake build Challenge + lake env lean VerifyAxioms.lean)
   Result: PASS (exit 0)
-  Theorems audited: 70
-  Allowed axioms only: [propext, Classical.choice, Quot.sound]
-  Forbidden axioms (sorryAx, Lean.ofReduceBool, Lean.trustCompiler, custom): 0
+  Lean options: autoImplicit = false, relaxedAutoImplicit = false, module header on all 12 .lean files
+  Theorems audited: 85 (15 zero-axiom pure proofs + 70 standard [propext, Classical.choice, Quot.sound])
+  Forbidden axioms (sorryAx, Lean.ofReduceBool, Lean.trustCompiler, _native, custom): 0
 
 [KERNEL 2/6] leanchecker --fresh Solution
-  Command: leanchecker --fresh Solution
+  Command: lake env leanchecker --fresh Solution
   Result: PASS (exit 0, Windows x86_64 local run; also re-run on Ubuntu CI)
 
 [KERNEL 3/6] leanchecker-paranoid --fresh Solution
-  Command: leanchecker-paranoid --fresh Solution
+  Command: lake env leanchecker-paranoid --fresh Solution
   Result: PASS (exit 0, Windows x86_64 local run; also re-run on Ubuntu CI)
 
 [KERNEL 4/6] nanoda_bin (independent Rust Lean 4 kernel)
-  Export: leanexport Solution -> solution.ndjson (15.75 MB, 2970 declarations)
-  Command: nanoda_bin --export solution.ndjson
-  Output: Checked 2970 declarations with no typechecker errors
-  Result: PASS (exit 0, Windows x86_64 local run; also re-run in lake check --paranoid on Ubuntu CI)
+  Export: leanexport Solution -- <85 theorems> -> planaria_v24_sol.ndjson (15.24 MB)
+  Command: lake env nanoda_bin <config.json> (permitted_axioms: [propext, Quot.sound, Classical.choice])
+  Result: PASS (exit 0, 0 typechecker errors, Windows x86_64 local run; also re-run in lake check --paranoid on Ubuntu CI)
 
 [KERNEL 5/6] con-leche --verified (independent Rust/verified kernel)
-  Command: con-leche --verified solution.ndjson
-  Output: accepted 2715 declarations (--verified)
+  Command: lake env con-leche --verified planaria_v24_sol.ndjson
+  Output: accepted 2732 declarations (--verified)
   Result: PASS (exit 0, Windows x86_64 local run; also re-run in lake check --paranoid on Ubuntu CI)
 
-[KERNEL 6/6] con-ron --verified + lean4lean + bubblewrap comparator
-  con-ron --verified (Windows local): accepted 2715 declarations (--verified) -> PASS (exit 0)
-  lean4lean + lake check --paranoid + lake comparator --config comparator.json --paranoid:
+[KERNEL 6/6] con-ron --verified + lean4lean + bubblewrap comparator + negative tamper test
+  con-ron --verified (Windows local): accepted 2732 declarations (--verified) -> PASS (exit 0)
+  lean4lean + lake check --paranoid + lake comparator --config comparator.json --paranoid + negative tamper test:
     Note: On Windows, `lean4lean.exe` cannot parse Windows `.olean` path headers and `lake check`
     requires Linux `bubblewrap` (`bwrap`). Full 6-kernel verification + Challenge/Solution
-    comparator runs automatically on Ubuntu Linux in `.github/workflows/ci.yml` (Lean 4.35.0 job).
+    comparator + live negative tamper rejection runs automatically on Ubuntu Linux in `.github/workflows/ci.yml`.

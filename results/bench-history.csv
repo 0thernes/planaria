@@ -1,0 +1,4 @@
+version,date,node_version,compile_4_species_ms,decode_median_ms,decode_iqr_ms,decode_p95_ms,pvm32_frame_median_ms,pvm32_mips,mitosis_min_ms,mitosis_max_ms,test_suites,mutants_killed,fuzz_cases,lean_theorems,notes
+v2.2.0,2026-11-21,v25.8.2,,8.96,,,0.082,27.02,,,24,0,0,62,Mean decode & frame latency (pre-IQR schema)
+v2.3.0,2026-11-25,v25.8.2,40.3,5.994,0.268,6.526,0.041,42.85,12.57,14.21,28,10,0,70,Equal-storage RS(192 48) control + 6-kernel Lean 4.35.0
+v2.4.0,2026-11-26,v25.8.2,48.61,9.669,1.217,12.891,0.060,28.04,17.17,21.28,30,12,2000,85,PVM-32 zero-alloc transactional rollback + Python oracle + Blueprint + AdversarialTests.lean

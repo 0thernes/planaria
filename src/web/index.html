@@ -3,17 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PLANARIA v2.3 — 3D Temporal-Quantum Holographic Executable Engine &amp; Surgical Vivisection Studio</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'" />
+  <title>PLANARIA v2.4 — 3D Temporal-Quantum Holographic Executable Engine &amp; Surgical Vivisection Studio</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2304070c'/%3E%3Cpolygon points='16,3 29,16 16,29 3,16' fill='none' stroke='%2310f5a8' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='%23e879f9'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="./src/web/styles.css" />
 </head>
 <body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
   <header class="topbar">
     <div class="brand">
       <div class="brand-dot" id="pulseDot" aria-hidden="true"></div>
       <div>
-        <h1>PLANARIA 3D <span style="font-size:10px; color:var(--emerald); font-weight:600;">v2.3</span></h1>
-        <div class="sub">TEMPORAL-QUANTUM WEBGL2 ENGINE · PROGRESSIVE HOLOGRAPHIC .HBIN · 1/1 ENDLESS FORGE · 6-KERNEL LEAN 4 VERIFIED</div>
+        <h1>PLANARIA 3D <span style="font-size:10px; color:var(--emerald); font-weight:600;">v2.4</span></h1>
+        <div class="sub">TEMPORAL-QUANTUM WEBGL2 ENGINE · PROGRESSIVE HOLOGRAPHIC .HBIN · 1/1 ENDLESS FORGE · 6-KERNEL LEAN 4.35 VERIFIED · <a href="./blueprint/" class="sub-link">PROOF BLUEPRINT</a></div>
       </div>
     </div>
     <div class="top-controls">
@@ -32,7 +34,7 @@
     </div>
   </header>
 
-  <main class="shell">
+  <main id="main-content" class="shell">
     <!-- LEFT MAIN 3D ENGINE + FORENSIC / RPG WORKBENCH -->
     <section class="main-col">
       <!-- LIVE 3D WEBGL2 TEMPORAL-QUANTUM HOLOGRAPHIC VIEWPORT -->
@@ -47,7 +49,7 @@
         </div>
 
         <div class="viewport3d-wrap" id="viewport3dWrap">
-          <canvas id="canvas3d" aria-label="PLANARIA 3D WebGL2 Temporal-Quantum Arena"></canvas>
+          <canvas id="canvas3d" role="img" aria-label="PLANARIA 3D WebGL2 Temporal-Quantum Arena"></canvas>
           <div id="webglFallback" class="webgl-fallback" hidden role="status">
             WebGL2 3D viewport unavailable or context lost — PLANARIA continues running live in 2D Dual-Patient PVM-32, Tissue Surgery, and AudioWorklet modes.
           </div>
@@ -95,13 +97,13 @@
               WEAPON: —
             </div>
             <div style="background:rgba(5,10,17,0.75); border:1px solid rgba(27,44,64,0.8); border-radius:4px; padding:4px 8px; font-size:9.5px; color:var(--muted);">
-              Drag: Orbit 3D · Wheel: Zoom · WASD: Move · Space: Fire · Hold R: Rewind · Hold Shift: Bullet-Time · 1-4: Weapons
+              Drag / J,L,I,K: Orbit · Wheel / +,-: Zoom · WASD: Move · Space: Fire · Hold R: Rewind · Shift: Bullet-Time · 1-4: Weapons
             </div>
           </div>
         </div>
 
         <!-- 8 ACTIVE QUANTUM-TEMPORAL ABILITY BAR -->
-        <div class="ability-bar" id="abilityBar" role="toolbar" aria-label="Quantum-Temporal Abilities"></div>
+        <div class="ability-bar" id="abilityBar" role="group" aria-label="Quantum-Temporal Abilities"></div>
 
         <!-- LIVE HEISENBERG UNCERTAINTY STANCE + TEMPORAL CLOCK SLIDERS -->
         <div class="slider-bar">
@@ -114,13 +116,13 @@
           </div>
           <div>
             <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:4px;">
-              <label for="sliderTime" style="color:var(--magenta); font-weight:700;">TEMPORAL CLOCK &amp; SCALE ORDER</label>
+              <label for="sliderTime" style="color:var(--magenta); font-weight:700;">TEMPORAL CLOCK &amp; SCALE REALM</label>
               <span id="timeLabel" style="color:var(--emerald);">1.00x · Real-Time</span>
             </div>
             <div style="display:flex; gap:6px; align-items:center;">
               <input id="sliderTime" type="range" min="15" max="250" value="100" style="flex:1;" aria-label="Temporal Clock Scale" />
-              <button id="btnRewindHold" type="button" class="btn-cyan" style="padding:3px 7px; font-size:10px;">Rewind 1s</button>
-              <button id="btnOrderNext" type="button" class="btn-gold" style="padding:3px 7px; font-size:10px;">Scale 10^x</button>
+              <button id="btnRewindHold" type="button" class="btn-cyan btn-compact">Rewind 1s</button>
+              <button id="btnOrderNext" type="button" class="btn-gold btn-compact">Scale 10^x</button>
             </div>
           </div>
         </div>
@@ -199,15 +201,15 @@
                 <strong id="primaryLabel" style="color:#f8fafc;">PATIENT A · PLANARIA (.hbin)</strong>
                 <span id="primaryCrtBadge" class="badge badge-s3">STRATUM 3</span>
               </div>
-              <div class="crt-wrap"><canvas id="canvasPrimary" width="160" height="120" aria-label="Patient A PVM-32 Display"></canvas></div>
+              <div class="crt-wrap"><canvas id="canvasPrimary" width="160" height="120" role="img" aria-label="Patient A PVM-32 Display"></canvas></div>
               <div class="crt-meta"><span id="primaryRoot">ROOT: —</span><span id="primaryFps">0 insns/f</span></div>
             </div>
             <div class="crt-card" id="cardSecondary">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px;">
                 <strong id="secondaryLabel" style="color:#f8fafc;">CONTROL · LINEAR BINARY (LINBIN01)</strong>
                 <span id="secondaryBadge" class="badge badge-s3">INTACT</span>
               </div>
-              <div class="crt-wrap"><canvas id="canvasSecondary" width="160" height="120" aria-label="Control Linear Twin Display"></canvas></div>
+              <div class="crt-wrap"><canvas id="canvasSecondary" width="160" height="120" role="img" aria-label="Control Linear Twin Display"></canvas></div>
               <div class="crt-meta"><span id="secondaryMeta">Monolithic ELF-style Loader</span><span id="secondaryStatus">ALIVE</span></div>
             </div>
           </div>
@@ -217,9 +219,9 @@
         <div class="tab-pane" id="tab-tissue" role="tabpanel" aria-labelledby="tabbtn-tissue">
           <div class="tissue-layout">
             <div>
-              <canvas id="canvasTissue" class="canvas-responsive" width="660" height="232"
-                aria-label="192-Cell Holographic Tissue Surgery Map"
-                title="Click to inspect cell anatomy; Shift+Drag to surgically excise cells live!"></canvas>
+              <canvas id="canvasTissue" class="canvas-responsive" width="660" height="232" tabindex="0" role="application"
+                aria-label="192-Cell Holographic Tissue Surgery Map (Arrow keys to move cell, Delete/Backspace to excise)"
+                title="Click or Arrow-keys to inspect cell anatomy; Shift+Drag or Delete to surgically excise cells live!"></canvas>
               <div class="legend-row">
                 <span><i class="swatch" style="background:#fbbf24"></i>S0 Stem (k=2)</span>
                 <span><i class="swatch" style="background:#22d3ee"></i>S1 Vital (k=4)</span>
@@ -227,21 +229,21 @@
                 <span><i class="swatch" style="background:#a855f7"></i>S3 Genome (k=8–16)</span>
                 <span><i class="swatch" style="background:#f43f5e"></i>Quarantined</span>
                 <span><i class="swatch" style="background:#e879f9"></i>Xenograft</span>
-                <span style="color:#f8fafc;">Shift+Drag to excise live 3D cells!</span>
+                <span style="color:#f8fafc;">Shift+Drag or Arrow+Delete to excise!</span>
               </div>
             </div>
-            <div class="cell-inspector" id="cellInspector">Click any cell to inspect its 512-byte anatomy.</div>
+            <div class="cell-inspector" id="cellInspector">Click or focus &amp; press Arrow keys to inspect 512-byte cell anatomy.</div>
           </div>
         </div>
 
         <!-- TAB 4: ORGAN ANASTOMOSIS & DISASSEMBLY -->
         <div class="tab-pane" id="tab-vascular" role="tabpanel" aria-labelledby="tabbtn-vascular">
           <div class="vascular-grid">
-            <div><canvas id="canvasVascular" class="canvas-responsive" width="520" height="240" aria-label="Live Organ Vascular Anastomosis Graph"></canvas></div>
+            <div><canvas id="canvasVascular" class="canvas-responsive" width="520" height="240" role="img" aria-label="Live Organ Vascular Anastomosis Graph"></canvas></div>
             <div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px; flex-wrap:wrap;">
                 <span style="font-size:10px; color:var(--cyan);">LIVE PVM-32 DISASSEMBLY</span>
-                <select id="disasmBundle" aria-label="Select Bundle to Disassemble" style="padding:3px 6px;">
+                <select id="disasmBundle" aria-label="Select Bundle to Disassemble" class="btn-compact">
                   <option value="0">B0: S0_STEM_NUCLEUS</option>
                   <option value="1">B1: S1_CORE_LOGIC</option>
                   <option value="2">B2: S1_WIREFRAME</option>
@@ -258,7 +260,7 @@
 
         <!-- TAB 5: EMPIRICAL SURVIVAL CURVE & LIVE PLANG COMPILER -->
         <div class="tab-pane" id="tab-curve" role="tabpanel" aria-labelledby="tabbtn-curve">
-          <canvas id="canvasCurve" class="canvas-responsive" width="880" height="210" aria-label="Empirical Survival Phase-Transition Curve"></canvas>
+          <canvas id="canvasCurve" class="canvas-responsive" width="880" height="210" role="img" aria-label="Empirical Survival Phase-Transition Curve"></canvas>
           <div id="benchSummary" style="margin:6px 0 10px; font-size:10px; color:var(--muted);"></div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; gap:6px; flex-wrap:wrap;">
             <span style="font-size:10px; color:var(--emerald);">LIVE IN-BROWSER PLANG -&gt; PVM-32 -&gt; .HBIN COMPILER</span>

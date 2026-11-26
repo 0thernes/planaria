@@ -1,10 +1,10 @@
 # PLANARIA — Comprehensive Technical, Scientific, Computational, Functional & Operational Master Report
 
 **Document Type:** Master Engineering, Adversarial Audit & Research Analysis Report  
-**System:** PLANARIA v2.3.0 — 3D Temporal-Quantum WebGL2 Engine & Progressive Holographic Executable Architecture (`.hbin`)  
+**System:** PLANARIA v2.4.0 — 3D Temporal-Quantum WebGL2 Engine & Progressive Holographic Executable Architecture (`.hbin`)  
 **Author:** Alexander Stephen Donahue — Independent Researcher ([0thernes project](https://0thernes.art), Spokane, WA, USA · `0_0@0thernes.art` · ORCID [0009-0006-8168-9648](https://orcid.org/0009-0006-8168-9648))  
-**Date:** November 25, 2026  
-**Verification Status:** 28/28 Verification & Security Suites Passed · 10/10 (100.0%) Surgical Mutants Killed · 70/70 Pure Lean 4.35.0 Proofs Audited Across 6 Kernels (0 `sorryAx`, 0 `native_decide`) · Build Standard v1.2.0 100% · Frozen Tectonic PDF ([`dist/Donahue_2026_planaria.pdf`](../dist/Donahue_2026_planaria.pdf)) · Mega-Atlas Audit: `0 / 1,900` Open Problems Solved (See [`docs/reviews/2026-11-25-10-pass-red-team-audit.md`](reviews/2026-11-25-10-pass-red-team-audit.md))
+**Date:** November 26, 2026  
+**Verification Status:** 30/30 Verification & Security Suites Passed · 12/12 (100.0%) Surgical Mutants Killed · 2,000/2,000 Deterministic Fuzz Cases · 100% Python 3 Differential Oracle Parity · 85/85 Pure Lean 4.35.0 Proofs Audited Across 6 Kernels (`autoImplicit=false`, 0 `sorryAx`, 0 `native_decide`, Interactive Blueprint `/blueprint/`) · Build Standard v1.2.0 100% · Frozen Tectonic PDF ([`dist/Donahue_2026_planaria.pdf`](../dist/Donahue_2026_planaria.pdf)) · Mega-Atlas Audit: `0 / 1,900` Open Problems Solved ([`docs/MEGA_ATLAS_CROSSCHECK.md`](MEGA_ATLAS_CROSSCHECK.md))
 
 ---
 
@@ -37,7 +37,7 @@ Specifically, PLANARIA demonstrates and formally verifies a **new executable bin
 1. **Zero-Overlap Planarian Binary Mitosis**: Literally cut a compiled executable in half at an arbitrary unaligned byte offset (`49177`) with zero shared bytes — BOTH halves independently boot at Stratum 3 and each regenerates the 100% SHA-256 bit-exact 98,304-byte original.
 2. **Zero-Cliff Sub-Threshold Survival ("The 12% Ghost")**: Delete 88%–92% of the binary file — well past the point where both monolithic executables (0% alive at 44% loss) and single-stratum `RS(40,16)` erasure-coded executables (0% alive at 76% loss) suffer total cliff death — and PLANARIA STILL boots live (**82.5% survival at 88% destruction; 65.0% at 92% destruction!**) in ghostly Stratum-0 wireframe survival mode.
 3. **File-Wide Simultaneous Radiation Healing**: Inject a contiguous **16-byte burst error inside EVERY SINGLE ONE of the 192 cells simultaneously** (3,072 corrupted bytes = 3.13% file-wide error rate — zero untouched cells in the entire file!), shift the file by 137 unaligned random bytes, shuffle all 192 cells, and PLANARIA STILL heals 192/192 cells and regenerates the 100% bit-exact original.
-4. **Cryptographic Byzantine Quarantine Before Linear Decoding**: Prepend 192 adversarially forged cells that pass sync matching, header parsing, and `RS(254, 238)` parity with zero errors; PLANARIA's Depth-8 SHA-256 Merkle Immune System quarantines 192/192 Trojans before Cauchy decoding (whereas toggling the immune system OFF proves that even **1 single Trojan** corrupts **470/472 bytes (99.6%)** of `S0_STEM_NUCLEUS`).
+4. **Cryptographic Byzantine Quarantine Before Linear Decoding**: Prepend 192 adversarially forged cells that pass sync matching, header parsing, and `RS(254, 238)` parity with zero errors; PLANARIA's Depth-8 SHA-256 Merkle Immune System quarantines 192/192 Trojans before Cauchy decoding (whereas toggling the immune system OFF proves that even **1 single Trojan** corrupts **469/472 bytes (99.4%)** of `S0_STEM_NUCLEUS`).
 5. **Raw-Concatenation Synergistic Healing & Cross-Species Executable Xenografting**: Raw OS concatenation of two crippled sub-threshold shards (`cat part1 + junk + part3`) heals super-additively back to Stratum 3; raw concatenation of an amputated host binary (`AEGIS_DRIFT`) with a foreign species (`SYNTH_REACTOR`, `CIPHER_VAULT`, or `QUANTUM_CHRONICLE`) dynamically transplants ABI-verified `LOGIC`, `RENDERER`, `AUDIO`, and `FX` organs at runtime, producing a playable hybrid Chimera exportable as its own self-healing `.hbin` binary.
 
 ---
@@ -112,7 +112,7 @@ As verified empirically in `results/benchmarks.json` (`radiationSweep`), this yi
 
 ### 4.3 Why Byzantine Quarantine MUST Precede Cauchy Decoding
 
-Experiment 3 (`byzantineAudit` in `results/benchmarks.json`) quantifies the exact amplification factor of an unauthenticated MDS decoder: injecting **1 single RS-valid Trojan cell** ahead of authentic cells when `disableImmuneSystem: true` corrupts **470 out of 472 bytes (99.6%)** of `S0_STEM_NUCLEUS` (and up to **472/472 = 100.0%** at 60 Trojans)! Because Gaussian elimination spreads one bad input vector linearly across all $k$ output chunks, **cryptographic authentication MUST happen per coded cell BEFORE linear inversion**, not merely on the final reassembled binary. PLANARIA embeds a complete 128-byte Depth-8 SHA-256-128 Merkle proof *inside every single cell*, guaranteeing zero contamination prior to inversion (formally proved in `ByzantineImmune.lean`).
+Experiment 3 (`byzantineAudit` in `results/benchmarks.json`) quantifies the exact amplification factor of an unauthenticated MDS decoder: injecting **1 single RS-valid Trojan cell** ahead of authentic cells when `disableImmuneSystem: true` corrupts **469 out of 472 bytes (99.4%)** of `S0_STEM_NUCLEUS` (and up to **472/472 = 100.0%** at 60 Trojans)! Because Gaussian elimination spreads one bad input vector linearly across all $k$ output chunks, **cryptographic authentication MUST happen per coded cell BEFORE linear inversion**, not merely on the final reassembled binary. PLANARIA embeds a complete 128-byte Depth-8 SHA-256-128 Merkle proof *inside every single cell*, guaranteeing zero contamination prior to inversion (formally proved in `ByzantineImmune.lean`).
 
 ---
 
@@ -147,7 +147,7 @@ packs `AEGIS_DRIFT`'s `S1_CORE_LOGIC` (including its `v2.2.0` `SPECIES_MAGIC` se
 | Species | Source | Compiled `.hbin` | Total Insns | Code Bytes | Interactive Behavior & Visual/Acoustic Degradation Profile |
 |---|---|---|---:|---:|---|
 | **`QUANTUM_CHRONICLE`** | `programs/quantum_chronicle.plang` | `artifacts/quantum_chronicle.hbin` | 426 | 1,704 B | Flagship 3D Temporal-Quantum WebGL2 co-processor driving 4-qubit gate schedules, Bell/GHZ entanglement pulses, Chrono-Well dilation telemetry, and PolyBLEP harmonic synth. |
-| **`AEGIS_DRIFT`** | `programs/aegis_drift.plang` | `artifacts/aegis_drift.hbin` | 991 | 3,964 B | Playable 60 FPS neon vector starfighter survival game (WASD/Arrows + Space or Autopilot). Degrades: S3 Starfield+Shrapnel+Shield Halo+4-voice synthwave → S2 Neon vector sprites → S1 Tactical radar wireframe → S0 Ghost distress triangle & 1-bit heartbeat. |
+| **`AEGIS_DRIFT`** | `programs/aegis_drift.plang` | `artifacts/aegis_drift.hbin` | 1,000 | 4,000 B | Playable 60 FPS neon vector starfighter survival game (WASD/Arrows + Space or Autopilot). Degrades: S3 Starfield+Shrapnel+Shield Halo+4-voice synthwave → S2 Neon vector sprites → S1 Tactical radar wireframe → S0 Ghost distress triangle & 1-bit heartbeat. |
 | **`SYNTH_REACTOR`** | `programs/synth_reactor.plang` | `artifacts/synth_reactor.hbin` | 645 | 2,580 B | 4-voice Lydian polyphonic synthesizer + phosphor-trailed Lissajous harmonic reactor. Arrows bend frequency ratios. Degrades: S3 Containment rings+8-band spectrum+4-voice chord engine → S2 Lissajous plasma web → S1 Green oscilloscope grid → S0 Central pulse ring. |
 | **`CIPHER_VAULT`** | `programs/cipher_vault.plang` | `artifacts/cipher_vault.hbin` | 534 | 2,136 B | Live 12-lane 32-bit ARX stream-cipher & cryptographic avalanche bit-matrix + pentatonic keystream sonification. Degrades: S3 Rotating lock ring+entropy ribbon → S2 12×8 avalanche bit-matrix → S1 Parity bars → S0 Emergency lockdown cross. |
 | **Chimera (`AEGIS x SYNTH`)** | Spliced live | Exportable 96 KiB `.hbin` | Mixed | Mixed | Runs `AEGIS_DRIFT`'s gameplay & enemy collisions through `SYNTH_REACTOR`'s Lissajous harmonic phase-web renderer and 4-voice Lydian FM synth engine (or even `S1_CORE_LOGIC` grafts via `SPECIES_MAGIC`!) — zero traps, full 50/50 Mitosis preserved! |
@@ -163,20 +163,20 @@ packs `AEGIS_DRIFT`'s `S1_CORE_LOGIC` (including its `v2.2.0` `SPECIES_MAGIC` se
 ## 7. Computational Performance, Latency & Memory Profiling
 
 Measured on Node.js `v25.8.2` (`results/benchmarks.json`, schema `PLANARIA-BENCHMARKS-1.2`, warm-JIT steady state):
-- **Full 96 KiB Decode Latency**: **`5.994 ms`** median (IQR `0.268 ms`, p95 `6.526 ms` across 25 steady-state passes, accelerated by precomputed `GF_MUL_TABLE`) — fast enough to re-decode a live 192-cell binary interactively on every surgical drag or button click without stutter.
-- **Dual Mitosis Decode + Bit-Exact Regeneration**: **`12.57–14.21 ms`** combined for BOTH disjoint halves across all 6 aligned and unaligned prime offsets.
-- **Compile All 4 Species**: **`40.3 ms`** total end-to-end (`Plang` → `PVM-32` → Cauchy → Depth-8 Merkle → 384 RS codewords → `98,304 B` `.hbin`).
-- **`PVM-32` Virtual Machine Throughput**: **`0.041 ms/frame`** median (IQR `0.006 ms`, p95 `0.111 ms`, **`42.85 MIPS`**, **`> 24,000 FPS`** headless ceiling; `< 0.25%` of a 16.67 ms 60 FPS frame budget).
-- **AudioWorklet DSP**: Lock-free 48 kHz stereo PolyBLEP synthesis with per-sample amplitude slewing (`0.008`), one-pole lowpass filtering, master DC-blocking highpass, and denormal flushing — zero GC allocations inside `process()`.
+- **Full 96 KiB Decode Latency**: **`9.669 ms`** median (mean `9.858 ms`, IQR `1.217 ms`, p95 `12.891 ms` across 40 steady-state passes, accelerated by precomputed `GF_MUL_TABLE`) — fast enough to re-decode a live 192-cell binary interactively on every surgical drag or button click without stutter.
+- **Dual Mitosis Decode + Bit-Exact Regeneration**: **`17.17–21.28 ms`** combined for BOTH disjoint halves across all 6 aligned and unaligned prime offsets.
+- **Compile All 4 Species**: **`48.61 ms`** total end-to-end (`Plang` → `PVM-32` → Cauchy → Depth-8 Merkle → 384 RS codewords → `98,304 B` `.hbin`).
+- **`PVM-32` Virtual Machine Throughput (with zero-allocation LIFO transactional trap rollback)**: **`0.060 ms/frame`** median (mean `0.088 ms`, IQR `0.023 ms`, p95 `0.192 ms`, **`28.04 MIPS`**, **`11,364 FPS`** headless ceiling; `< 0.4%` of a 16.67 ms 60 FPS frame budget).
+- **AudioWorklet DSP**: Lock-free 48 kHz stereo PolyBLEP synthesis with per-sample amplitude slewing (`0.008`), one-pole lowpass filtering, master DC-blocking highpass, and denormal flushing — zero GC allocations inside `process()` (verified in sandboxed Suite 29).
 
 ---
 
-## 8. Formal Verification & Falsification Audit Summary (`v2.3.0`)
+## 8. Formal Verification & Falsification Audit Summary (`v2.4.0`)
 
-1. **Lean 4.35.0 6-Kernel Proofs (`lean/`)**: **70/70 theorems built cleanly** under `leanprover/lean4:v4.35.0` (`module` system, zero Mathlib, zero warnings, zero `sorryAx`, zero `native_decide`/`trustCompiler`, strictly within `{propext, Classical.choice, Quot.sound}`, 12 zero-axiom constructive proofs), independently verified across **6 kernels** (`lean4`, `leanchecker`, `leanchecker-paranoid`, `lean4lean`, `nanoda_bin`, `con-leche --verified`, `con-ron --verified`) plus Palomar `lake comparator --config comparator.json --paranoid` against `Challenge.lean` ([results/lean4-audit.txt](../results/lean4-audit.txt), [results/lean4-multi-kernel.txt](../results/lean4-multi-kernel.txt)).
-2. **Executable Falsification, Metamorphic & Mutation Suite (`test/verify.mjs`, `scripts/mutation-test.mjs`)**: **28/28 test suites passed** + **10/10 (100.0%) surgical mutants killed**, validating positive survival invariants, tight negative Popperian failure boundaries (1-bit linear death, $k-1$ Cauchy failure, $e=10>8$ RS rejection, 18 B burst failure, Overlap-Eclipse Trojan deflection, single-Trojan poisoning under `disableImmuneSystem: true`, unpinned tie fail-closed, `BitVec` & `PVM-32` traps, Game3D rewind non-NaN, all 9 CLI subcommands, live `server.mjs` HTTP security/XSS/traversal defense, property-based & metamorphic laws, runnable `examples/01..03`, GitHub Pages subpath safety, and on-disk artifact determinism).
-3. **Browser Studio Verification**: Verified live against the hardened `server.mjs` at `http://127.0.0.1:4174` across 3D WebGL2 rendering, Rewind, Mitosis, and Chimera+Heal+Shred with **zero JS console errors, zero failed network fetches, and zero VM traps** (`docs/media/studio-v2-3.png`).
-4. **Cryptographic Attestation**: [results/attestation.json](../results/attestation.json) binds SHA-256 digests of **61** repository artifacts (all core/compiler/VM/quantum/world/web source files, 4 `.plang` sources, 4 `.hbin` binaries, all Lean proof/spec/Palomar files, frozen 10-page PDF & arXiv tarball, and `results/benchmarks.json`) under a verified Ed25519 self-consistency seal (`selfVerified: true`), complemented by `MANIFEST.sha256` and `data/MANIFEST.sha256`.
+1. **Lean 4.35.0 6-Kernel Proofs & Interactive Blueprint (`lean/`, `blueprint/`)**: **85/85 theorems built cleanly** under `leanprover/lean4:v4.35.0` (`module` system on all 12 `.lean` files, `autoImplicit = false`, `relaxedAutoImplicit = false`, zero Mathlib, zero warnings, zero `sorryAx`, zero `native_decide`/`trustCompiler`/`_native`, strictly within `{propext, Classical.choice, Quot.sound}`, 15 zero-axiom constructive proofs, 10 non-vacuity witnesses, and 8 formal false-variant refutations in `AdversarialTests.lean`), mapped 1:1 in `blueprint/blueprint.json`, and independently verified across **6 kernels** (`lean4`, `leanchecker`, `leanchecker-paranoid`, `lean4lean`, `nanoda_bin`, `con-leche --verified`, `con-ron --verified` accepting `2,732` declarations) plus Palomar `lake comparator --config comparator.json --paranoid` and live negative tamper rejection in CI ([results/lean4-audit.txt](../results/lean4-audit.txt), [results/lean4-multi-kernel.txt](../results/lean4-multi-kernel.txt)).
+2. **Executable Falsification, Mutation, Fuzzing & Python 3 Differential Oracle (`test/verify.mjs`, `scripts/mutation-test.mjs`, `scripts/fuzz.mjs`, `reference/planaria_oracle.py`)**: **30/30 test suites passed** + **12/12 (100.0%) surgical mutants killed** + **2,000/2,000 deterministic fuzz cases** + **100% cross-language Python 3 stdlib parity** across all 768 cells of all 4 species, 28 Cauchy bundles, unaligned `49,177 B` mitosis, Bell CHSH, and GHZ Mermin.
+3. **Browser Studio & Proof Blueprint Verification**: Verified live against the hardened `server.mjs` at `http://127.0.0.1:4174/` and `http://127.0.0.1:4174/blueprint/` across 3D WebGL2 rendering, Rewind, Mitosis, Chimera+Heal+Shred, and 85-theorem Blueprint DAG inspection with **zero JS console errors, zero failed network fetches, and zero VM traps**.
+4. **Cryptographic Attestation**: [results/attestation.json](../results/attestation.json) binds SHA-256 digests of **73** repository artifacts (all core/compiler/VM/quantum/world/web/script source files, Python oracle, Blueprint, 4 `.plang` sources, 4 `.hbin` binaries, all 12 Lean files, frozen PDF & arXiv tarball, `benchmarks.json`, `bench-history.csv`, `citation-audit.json`, and Lean transcripts) under a verified Ed25519 self-consistency seal (`selfVerified: true`), complemented by `MANIFEST.sha256` and `data/MANIFEST.sha256`.
 
 ---
 
@@ -187,11 +187,13 @@ Measured on Node.js `v25.8.2` (`results/benchmarks.json`, schema `PLANARIA-BENCH
 | Goal | Exact Command |
 |---|---|
 | Compile all 4 `.plang` sources → `.hbin` + verify round-trip | `npm run build` |
-| Run 28-suite falsifiable verification, metamorphic & security harness | `npm test` |
-| Run 10-mutant surgical mutation suite (100% kill gate) | `npm run mutate` |
+| Run 30-suite falsifiable verification, AudioWorklet, metamorphic & security harness | `npm test` |
+| Run 12-mutant surgical mutation suite (100% kill gate) | `npm run mutate` |
+| Run 2,000-case deterministic fuzzer & clean-room Python 3 differential oracle | `npm run fuzz && python3 reference/planaria_oracle.py` |
 | Run full 4-architecture statistical benchmarks & Ed25519 attestation | `npm run benchmark` |
-| Launch 60 FPS WebGL2 + 48 kHz Surgical Vivisection Studio | `npm start` → open `http://127.0.0.1:4174` |
-| Clean-build & audit all 70 Lean 4.35.0 theorems | `npm run verify:lean` (or `cd lean && lake build && lake env lean VerifyAxioms.lean`) |
+| Launch 60 FPS WebGL2 Studio & Proof Blueprint | `npm start` → open `http://127.0.0.1:4174/` & `/blueprint/` |
+| Clean-build & audit all 85 Lean 4.35.0 theorems | `npm run verify:lean` (or `cd lean && lake build && lake env lean VerifyAxioms.lean`) |
+| Audit static lint, Crossref DOIs, README axioms & Proof Blueprint 1:1 | `npm run lint && npm run check:citations && npm run check:axioms && npm run check:blueprint` |
 | Inspect any `.hbin` (damaged, shifted, or poisoned) | `node bin/planaria.mjs inspect <file.hbin>` |
 | Perform unaligned 50/50 Planarian Mitosis on disk | `node bin/planaria.mjs bisect artifacts/aegis_drift.hbin L.hbin R.hbin --offset 49177` |
 | Fuse multiple damaged shards via raw concatenation | `node bin/planaria.mjs fuse shardA.hbin shardB.hbin -o fused.hbin` |

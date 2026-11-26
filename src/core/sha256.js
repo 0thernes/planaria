@@ -197,6 +197,9 @@ export const EMPTY_LEAF_HASH = sha256(new Uint8Array([0x02, 0x50, 0x4c, 0x4e, 0x
  * Returns { root: Uint8Array(16), rootHex: string, levels: Uint8Array[][] }
  */
 export function buildMerkleTree(leafByteArrays) {
+  if (!Array.isArray(leafByteArrays)) {
+    throw new TypeError('buildMerkleTree expects an Array of leaf byte buffers');
+  }
   if (leafByteArrays.length > MERKLE_LEAVES) {
     throw new RangeError(`Merkle tree max leaves is ${MERKLE_LEAVES}, got ${leafByteArrays.length}`);
   }

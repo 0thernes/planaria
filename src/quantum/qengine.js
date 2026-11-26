@@ -90,6 +90,7 @@ export class QuantumRegister {
     q.re.set(this.re);
     q.im.set(this.im);
     q.coherence = this.coherence;
+    q._gateCounter = this._gateCounter;
     return q;
   }
 
@@ -283,21 +284,32 @@ export class QuantumRegister {
       this.reset();
       return { outcome: 0, probability: 1.0 };
     }
-    const outcome = p1 <= 0 ? 0 : (p0 <= 0 ? 1 : (r < p1 / total ? 1 : 0));
+    // Honor Werner visibility V = this.coherence: rho = V|psi><psi| + (1-V) I/2^n
+    const pureP1 = p1 / total;
+    const effP1 = this.coherence * pureP1 + (1 - this.coherence) * 0.5;
+    const outcome = (p1 <= 0 && this.coherence >= 1) ? 0 : ((p0 <= 0 && this.coherence >= 1) ? 1 : (r < effP1 ? 1 : 0));
     const keepProb = outcome === 1 ? p1 : p0;
-    const invNorm = 1 / Math.sqrt(keepProb);
+    const effProb = outcome === 1 ? effP1 : (1 - effP1);
 
-    for (let i = 0; i < this.dim; i++) {
-      const hasBit = (i & bit) ? 1 : 0;
-      if (hasBit === outcome) {
-        this.re[i] *= invNorm;
-        this.im[i] *= invNorm;
-      } else {
-        this.re[i] = 0;
-        this.im[i] = 0;
+    if (keepProb > 0) {
+      const invNorm = 1 / Math.sqrt(keepProb);
+      for (let i = 0; i < this.dim; i++) {
+        const hasBit = (i & bit) ? 1 : 0;
+        if (hasBit === outcome) {
+          this.re[i] *= invNorm;
+          this.im[i] *= invNorm;
+        } else {
+          this.re[i] = 0;
+          this.im[i] = 0;
+        }
       }
+    } else {
+      // Decohered noise outcome fell onto zero-amplitude branch: project onto basis eigenstate |outcome>
+      this.re.fill(0);
+      this.im.fill(0);
+      this.re[outcome === 1 ? bit : 0] = 1.0;
     }
-    return { outcome, probability: keepProb / total };
+    return { outcome, probability: effProb };
   }
 
   /** Compute exact Pauli product expectation <sigma_a^(qA) \otimes sigma_b^(qB)> for a,b in {0:X, 1:Y, 2:Z}. */
@@ -537,10 +549,13 @@ export function evalWaveInterference(x, z, time, sources) {
     }
     const dx = x - s.x;
     const dz = z - s.z;
-    const r = Math.sqrt(dx * dx + dz * dz + 0.35);
+    const r = Math.hypot(dx, dz, 0.5916079783099616); // sqrt(0.35) without dx*dx overflow!
+    if (!Number.isFinite(r)) continue;
     const amp = s.amp / (1 + 0.08 * r);
     const ph = Number.isFinite(s.phase) ? s.phase : 0;
-    const phase = s.k * r - s.omega * time + ph;
+    const rawPhase = s.k * r - s.omega * time + ph;
+    if (!Number.isFinite(rawPhase)) continue;
+    const phase = rawPhase % (Math.PI * 2);
     sumRe += amp * Math.cos(phase);
     sumIm += amp * Math.sin(phase);
   }

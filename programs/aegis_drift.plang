@@ -213,8 +213,8 @@ bundle S2_CORTEX_RENDER {
   let f = mem[0];
   glow(165);
 
-  // Perspective tactical floor grid
-  let gy = 20 + ((f * 2) % 20);
+  // Perspective tactical floor grid (masked against int32 wraparound)
+  let gy = 20 + (((f & 0x3fffffff) * 2) % 20);
   while (gy < 120) {
     line(0, gy, 159, gy, 1);
     gy += 20;
@@ -323,7 +323,7 @@ bundle S3_ORGANISM_FX {
     let by = mem[251];
     let k = 0;
     while (k < 6) {
-      let pi = PART_BASE + ((f + k) % 20) * 4;
+      let pi = PART_BASE + (((f + k) & 0x7fffffff) % 20) * 4;
       mem[pi] = bx;
       mem[pi + 1] = by;
       mem[pi + 2] = (k - 3) * 2 + 1;
@@ -338,7 +338,7 @@ bundle S3_ORGANISM_FX {
   while (s < 18) {
     let sx = (s * 47 + 13) % 160;
     let speed = 1 + (s & 3);
-    let sy = (s * 29 + f * speed) % 108 + 12;
+    let sy = ((s * 29 + (f & 0x0fffffff) * speed) % 108) + 12;
     let col = (speed > 2) ? 7 : 14;
     pixel(sx, sy, col);
     s += 1;

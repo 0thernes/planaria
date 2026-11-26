@@ -148,7 +148,7 @@ export function parsePlang(tokens) {
       let elseBranch = null;
       if (match('KEYWORD', 'else')) {
         if (peek().type === 'KEYWORD' && peek().value === 'if') {
-          elseBranch = parseStmt();
+          elseBranch = withDepth(() => parseStmt());
         } else {
           elseBranch = parseBlock();
         }
@@ -233,10 +233,12 @@ export function parsePlang(tokens) {
   function parseTernary() {
     let cond = parseLogicalOr();
     if (match('PUNCT', '?')) {
-      const thenExpr = parseExpr();
-      expect('PUNCT', ':');
-      const elseExpr = parseExpr();
-      return { type: 'Ternary', cond, thenExpr, elseExpr };
+      return withDepth(() => {
+        const thenExpr = parseExpr();
+        expect('PUNCT', ':');
+        const elseExpr = parseExpr();
+        return { type: 'Ternary', cond, thenExpr, elseExpr };
+      });
     }
     return cond;
   }
@@ -362,6 +364,9 @@ export function parsePlang(tokens) {
     const t = peek();
 
     if (t.type === 'NUMBER') {
+      if (!t.isHex && t.rawValue > 0x7fffffff) {
+        throw new SyntaxError(`Decimal literal '${t.rawValue}' exceeds signed 32-bit max (2147483647); use hex 0x... for unsigned 32-bit bit patterns at ${t.line}:${t.col}`);
+      }
       advance();
       return { type: 'Number', value: t.value };
     }

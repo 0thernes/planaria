@@ -42,6 +42,7 @@ import { sha256, toHex } from '../src/core/sha256.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
+const VERSION = fs.readFileSync(path.join(ROOT, 'VERSION'), 'utf8').trim();
 const RESULTS_DIR = path.join(ROOT, 'results');
 fs.mkdirSync(RESULTS_DIR, { recursive: true });
 const ATTEST_ONLY = process.argv.includes('--attest-only');
@@ -480,10 +481,17 @@ const filesToAttest = [
   'scripts/build-artifacts.mjs',
   'scripts/benchmark.mjs',
   'scripts/mutation-test.mjs',
+  'scripts/fuzz.mjs',
+  'scripts/build-blueprint.mjs',
+  'scripts/check-blueprint.mjs',
+  'scripts/check-readme-axioms.mjs',
   'scripts/lint-check.mjs',
   'scripts/check-citations.mjs',
   'scripts/build-pages.mjs',
   'test/verify.mjs',
+  'reference/planaria_oracle.py',
+  'blueprint/index.html',
+  'blueprint/blueprint.json',
   'programs/quantum_chronicle.plang',
   'programs/aegis_drift.plang',
   'programs/synth_reactor.plang',
@@ -505,10 +513,15 @@ const filesToAttest = [
   'lean/PlanariaProofs/ByzantineImmune.lean',
   'lean/PlanariaProofs/XenograftABI.lean',
   'lean/PlanariaProofs/QuantumTemporal.lean',
+  'lean/PlanariaProofs/AdversarialTests.lean',
   'paper/main.tex',
   'dist/Donahue_2026_planaria.pdf',
   'dist/arxiv_submission.tar.gz',
   'results/benchmarks.json',
+  'results/bench-history.csv',
+  'results/citation-audit.json',
+  'results/lean4-audit.txt',
+  'results/lean4-multi-kernel.txt',
 ];
 
 const digests = {};

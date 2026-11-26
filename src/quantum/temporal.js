@@ -1,10 +1,10 @@
 /**
- * PLANARIA v2.2 — Temporal Causality, Timeline Scrubbing, Chrono-Wells & Paradox Echo Engine
+ * PLANARIA v2.4 — Temporal Causality, Timeline Scrubbing, Chrono-Wells & Paradox Echo Engine
  *
  * Implements:
  *   1. True O(1) Fixed-Capacity Circular Snapshot Ring Buffer (360 frames = 6s lossless deep-cloned rewind)
  *   2. Exact reversible Chrono-Step Clock (matches Lean 4 Theorems VI.8-VI.10!)
- *   3. Local Spherical Time-Dilation Wells (0.12x bullet-time, 2.5x hyper-haste, validated bounds)
+ *   3. Local Spherical Time-Dilation Wells (0.05x bullet-time .. 4.0x hyper-haste, validated bounds)
  *   4. Chrono-Forking: spawns autonomous Past-Timeline Echo Clones replaying recorded player
  *      trajectories, weapon snapshots, and firing pulses at frame-rate-independent local time
  *   5. Retrocausal Future-Cone Predictors projecting enemy states ahead in 3D space
@@ -23,6 +23,8 @@ function cloneNpcSnap(n) {
     superposeAngle: n.superposeAngle,
     zenoFreeze: n.zenoFreeze,
     stasisTimer: n.stasisTimer || 0,
+    _revTimer: n._revTimer || 0,
+    _echoMineCd: n._echoMineCd || 0,
     seed: n.seed,
     archetypeIdx: n.archetypeIdx,
     rarityIdx: n.rarityIdx,
@@ -55,6 +57,15 @@ function cloneWeaponSnap(w) {
   };
 }
 
+function cloneArmorSnap(a) {
+  if (!a) return null;
+  return {
+    ...a,
+    color: Array.isArray(a.color) ? [...a.color] : [0.13, 0.83, 0.93],
+    layer: a.layer ? { ...a.layer } : null,
+  };
+}
+
 function cloneFullSnap(s) {
   return {
     worldTime: s.worldTime,
@@ -63,8 +74,19 @@ function cloneFullSnap(s) {
     qRe: new Float64Array(s.qRe),
     qIm: new Float64Array(s.qIm),
     qCoh: s.qCoh,
+    qGateCounter: s.qGateCounter ?? 0,
     npcs: s.npcs.map(cloneNpcSnap),
     projectiles: s.projectiles.map(cloneProjSnap),
+    weapons: Array.isArray(s.weapons) ? s.weapons.map(cloneWeaponSnap) : null,
+    weaponIdx: s.weaponIdx ?? 0,
+    armors: Array.isArray(s.armors) ? s.armors.map(cloneArmorSnap) : null,
+    armorIdx: s.armorIdx ?? 0,
+    recentLoot: Array.isArray(s.recentLoot) ? s.recentLoot.map((l) => ({ ...l })) : null,
+    lootSeq: s.lootSeq ?? 0,
+    playerProfile: s.playerProfile ? { ...s.playerProfile } : null,
+    npcIdSeq: s.npcIdSeq ?? 1,
+    projIdSeq: s.projIdSeq ?? 1,
+    rngState: s.rngState ?? null,
     score: s.score,
     kills: s.kills,
     xp: s.xp,
@@ -72,7 +94,11 @@ function cloneFullSnap(s) {
     skillPoints: s.skillPoints,
     skills: s.skills ? { ...s.skills } : null,
     delayedEchoShots: Array.isArray(s.delayedEchoShots)
-      ? s.delayedEchoShots.map((d) => ({ ...d, weapon: cloneWeaponSnap(d.weapon) }))
+      ? s.delayedEchoShots.map((d) => ({
+          ...d,
+          origin: d.origin ? { ...d.origin } : null,
+          weapon: cloneWeaponSnap(d.weapon),
+        }))
       : [],
     scaleOrderOverride: s.scaleOrderOverride ?? -1,
     paradoxCount: s.paradoxCount ?? 0,
@@ -146,7 +172,7 @@ export class TemporalEngine {
     this.maxSnapshots = Math.max(2, Math.floor(maxSnapshots) || 360);
     this._snapRing = new RingBuffer(this.maxSnapshots);
     this._trailRing = new RingBuffer(this.maxSnapshots);
-    this.globalTimeScale = 1.0; // [-1.5 .. 3.0]
+    this.globalTimeScale = 1.0; // [0.0 .. 3.0] forward time dilation; rewind uses popRewindSnapshot()
     this.worldTime = 0;
     this.chronoStep = 0;        // exact discrete monotonic/reversible step counter
     this.rewinding = false;
@@ -199,6 +225,7 @@ export class TemporalEngine {
     this.echoClones = [];
     this.paradoxCount = 0;
     this.forkCount = 0;
+    this._nextId = 1;
   }
 
   /** Record a full deep-copied world snapshot into the O(1) circular ring buffer. */
@@ -210,8 +237,19 @@ export class TemporalEngine {
       qRe: new Float64Array(worldState.qReg.re),
       qIm: new Float64Array(worldState.qReg.im),
       qCoh: worldState.qReg.coherence,
+      qGateCounter: worldState.qReg._gateCounter ?? 0,
       npcs: worldState.npcs.map(cloneNpcSnap),
       projectiles: worldState.projectiles.map(cloneProjSnap),
+      weapons: Array.isArray(worldState.weapons) ? worldState.weapons.map(cloneWeaponSnap) : null,
+      weaponIdx: worldState.weaponIdx ?? 0,
+      armors: Array.isArray(worldState.armors) ? worldState.armors.map(cloneArmorSnap) : null,
+      armorIdx: worldState.armorIdx ?? 0,
+      recentLoot: Array.isArray(worldState.recentLoot) ? worldState.recentLoot.map((l) => ({ ...l })) : null,
+      lootSeq: worldState.lootSeq ?? 0,
+      playerProfile: worldState.playerProfile ? { ...worldState.playerProfile } : null,
+      npcIdSeq: worldState._npcId ?? 1,
+      projIdSeq: worldState._projId ?? 1,
+      rngState: typeof worldState.getRngState === 'function' ? worldState.getRngState() : null,
       score: worldState.score,
       kills: worldState.kills ?? 0,
       xp: worldState.xp ?? 0,
@@ -219,7 +257,11 @@ export class TemporalEngine {
       skillPoints: worldState.skillPoints ?? 0,
       skills: worldState.skills ? { ...worldState.skills } : null,
       delayedEchoShots: Array.isArray(worldState._delayedEchoShots)
-        ? worldState._delayedEchoShots.map((d) => ({ ...d, weapon: cloneWeaponSnap(d.weapon) }))
+        ? worldState._delayedEchoShots.map((d) => ({
+            ...d,
+            origin: d.origin ? { ...d.origin } : null,
+            weapon: cloneWeaponSnap(d.weapon),
+          }))
         : [],
       scaleOrderOverride: worldState.scaleOrderOverride ?? -1,
       paradoxCount: this.paradoxCount,
@@ -268,7 +310,7 @@ export class TemporalEngine {
   spawnChronoWell(x, y, z, radius = 9.0, factor = 0.18, duration = 6.5, kind = 'DILATION') {
     const safeRadius = Number.isFinite(radius) ? Math.max(0.5, Math.min(40, radius)) : 9.0;
     const safeDuration = Number.isFinite(duration) ? Math.max(0.1, Math.min(60, duration)) : 6.5;
-    const safeFactor = Number.isFinite(factor) ? Math.max(-2.0, Math.min(4.0, factor)) : 0.18;
+    const safeFactor = Number.isFinite(factor) ? Math.max(0.05, Math.min(4.0, factor)) : 0.18;
     const well = {
       id: this._nextId++,
       x: Number.isFinite(x) ? x : 0,
@@ -278,7 +320,7 @@ export class TemporalEngine {
       factor: safeFactor,
       life: safeDuration,
       maxLife: safeDuration,
-      kind, // 'DILATION' (slow), 'HASTE' (fast), 'INVERT' (reverse)
+      kind, // 'DILATION' (slow), 'HASTE' (fast)
     };
     this.chronoWells.push(well);
     if (this.chronoWells.length > 6) this.chronoWells.shift();
@@ -317,7 +359,10 @@ export class TemporalEngine {
   spawnChronoFork(extraFrames = 0) {
     if (this._trailRing.length < 25) return null;
     const maxLen = Math.min(this.maxSnapshots, 240 + Math.max(0, Math.floor(extraFrames)));
-    const slice = this._trailRing.toArray(maxLen).map((pt) => ({ ...pt }));
+    const slice = this._trailRing.toArray(maxLen).map((pt) => ({
+      ...pt,
+      weaponRef: cloneWeaponSnap(pt.weaponRef),
+    }));
     const colors = [
       [0.13, 0.83, 0.93], // cyan echo
       [0.98, 0.75, 0.14], // gold echo
@@ -336,7 +381,7 @@ export class TemporalEngine {
       z: slice[0].z,
       yaw: slice[0].yaw,
       firing: false,
-      weaponRef: slice[0].weaponRef || null,
+      weaponRef: cloneWeaponSnap(slice[0].weaponRef),
     };
     this.echoClones.push(echo);
     if (this.echoClones.length > 3) this.echoClones.shift();
@@ -403,12 +448,22 @@ export class TemporalEngine {
    * `horizonSec` seconds into the future respecting local Chrono-Wells!
    */
   predictFuturePosition(entity, horizonSec = 1.1) {
-    const locF = this.localTimeFactor(entity.x, entity.y, entity.z);
-    const dt = horizonSec * Math.max(0.05, Math.abs(locF));
+    if (!entity || typeof entity !== 'object') {
+      return { x: 0, y: 0, z: 0, confidence: 0 };
+    }
+    const ex = Number.isFinite(entity.x) ? entity.x : 0;
+    const ey = Number.isFinite(entity.y) ? entity.y : 0;
+    const ez = Number.isFinite(entity.z) ? entity.z : 0;
+    const vx = Number.isFinite(entity.vx) ? entity.vx : 0;
+    const vy = Number.isFinite(entity.vy) ? entity.vy : 0;
+    const vz = Number.isFinite(entity.vz) ? entity.vz : 0;
+    const h = Number.isFinite(horizonSec) ? Math.max(0, Math.min(10, horizonSec)) : 1.1;
+    const locF = this.localTimeFactor(ex, ey, ez);
+    const dt = h * Math.max(0.05, Math.abs(locF));
     return {
-      x: entity.x + entity.vx * dt,
-      y: entity.y + (entity.vy || 0) * dt,
-      z: entity.z + entity.vz * dt,
+      x: ex + vx * dt,
+      y: ey + vy * dt,
+      z: ez + vz * dt,
       confidence: Math.max(0.2, 1.0 - Math.abs(locF - 1.0) * 0.35),
     };
   }

@@ -212,4 +212,16 @@ public theorem trisection_synergy_recovery :
     (s1 + s2 ≥ k ∧ s1 + s3 ≥ k ∧ s2 + s3 ≥ k) := by
   omega
 
+/-- Non-vacuity witness for Theorem II.2 (`mitosis_strict_impossibility`):
+    for `N = 3 < 2 * 2`, the partition `1 + 2 = 3` satisfies all hypotheses and fails dual recovery. -/
+public theorem mitosis_strict_impossibility_witness :
+    3 < 2 * 2 ∧ 1 + 2 = 3 ∧ ¬ (1 ≥ 2 ∧ 2 ≥ 2) :=
+  ⟨by decide, by decide, mitosis_strict_impossibility 3 2 1 2 (by decide) (by decide)⟩
+
+/-- Non-vacuity witness for Theorem II.10 (`pigeonhole_two_way`):
+    for Stratum-0 `N = 24, k = 2`, any partition `(12, 12)` retains at least one viable half. -/
+public theorem pigeonhole_two_way_witness :
+    2 ≥ 1 ∧ 24 > 2 * (2 - 1) ∧ 12 + 12 = 24 ∧ (12 ≥ 2 ∨ 12 ≥ 2) :=
+  ⟨by decide, by decide, by decide, pigeonhole_two_way 24 2 12 12 (by decide) (by decide) (by decide)⟩
+
 end Planaria.Mitosis

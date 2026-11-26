@@ -264,7 +264,11 @@ export function drawAnastomosisGraph(canvas, decoded, routes = [], tick = 0) {
     ctx.fillText(node.label, node.x, y + 13);
 
     const found = bun ? bun.cellsFound : 0;
-    const tag = xeno ? 'XENO' : alive ? (active ? 'LIVE' : 'STANDBY') : 'AMPUTATED';
+    const tag = xeno
+      ? 'XENO'
+      : alive
+        ? (node.id === 6 ? 'MOUNTED' : (active ? 'LIVE' : 'STANDBY'))
+        : 'AMPUTATED';
     ctx.fillStyle = col;
     ctx.font = '9px monospace';
     ctx.fillText(`rank ${found}/${node.k} · ${tag}`, node.x, y + 26);
@@ -299,7 +303,7 @@ export function drawSurvivalCurve(canvas, curveData, currentDropPct = 0) {
     ctx.moveTo(mL, y);
     ctx.lineTo(mL + pW, y);
     ctx.stroke();
-    ctx.fillStyle = '#64748b';
+    ctx.fillStyle = '#94a3b8';
     ctx.font = '10px monospace';
     ctx.textAlign = 'right';
     ctx.fillText(`${p}%`, mL - 6, y + 3);
@@ -310,7 +314,7 @@ export function drawSurvivalCurve(canvas, curveData, currentDropPct = 0) {
     ctx.moveTo(x, mT);
     ctx.lineTo(x, mT + pH);
     ctx.stroke();
-    ctx.fillStyle = '#64748b';
+    ctx.fillStyle = '#94a3b8';
     ctx.textAlign = 'center';
     ctx.fillText(`${d}%`, x, mT + pH + 15);
   }

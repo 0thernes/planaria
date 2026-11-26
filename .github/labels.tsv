@@ -15,3 +15,5 @@ replication	0e8a16	Replication report (successful or not)
 security	5319e7	Security-related
 docs	1d76db	Documentation
 ai	bfdadc	AI model, prompt, eval or budget
+falsification	d93f0b	Adversarial counterexample, bound violation, or prior-art challenge
+enhancement	a2eeef	Architecture or capability proposal

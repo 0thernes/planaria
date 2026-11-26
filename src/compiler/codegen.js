@@ -165,16 +165,30 @@ function compileBundle(bundleNode, constEnv) {
       return null;
     }
 
-    function containsCall(n) {
-      if (!n) return false;
-      if (n.type === 'Call' || n.type === 'OrganCall') return true;
-      if (n.type === 'Binary') return containsCall(n.left) || containsCall(n.right);
-      if (n.type === 'Ternary') return containsCall(n.cond) || containsCall(n.thenExpr) || containsCall(n.elseExpr);
-      if (n.type === 'MemLoad') return containsCall(n.index);
+    const MAX_AST_DEPTH = 256;
+
+    function containsCall(root) {
+      if (!root) return false;
+      const stack = [root];
+      while (stack.length > 0) {
+        const n = stack.pop();
+        if (!n) continue;
+        if (n.type === 'Call' || n.type === 'OrganCall') return true;
+        if (n.type === 'Binary') {
+          stack.push(n.left, n.right);
+        } else if (n.type === 'Ternary') {
+          stack.push(n.cond, n.thenExpr, n.elseExpr);
+        } else if (n.type === 'MemLoad') {
+          stack.push(n.index);
+        }
+      }
       return false;
     }
 
-    function compileExpr(node, targetReg, tempBase = 8) {
+    function compileExpr(node, targetReg, tempBase = 8, astDepth = 0) {
+      if (astDepth > MAX_AST_DEPTH) {
+        throw new Error(`Expression AST depth exceeds ${MAX_AST_DEPTH} in bundle ${bundleNode.name}`);
+      }
       if (node.type === 'Number') {
         emitLoadImm(targetReg, node.value);
         return;
@@ -193,10 +207,6 @@ function compileBundle(bundleNode, constEnv) {
         }
         if (constEnv.has(node.name)) {
           emitLoadImm(targetReg, constEnv.get(node.name));
-          return;
-        }
-        if (ORGAN_ID_MAP.has(node.name)) {
-          emitLoadImm(targetReg, ORGAN_ID_MAP.get(node.name));
           return;
         }
         throw new Error(`Undefined identifier '${node.name}' in bundle ${bundleNode.name}`);
@@ -218,15 +228,15 @@ function compileBundle(bundleNode, constEnv) {
             if (node.index.left.type === 'Ident' && locals.has(node.index.left.name)) {
               emit(encodeI(OP.LDW, targetReg, locals.get(node.index.left.name), rOff));
             } else {
-              compileExpr(node.index.left, tempBase, tempBase + 1);
+              compileExpr(node.index.left, tempBase, tempBase, astDepth + 1);
               emit(encodeI(OP.LDW, targetReg, tempBase, rOff));
             }
             return;
           }
-          compileExpr(node.index, tempBase, tempBase + 1);
+          compileExpr(node.index, tempBase, tempBase, astDepth + 1);
           emit(encodeI(OP.LDW, targetReg, tempBase, 0));
         } else {
-          compileExpr(node.index, tempBase, tempBase + 1);
+          compileExpr(node.index, tempBase, tempBase, astDepth + 1);
           emit(encodeI(OP.LDW, targetReg, tempBase, 0));
         }
         return;
@@ -237,6 +247,9 @@ function compileBundle(bundleNode, constEnv) {
           throw new Error(`Unknown organ '${node.organName}' in organ_call`);
         }
         const organId = ORGAN_ID_MAP.get(node.organName);
+        if (organId === ORGAN_IDS.KERNEL || organId === ORGAN_IDS.GENOME) {
+          throw new Error(`Sovereign organ '${node.organName}' cannot be invoked via organ_call`);
+        }
         const maxS = evalConstExpr(node.maxStratum, constEnv);
         if (!Number.isInteger(maxS) || maxS < 0 || maxS > 3) {
           throw new RangeError(`organ_call maxStratum must be in 0..3, got ${maxS}`);
@@ -254,14 +267,14 @@ function compileBundle(bundleNode, constEnv) {
           }
           if (!anyNestedCall) {
             for (let i = 0; i < node.args.length; i++) {
-              compileExpr(node.args[i], i + 1, tempBase);
+              compileExpr(node.args[i], i + 1, tempBase, astDepth + 1);
             }
           } else {
             if (tempBase + node.args.length - 1 > 17) {
               throw new Error(`Expression nesting too deep for nested syscall '${node.name}' in ${bundleNode.name}`);
             }
             for (let i = 0; i < node.args.length; i++) {
-              compileExpr(node.args[i], tempBase + i, tempBase + i + 1);
+              compileExpr(node.args[i], tempBase + i, tempBase + i, astDepth + 1);
             }
             for (let i = 0; i < node.args.length; i++) {
               emit(encodeR(OP.ADD, i + 1, tempBase + i, 0));
@@ -281,14 +294,14 @@ function compileBundle(bundleNode, constEnv) {
         }
         if (!anyNestedCall) {
           for (let i = 0; i < node.args.length; i++) {
-            compileExpr(node.args[i], i + 1, tempBase);
+            compileExpr(node.args[i], i + 1, tempBase, astDepth + 1);
           }
         } else {
           if (tempBase + node.args.length - 1 > 17) {
             throw new Error(`Expression nesting too deep for nested call '${node.name}' in ${bundleNode.name}`);
           }
           for (let i = 0; i < node.args.length; i++) {
-            compileExpr(node.args[i], tempBase + i, tempBase + i + 1);
+            compileExpr(node.args[i], tempBase + i, tempBase + i, astDepth + 1);
           }
           for (let i = 0; i < node.args.length; i++) {
             emit(encodeR(OP.ADD, i + 1, tempBase + i, 0));
@@ -303,14 +316,14 @@ function compileBundle(bundleNode, constEnv) {
       if (node.type === 'Ternary') {
         const elseLbl = newLabel('TERN_E');
         const endLbl = newLabel('TERN_D');
-        compileExpr(node.cond, tempBase, tempBase + 1);
+        compileExpr(node.cond, tempBase, tempBase, astDepth + 1);
         fixups.push({ wordIdx: words.length, kind: 'B', op: OP.BEQ, rs1: tempBase, rs2: 0, targetLabel: elseLbl });
         emit(0);
-        compileExpr(node.thenExpr, targetReg, tempBase);
+        compileExpr(node.thenExpr, targetReg, tempBase, astDepth + 1);
         fixups.push({ wordIdx: words.length, kind: 'JMP', targetLabel: endLbl });
         emit(0);
         markLabel(elseLbl);
-        compileExpr(node.elseExpr, targetReg, tempBase);
+        compileExpr(node.elseExpr, targetReg, tempBase, astDepth + 1);
         markLabel(endLbl);
         return;
       }
@@ -320,10 +333,10 @@ function compileBundle(bundleNode, constEnv) {
         if (node.op === '&&') {
           const falseLbl = newLabel('AND_F');
           const endLbl = newLabel('AND_E');
-          compileExpr(node.left, tempBase, tempBase + 1);
+          compileExpr(node.left, tempBase, tempBase, astDepth + 1);
           fixups.push({ wordIdx: words.length, kind: 'B', op: OP.BEQ, rs1: tempBase, rs2: 0, targetLabel: falseLbl });
           emit(0);
-          compileExpr(node.right, tempBase, tempBase + 1);
+          compileExpr(node.right, tempBase, tempBase, astDepth + 1);
           emit(encodeR(OP.SNE, targetReg, tempBase, 0));
           fixups.push({ wordIdx: words.length, kind: 'JMP', targetLabel: endLbl });
           emit(0);
@@ -335,10 +348,10 @@ function compileBundle(bundleNode, constEnv) {
         if (node.op === '||') {
           const trueLbl = newLabel('OR_T');
           const endLbl = newLabel('OR_E');
-          compileExpr(node.left, tempBase, tempBase + 1);
+          compileExpr(node.left, tempBase, tempBase, astDepth + 1);
           fixups.push({ wordIdx: words.length, kind: 'B', op: OP.BNE, rs1: tempBase, rs2: 0, targetLabel: trueLbl });
           emit(0);
-          compileExpr(node.right, tempBase, tempBase + 1);
+          compileExpr(node.right, tempBase, tempBase, astDepth + 1);
           emit(encodeR(OP.SNE, targetReg, tempBase, 0));
           fixups.push({ wordIdx: words.length, kind: 'JMP', targetLabel: endLbl });
           emit(0);
@@ -353,7 +366,7 @@ function compileBundle(bundleNode, constEnv) {
           if (node.left.type === 'Ident' && locals.has(node.left.name)) {
             emit(encodeI(OP.ADDI, targetReg, locals.get(node.left.name), node.right.value));
           } else {
-            compileExpr(node.left, tempBase, tempBase + 1);
+            compileExpr(node.left, tempBase, tempBase, astDepth + 1);
             emit(encodeI(OP.ADDI, targetReg, tempBase, node.right.value));
           }
           return;
@@ -362,7 +375,7 @@ function compileBundle(bundleNode, constEnv) {
           if (node.left.type === 'Ident' && locals.has(node.left.name)) {
             emit(encodeI(OP.ADDI, targetReg, locals.get(node.left.name), -node.right.value));
           } else {
-            compileExpr(node.left, tempBase, tempBase + 1);
+            compileExpr(node.left, tempBase, tempBase, astDepth + 1);
             emit(encodeI(OP.ADDI, targetReg, tempBase, -node.right.value));
           }
           return;
@@ -375,14 +388,14 @@ function compileBundle(bundleNode, constEnv) {
         let rR = rightReg;
         if (rL < 0) {
           rL = tempBase;
-          compileExpr(node.left, rL, tempBase + 1);
+          compileExpr(node.left, rL, tempBase, astDepth + 1);
         }
         if (rR < 0) {
           rR = (rL === tempBase) ? tempBase + 1 : tempBase;
           if (rR > 17) {
             throw new Error(`Expression nesting too deep in bundle ${bundleNode.name} (scratch register overflow)`);
           }
-          compileExpr(node.right, rR, rR + 1);
+          compileExpr(node.right, rR, rR, astDepth + 1);
         }
         const opc = BINARY_OP_MAP.get(node.op);
         if (opc === undefined) throw new Error(`Unknown binary op '${node.op}'`);
@@ -401,13 +414,13 @@ function compileBundle(bundleNode, constEnv) {
           : (cond.right.type === 'Number' && cond.right.value === 0) ? 0 : -1;
         let rl = lReg;
         let rr = rReg;
-        if (rl < 0) { rl = 8; compileExpr(cond.left, 8, 9); }
-        if (rr < 0) { rr = rl === 8 ? 9 : 8; compileExpr(cond.right, rr, rr + 1); }
+        if (rl < 0) { rl = 8; compileExpr(cond.left, 8, 8); }
+        if (rr < 0) { rr = rl === 8 ? 9 : 8; compileExpr(cond.right, rr, rr); }
         fixups.push({ wordIdx: words.length, kind: 'B', op: inv[cond.op], rs1: rl, rs2: rr, targetLabel: falseLabel });
         emit(0);
         return;
       }
-      compileExpr(cond, 8, 9);
+      compileExpr(cond, 8, 8);
       fixups.push({ wordIdx: words.length, kind: 'B', op: OP.BEQ, rs1: 8, rs2: 0, targetLabel: falseLabel });
       emit(0);
     }
@@ -597,8 +610,12 @@ export function generateCode(ast) {
   for (const [k, v] of Object.entries(ORGAN_IDS)) constEnv.set(k, v);
   for (const b of BUNDLE_SPECS) constEnv.set(`BUNDLE_${b.name}`, b.id);
 
+  const builtinConsts = new Set(constEnv.keys());
   const userConsts = new Set();
   for (const c of ast.consts) {
+    if (builtinConsts.has(c.name)) {
+      throw new Error(`Cannot redefine built-in constant '${c.name}' in program '${ast.name}'`);
+    }
     if (userConsts.has(c.name)) {
       throw new Error(`Duplicate const declaration '${c.name}' in program '${ast.name}'`);
     }

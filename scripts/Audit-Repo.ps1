@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Score any repository against the Build Standard for LLMs (90 items). Report-only: always exits 0 unless misused.
 .DESCRIPTION
@@ -52,7 +52,8 @@ function Get-Matches([string]$alts) {
 }
 function Test-Any([string]$alts) { return ((Get-Matches $alts).Count -gt 0) }
 function Test-TextFile([string]$f) {
-  try { $fs = [System.IO.File]::OpenRead($f) } catch { return $false }
+  $full = if ([System.IO.Path]::IsPathRooted($f)) { $f } else { Join-Path $Root $f }
+  try { $fs = [System.IO.File]::OpenRead($full) } catch { return $false }
   try { $buf = New-Object byte[] 8000; $n = $fs.Read($buf, 0, 8000); for ($i = 0; $i -lt $n; $i++) { if ($buf[$i] -eq 0) { return $false } }; return $true } finally { $fs.Dispose() }
 }
 function Test-Grep([string]$file, [string]$re) {
@@ -92,7 +93,8 @@ function Invoke-Builtin([string]$name) {
       $ve = [regex]::Escape($v)
       if (-not (Test-Grep "CHANGELOG.md" "^## \[?v?$ve\]?")) { $D = "CHANGELOG.md has no section for $v"; break }
       if ((Test-Path -LiteralPath "CITATION.cff") -and -not (Test-Grep "CITATION.cff" "^version: *`"?$ve`"?")) { $D = "CITATION.cff version differs from $v"; break }
-      $R = "pass"; $D = "VERSION $v matches CHANGELOG and CITATION"
+      if ((Test-Path -LiteralPath "package.json") -and -not (Test-Grep "package.json" "`"version`": *`"$ve`"")) { $D = "package.json version differs from $v"; break }
+      $R = "pass"; $D = "VERSION $v matches CHANGELOG, CITATION, and package.json"
     }
     "tests_exist" {
       if ($Files | Where-Object { $_ -match '(^|/)(tests?|spec|__tests__|testdata)/|_test\.(go|py|rb|c|cc|cpp|exs)$|(^|/)test_[^/]*\.py$|\.(test|spec)\.[cm]?[jt]sx?$|_spec\.rb$|Tests?\.(java|kt|cs|fs|swift)$' }) { $R = "pass"; $D = "test files found" } else { $D = "no test files found" }

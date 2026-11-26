@@ -1,6 +1,10 @@
 name = "PlanariaProofs"
-version = "2.3.0"
+version = "2.4.0"
 defaultTargets = ["PlanariaProofs", "Solution"]
+
+[leanOptions]
+autoImplicit = false
+relaxedAutoImplicit = false
 
 [[lean_lib]]
 name = "PlanariaProofs"

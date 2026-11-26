@@ -168,21 +168,43 @@ export function amputateBundles(rawBytes, targetBundleIds, replaceWithNoise = tr
   const rng = makeRng(seed);
   const targets = new Set(targetBundleIds);
   const out = new Uint8Array(bytes);
+  const limit = out.length - CELL_SIZE;
+  const visited = new Set();
+  const flywheelOffsets = new Set();
   let amputated = 0;
 
-  for (let off = 0; off <= out.length - CELL_SIZE; off++) {
-    if (syncHammingDist(out, off) > 3) continue;
-    // Verify genuine RS-valid cell before excising so 1-bit sync flips are caught and Overlap-Eclipse decoys never skip real cells
+  function inspectAndExcise(off, fromFlywheel) {
+    if (off < 0 || off > limit || visited.has(off)) return false;
     const rs = rsUnarmorInterleaved(out.subarray(off + 4, off + CELL_SIZE));
-    if (!rs.ok || rs.body[0] !== HBIN_VERSION) continue;
+    if (!rs.ok || rs.body[0] !== HBIN_VERSION) return false;
+    visited.add(off);
     const bundleId = rs.body[1];
+    // Lock +/-512B cadence flywheel so sync-damaged target cells cannot evade scalpel
+    if (off + CELL_SIZE <= limit && !visited.has(off + CELL_SIZE)) {
+      flywheelOffsets.add(off + CELL_SIZE);
+    }
+    if (!fromFlywheel) {
+      let backOff = off - CELL_SIZE;
+      while (backOff >= 0 && !visited.has(backOff)) {
+        if (!inspectAndExcise(backOff, true)) break;
+        backOff -= CELL_SIZE;
+      }
+    }
     if (targets.has(bundleId)) {
       amputated++;
       for (let b = 0; b < CELL_SIZE; b++) {
         out[off + b] = replaceWithNoise ? Math.floor(rng() * 256) : 0;
       }
     }
-    off += CELL_SIZE - 1;
+    return true;
+  }
+
+  for (let off = 0; off <= limit; off++) {
+    if (visited.has(off)) continue;
+    const isFlywheel = flywheelOffsets.has(off);
+    if (isFlywheel || syncHammingDist(out, off) <= 3) {
+      inspectAndExcise(off, isFlywheel);
+    }
   }
   return { bytes: out, amputatedCells: amputated };
 }
@@ -198,6 +220,7 @@ export function shiftAndShuffle(rawBytes, leadGarbage = 137, seed = 777, shuffle
   const maxGap = Number.isFinite(interCellGapMax) ? Math.max(0, Math.floor(interCellGapMax)) : 0;
   const rng = makeRng(seed);
   const numCells = Math.floor(bytes.length / CELL_SIZE);
+  const remainder = bytes.subarray(numCells * CELL_SIZE);
   const cells = [];
   for (let i = 0; i < numCells; i++) {
     cells.push(bytes.subarray(i * CELL_SIZE, (i + 1) * CELL_SIZE));
@@ -213,7 +236,7 @@ export function shiftAndShuffle(rawBytes, leadGarbage = 137, seed = 777, shuffle
   const gaps = cells.map(() => (maxGap > 0 ? Math.floor(rng() * (maxGap + 1)) : 0));
   const totalGaps = gaps.reduce((a, g) => a + g, 0);
   const trailGarbage = (lead > 0 || shuffle || maxGap > 0) ? 73 : 0;
-  const out = new Uint8Array(lead + cells.length * CELL_SIZE + totalGaps + trailGarbage);
+  const out = new Uint8Array(lead + cells.length * CELL_SIZE + totalGaps + remainder.length + trailGarbage);
   for (let i = 0; i < lead; i++) out[i] = Math.floor(rng() * 256);
   let cursor = lead;
   for (let i = 0; i < cells.length; i++) {
@@ -222,6 +245,10 @@ export function shiftAndShuffle(rawBytes, leadGarbage = 137, seed = 777, shuffle
     for (let g = 0; g < gaps[i]; g++) {
       out[cursor++] = Math.floor(rng() * 256);
     }
+  }
+  if (remainder.length > 0) {
+    out.set(remainder, cursor);
+    cursor += remainder.length;
   }
   for (let i = cursor; i < out.length; i++) {
     out[i] = Math.floor(rng() * 256);

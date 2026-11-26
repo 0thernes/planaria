@@ -31,6 +31,39 @@ function ensureParentDir(filePath) {
   fs.mkdirSync(path.dirname(path.resolve(filePath)), { recursive: true });
 }
 
+const MAX_CLI_INPUT_BYTES = 16 * 1024 * 1024; // 16 MiB bounded CLI read cap (prevents OOM before decodeHbin)
+
+function readBoundedFile(filePath, maxBytes = MAX_CLI_INPUT_BYTES) {
+  const fd = fs.openSync(filePath, 'r');
+  try {
+    const st = fs.fstatSync(fd);
+    if (!st.isFile()) {
+      throw new Error(`Input path is not a regular file: ${filePath}`);
+    }
+    if (st.size > maxBytes) {
+      throw new Error(`Input file ${filePath} (${st.size} B) exceeds CLI safety cap (${maxBytes} B)`);
+    }
+    const buf = Buffer.allocUnsafe(st.size);
+    let offset = 0;
+    while (offset < st.size) {
+      const n = fs.readSync(fd, buf, offset, st.size - offset, offset);
+      if (n <= 0) break;
+      offset += n;
+    }
+    return new Uint8Array(buf.buffer, buf.byteOffset, offset);
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
+function assertDistinctOutput(outPath, inputPaths, label = 'Output path') {
+  for (const inp of inputPaths) {
+    if (isSameFilePath(outPath, inp)) {
+      throw new Error(`${label} (${outPath}) must differ from input path (${inp})`);
+    }
+  }
+}
+
 function isSameFilePath(a, b) {
   const resA = path.resolve(a);
   const resB = path.resolve(b);
@@ -167,9 +200,9 @@ Commands:
   run       <file.hbin> [--frames 60] [--pinned <rootHex>] [--xenograft] [--allow-unpinned-xenograft] [--ppm <snapshot.ppm>]
   bisect    <file.hbin> <left.hbin> <right.hbin> [--offset <bytes>]
   fuse      <shard1.hbin> <shard2.hbin> [shard3...] -o <fused.hbin> [--gap 0] [--seed 42]
-  heal      <in1.hbin> [in2.hbin ...] -o <healed.hbin> [--pinned <rootHex>] [--xenograft] [--allow-unpinned-xenograft]
-  damage    <in.hbin> -o <out.hbin> [--drop 0.5] [--bitrot 8] [--burst] [--trojans 20] [--shift 137] [--shuffle] [--amputate 3,4] [--seed 42]
-  xenograft <host.hbin> <donor.hbin> -o <chimera.hbin> [--amputate 3,4] [--gap 37] [--seed 42]
+  heal      <in1.hbin> [in2.hbin ...] -o <healed.hbin> [--pinned <rootHex>] [--xenograft] [--allow-unpinned-xenograft] [--allow-partial]
+  damage    <in.hbin> -o <out.hbin> [--drop 0.5] [--bitrot 8] [--burst] [--include-sync] [--trojans 20] [--shift 137] [--shuffle] [--amputate 3,4] [--seed 42]
+  xenograft <host.hbin> <donor.hbin> -o <chimera.hbin> [--amputate 3,4] [--gap 37] [--seed 42] [--allow-partial]
   disasm    <file.hbin> [--bundle 0] [--max 48] [--pinned <rootHex>] [--xenograft] [--allow-unpinned-xenograft]
 
 Flags:
@@ -179,8 +212,10 @@ Flags:
 }
 
 const [, , cmd, ...args] = process.argv;
+const ddIdx = args.indexOf('--');
+const optionArgs = ddIdx === -1 ? args : args.slice(0, ddIdx);
 
-if (!cmd || cmd === '-h' || cmd === '--help' || args.includes('-h') || args.includes('--help')) {
+if (!cmd || cmd === '-h' || cmd === '--help' || optionArgs.includes('-h') || optionArgs.includes('--help')) {
   printHelp();
   process.exit(0);
 }
@@ -220,7 +255,7 @@ try {
       maxPositional: 1,
     });
     const filePath = positional[0];
-    const bytes = new Uint8Array(fs.readFileSync(filePath));
+    const bytes = readBoundedFile(filePath);
     const dec = decodeHbin(bytes, {
       pinnedRootHex: flags['--pinned'] || null,
       allowXenograft: Boolean(flags['--xenograft']),
@@ -255,18 +290,26 @@ try {
     const filePath = positional[0];
     const frames = flags['--frames'] !== undefined ? parseIntStrict(flags['--frames'], '--frames', 1, 100000) : 60;
     const ppmPath = flags['--ppm'] || null;
-    const bytes = new Uint8Array(fs.readFileSync(filePath));
+    if (ppmPath) assertDistinctOutput(ppmPath, [filePath], 'PPM output path');
+    const bytes = readBoundedFile(filePath);
     const dec = decodeHbin(bytes, {
       pinnedRootHex: flags['--pinned'] || null,
       allowXenograft: Boolean(flags['--xenograft']),
       allowUnpinnedXenograft: Boolean(flags['--allow-unpinned-xenograft']),
     });
+    if (dec.stats.xenograftBlockedUnpinned) {
+      console.error('[PLANARIA WARN] --xenograft disabled without --pinned <rootHex> or --allow-unpinned-xenograft.');
+    }
     if (!dec.bootable) {
       console.error('[PLANARIA] Organism dead: Stratum 0 Stem Nucleus below threshold (k=2).');
       process.exit(2);
     }
     const vm = new PVM32();
     vm.loadDecoded(dec, true);
+    if (!vm.alive) {
+      console.error('[PLANARIA] Organism dead: Stratum 0 Stem Nucleus contains no executable bytecode.');
+      process.exit(2);
+    }
     for (let f = 0; f < frames; f++) vm.stepFrame();
     const fb = vm.framebufferStats();
     console.log(`[PLANARIA] Executed ${frames} frames of ${dec.genome?.name || filePath} (Stratum S${dec.maxViableStratum})`);
@@ -293,7 +336,7 @@ try {
     if (isSameFilePath(inPath, leftPath) || isSameFilePath(inPath, rightPath)) {
       throw new Error('Bisect output paths must differ from input path');
     }
-    const bytes = new Uint8Array(fs.readFileSync(inPath));
+    const bytes = readBoundedFile(inPath);
     if (bytes.length < 2) throw new Error(`Cannot bisect file of length ${bytes.length}`);
     const cutOff = flags['--offset'] !== undefined
       ? parseIntStrict(flags['--offset'], '--offset', 1, bytes.length - 1)
@@ -313,11 +356,12 @@ try {
     });
     const outPath = flags['-o'];
     if (!outPath) throw new Error('Missing -o <fused.hbin>');
+    assertDistinctOutput(outPath, positional);
     const gap = flags['--gap'] !== undefined ? parseIntStrict(flags['--gap'], '--gap', 0, 65536) : 0;
     const seed = flags['--seed'] !== undefined ? parseIntStrict(flags['--seed'], '--seed', 0, 0x7fffffff) : 42;
-    let fused = new Uint8Array(fs.readFileSync(positional[0]));
+    let fused = readBoundedFile(positional[0]);
     for (let i = 1; i < positional.length; i++) {
-      const next = new Uint8Array(fs.readFileSync(positional[i]));
+      const next = readBoundedFile(positional[i]);
       fused = concatShards(fused, next, gap, seed + i);
     }
     ensureParentDir(outPath);
@@ -326,12 +370,13 @@ try {
   } else if (cmd === 'heal') {
     const { flags, positional } = parseCommandArgs(args, {
       valueFlags: ['-o', '--pinned'],
-      boolFlags: ['--xenograft', '--allow-unpinned-xenograft'],
+      boolFlags: ['--xenograft', '--allow-unpinned-xenograft', '--allow-partial'],
       minPositional: 1,
     });
     const outPath = flags['-o'];
     if (!outPath) throw new Error('Missing -o <healed.hbin>');
-    const chunks = positional.map((p) => new Uint8Array(fs.readFileSync(p)));
+    assertDistinctOutput(outPath, positional);
+    const chunks = positional.map((p) => readBoundedFile(p));
     const totalLen = chunks.reduce((s, c) => s + c.length, 0);
     if (totalLen > 8 * 1024 * 1024) {
       console.error(`[PLANARIA WARN] Combined input (${totalLen}B) exceeds default 8 MiB scan budget; trailing bytes may be skipped.`);
@@ -344,7 +389,10 @@ try {
       allowXenograft: Boolean(flags['--xenograft']),
       allowUnpinnedXenograft: Boolean(flags['--allow-unpinned-xenograft']),
     });
-    const healed = regenerateHbin(dec);
+    if (dec.stats.xenograftBlockedUnpinned) {
+      console.error('[PLANARIA WARN] --xenograft disabled without --pinned <rootHex> or --allow-unpinned-xenograft.');
+    }
+    const healed = regenerateHbin(dec, null, { allowPartial: Boolean(flags['--allow-partial']) });
     ensureParentDir(outPath);
     fs.writeFileSync(outPath, healed.bytes);
     console.log(`[PLANARIA] Regenerated pristine binary -> ${outPath} (${healed.bytes.length}B)`);
@@ -353,16 +401,18 @@ try {
   } else if (cmd === 'damage') {
     const { flags, positional } = parseCommandArgs(args, {
       valueFlags: ['-o', '--drop', '--bitrot', '--trojans', '--shift', '--amputate', '--seed'],
-      boolFlags: ['--burst', '--shuffle'],
+      boolFlags: ['--burst', '--shuffle', '--include-sync'],
       minPositional: 1,
       maxPositional: 1,
     });
     const inPath = positional[0];
     const outPath = flags['-o'];
     if (!outPath) throw new Error('Missing -o <out.hbin>');
-    let buf = new Uint8Array(fs.readFileSync(inPath));
+    assertDistinctOutput(outPath, [inPath]);
+    let buf = readBoundedFile(inPath);
     const drop = flags['--drop'] !== undefined ? parseFloatStrict(flags['--drop'], '--drop', 0, 1) : 0;
-    const bitrot = flags['--bitrot'] !== undefined ? parseIntStrict(flags['--bitrot'], '--bitrot', 0, 508) : 0;
+    const includeSync = Boolean(flags['--include-sync']);
+    const bitrot = flags['--bitrot'] !== undefined ? parseIntStrict(flags['--bitrot'], '--bitrot', 0, includeSync ? 512 : 508) : 0;
     const burst = Boolean(flags['--burst']);
     const trojans = flags['--trojans'] !== undefined ? parseIntStrict(flags['--trojans'], '--trojans', 0, 5000) : 0;
     const shift = flags['--shift'] !== undefined ? parseIntStrict(flags['--shift'], '--shift', 0, 65536) : 0;
@@ -372,7 +422,7 @@ try {
 
     if (ampIds) buf = amputateBundles(buf, ampIds, true, seed).bytes;
     if (drop > 0) buf = shredCells(buf, drop, seed, false).bytes;
-    if (bitrot > 0) buf = irradiateCells(buf, bitrot, seed + 1, burst).bytes;
+    if (bitrot > 0) buf = irradiateCells(buf, bitrot, seed + 1, burst, includeSync).bytes;
     if (shift > 0 || shuffle) buf = shiftAndShuffle(buf, shift, seed + 2, shuffle);
     if (trojans > 0) buf = injectByzantineTrojans(buf, trojans, seed + 3, true).bytes;
 
@@ -382,18 +432,20 @@ try {
   } else if (cmd === 'xenograft') {
     const { flags, positional } = parseCommandArgs(args, {
       valueFlags: ['-o', '--amputate', '--gap', '--seed'],
+      boolFlags: ['--allow-partial'],
       minPositional: 2,
       maxPositional: 2,
     });
     const [hostPath, donorPath] = positional;
     const outPath = flags['-o'];
     if (!outPath) throw new Error('Missing -o <chimera.hbin>');
+    assertDistinctOutput(outPath, [hostPath, donorPath]);
     // Sovereign bundles 0 (S0_STEM_NUCLEUS) and 6 (S3_GENOME_LEDGER) cannot be xenografted
     const ampIds = parseBundleList(flags['--amputate'] || '3,4', '--amputate', 1, 5);
     const gap = flags['--gap'] !== undefined ? parseIntStrict(flags['--gap'], '--gap', 0, 65536) : 37;
     const seed = flags['--seed'] !== undefined ? parseIntStrict(flags['--seed'], '--seed', 0, 0x7fffffff) : 42;
-    const hostBytes = new Uint8Array(fs.readFileSync(hostPath));
-    const donorBytes = new Uint8Array(fs.readFileSync(donorPath));
+    const hostBytes = readBoundedFile(hostPath);
+    const donorBytes = readBoundedFile(donorPath);
     const hostDec = decodeHbin(hostBytes);
     const donorDec = decodeHbin(donorBytes);
     if (!hostDec.bootable || !hostDec.primaryRootHex) {
@@ -411,7 +463,7 @@ try {
     if (chimeraDec.xenografts.length === 0) {
       throw new Error(`No compatible xenograft organs transplanted for bundles [${ampIds.join(',')}]`);
     }
-    const chimeraBin = regenerateHbin(chimeraDec);
+    const chimeraBin = regenerateHbin(chimeraDec, null, { allowPartial: Boolean(flags['--allow-partial']) });
     ensureParentDir(outPath);
     fs.writeFileSync(outPath, chimeraBin.bytes);
     console.log(`[PLANARIA] Xenograft Chimera forged -> ${outPath} (${chimeraBin.bytes.length}B)`);
@@ -427,11 +479,14 @@ try {
     const filePath = positional[0];
     const bundleId = flags['--bundle'] !== undefined ? parseIntStrict(flags['--bundle'], '--bundle', 0, 6) : 0;
     const maxW = flags['--max'] !== undefined ? parseIntStrict(flags['--max'], '--max', 1, 4096) : 48;
-    const dec = decodeHbin(new Uint8Array(fs.readFileSync(filePath)), {
+    const dec = decodeHbin(readBoundedFile(filePath), {
       pinnedRootHex: flags['--pinned'] || null,
       allowXenograft: Boolean(flags['--xenograft']),
       allowUnpinnedXenograft: Boolean(flags['--allow-unpinned-xenograft']),
     });
+    if (dec.stats.xenograftBlockedUnpinned) {
+      console.error('[PLANARIA WARN] --xenograft disabled without --pinned <rootHex> or --allow-unpinned-xenograft.');
+    }
     const b = dec.bundles[bundleId];
     if (!b || !b.viable) {
       console.error(`Bundle ${bundleId} (${BUNDLE_SPECS[bundleId]?.name}) is not viable.`);

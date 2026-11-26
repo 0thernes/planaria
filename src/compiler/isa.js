@@ -222,7 +222,8 @@ export function disassembleWord(word, pc = 0) {
 /** Disassemble a byte buffer (little-endian 32-bit words). */
 export function disassembleBytes(rawBytes, maxWords = 64) {
   const bytes = toBytes(rawBytes);
-  const words = Math.min(Math.floor(bytes.length / 4), maxWords);
+  const cap = Number.isFinite(maxWords) ? Math.max(0, Math.floor(maxWords)) : 64;
+  const words = Math.min(Math.floor(bytes.length / 4), cap);
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const lines = [];
   for (let i = 0; i < words; i++) {

@@ -2,6 +2,30 @@
 
 All notable changes to **PLANARIA** are documented in this file.
 
+## [2.4.0] - 2026-11-25
+
+### Second Full 3-Cycle Deep-Dive Hardening, Clean-Room Python Oracle, Interactive Blueprint & 85 Pure Lean 4.35.0 Proofs
+- **Unsolved Problems Mega-Atlas Verification Dossier (`docs/MEGA_ATLAS_CROSSCHECK.md`):** Programmatically scanned all `1,900` entries of `MegaAtlas_Unsolved_Problems_V2.json.gz`, archiving the verbatim top 19 nearest neighbors and honest **`0 / 1,900`** verdict.
+- **Layer 1 — Cellular Harvester, Flood Defense & Xenograft Fidelity (`src/core/`, `src/vm/linear-twin.js`):**
+  - Replaced exact-only sync-flood guard with sliding-window fuzzy dense-flood bypass (`>= 2` fuzzy hits within `[offset+1..offset+16]`), defeating 1-bit-flipped and stride-5 sync-flood DoS attacks.
+  - Enforced unconditional `bestUnique < 2` unpinned fail-closed quorum (exact Lean `electUnpinnedQuorum` parity), required `origLen >= 4 && origLen % 4 === 0` for executable bundles `B0..B5` (`origLen > 0` for `B6`), preserved surviving host sub-threshold `abiSig` for strict donor ABI matching, switched donor tie-break to deterministic code-point comparison, routed ONLY actually-grafted donor cells to `slotMap: 'XENOGRAFT'`, added ±512 B flywheel to `amputateBundles()`, preserved remainder bytes in `shiftAndShuffle()`, and added safe `toBytes` & bounds guards across `rs.js`, `cauchy.js`, `gf256.js`, `sha256.js`.
+- **Layer 2 — Plang Compiler, `PVM-32` & Living Species (`src/compiler/`, `src/vm/pvm32.js`, `programs/`):**
+  - Wrapped `else if` and ternary `?:` in `withDepth(...)` (`parser.js`) and replaced recursive `containsCall` with iterative traversal + `MAX_AST_DEPTH = 256` (`codegen.js`), closing all uncaught call-stack overflow DoS vectors.
+  - Fixed flat-binary scratch-register reuse while preserving the strict `rR > 17` overflow guard; rejected decimal literals `> 2147483647` unless hex (`0x9e3779b1` in `cipher_vault.plang`); forbade built-in constant shadowing & compile-time `organ_call(KERNEL/GENOME)`; masked frame counters in `aegis_drift.plang` against int32 wraparound.
+  - Added proportional blitter fuel costs (`GLOW` 128, `CLEAR` 64, `TRI` 4, `LINE` 2, filled `RECT`/`CIRCLE` `ceil(pixels/256)`), transactional RAM & `voiceTouched` rollback on trapped organ fallback, endian-safe `PALETTE_RGBA`, printable ASCII `& 0xff` sanitization in `SYSCALL.LABEL`, and nested `ORGAN_CALL` self-accounting.
+- **Layer 3 — Deterministic 3D Engine, Audio Recovery & WCAG 2.2 AA Studio (`src/quantum/`, `src/world/`, `src/web/`, `server.mjs`):**
+  - Replaced all 7 unseeded `Math.random()` calls in `ChronoQuantumWorld` with a snapshotted Mulberry32 PRNG; deep-cloned & restored `weapons`, `armors`, indices, `recentLoot`, `playerProfile`, `rngState`, `qGateCounter`, and `delayedEchoShots.origin` on rewind (kills new Mutant `M12`!).
+  - Fixed Werner readout visibility in `measureQubit()`, overflow-safe `Math.hypot` + `2π` phase reduction in `evalWaveInterference()`, bounded single `DILATED_AURA` slowdown (capped at 65%), lethal-only `TIME_UNDO`, balanced `_ghzMode` phase evolution (`|M_4| = 4.0`), `AudioWorklet` `onprocessorerror` recovery + `dispose()`, WebGL2 context-restore leak guards + S0/S2 organ-amputation visual degradation, meta CSP, skip-to-main link, keyboard tissue inspector & 3D orbit controls, `aria-valuetext`, 7.7:1 contrast, `/blueprint/` server route & `/src/web/index.html -> /` redirect.
+- **Layer 4 — New Elite Verification Pillars (`reference/`, `blueprint/`, `scripts/`, `test/`):**
+  - **Clean-Room Python 3 Differential Oracle (`reference/planaria_oracle.py`):** Zero-dependency Python 3 stdlib verification achieving 100% cross-language parity across all 4 compiled `.hbin` binaries (768 cells, 28 Cauchy bundles, unaligned `49,177 B` mitosis, Bell CHSH `2.828427`, GHZ `|M_4| = 4.0`).
+  - **Deterministic 2,000-Case Fuzzer (`scripts/fuzz.mjs`):** 500 cases each across `decodeHbin`, `compilePlangToHbin`, `RS(254,238)`, and `PVM32` (0 crashes/hangs).
+  - **Interactive Lean 4.35.0 Proof Blueprint (`blueprint/index.html` + `blueprint.json`):** Zero-CDN SVG dependency DAG + searchable 85-theorem table verified 1:1 via `npm run check:blueprint`.
+  - **Expanded Testing & Scripts:** 30/30 test suites (incl. Suite 29 `audio-worklet.js` DSP harness & Suite 30 manifest/CSP invariants), **12/12 (100.0%)** surgical mutants killed (`M11` server traversal, `M12` temporal inventory rewind), live Crossref DOI + retraction checker (`npm run check:citations -- --live` -> `results/citation-audit.json`), verbatim README axiom checker (`npm run check:axioms`), cross-doc Lean theorem-name linter (`scripts/lint-check.mjs`), and `Audit-Repo.ps1` non-CWD path fix.
+- **Layer 5 — Pure Lean 4.35.0 Proofs (70 → 85 Theorems) & Academic Governance (`lean/`, `paper/`, `docs/`):**
+  - Enabled `autoImplicit = false` & `relaxedAutoImplicit = false` in `lean/lakefile.toml`; added line-1 `module` to `VerifyAxioms.lean` (12/12 `.lean` files now Palomar-clean); removed duplicate `#print axioms` from `PlanariaProofs.lean`.
+  - Strengthened `merkle_path_collision_free_binding` (full dual-path commitment), `unpinned_quorum_honest_majority` (arbitrary list index), `unpinned_quorum_tie_fail_closed` (arbitrary list), added `applyXenograftWithStem` + `xenograft_dead_host_refused`, added 5 new non-vacuity witnesses (10 total), and added `lean/PlanariaProofs/AdversarialTests.lean` (8 formal false-variant refutations) + live CI negative `lake comparator --paranoid` tamper rejection.
+  - Corrected Crossref-caught `forney1965` DOI (`10.1109/TIT.1965.1053833` -> `10.1109/TIT.1965.1053825`), fixed `LICENSE` patent wording + Section 6 CC BY 4.0 carve-out, removed invalid `NOASSERTION` in `CITATION.cff`, reconciled `docs/architecture.md`, `docs/glossary.md`, and `docs/threat-model.md`, and added `docs/MEGA_ATLAS_CROSSCHECK.md`, `docs/LITERATURE_SEARCH.md`, and `docs/SUBMISSION_READINESS.md`.
+
 ## [2.3.0] - 2026-11-25
 
 ### Three-Cycle World-Class Hardening, 6-Kernel Palomar Proofs, Statistical Inference & Build Standard v1.2.0

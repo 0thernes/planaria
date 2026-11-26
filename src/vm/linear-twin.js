@@ -123,23 +123,38 @@ export function decodeLinearBinary(rawBytes) {
       };
     }
     prevEnd = off + len;
+    const isViable = len >= 4 && len % 4 === 0;
     bundles.push({
       id: b,
       name: BUNDLE_SPECS[b].name,
       organId: BUNDLE_SPECS[b].organId,
       stratum: BUNDLE_SPECS[b].stratum,
-      viable: true,
-      data: new Uint8Array(buf.subarray(off, off + len)),
-      source: 'LINEAR',
+      viable: isViable,
+      data: isViable ? new Uint8Array(buf.subarray(off, off + len)) : null,
+      source: isViable ? 'LINEAR' : 'MISSING',
     });
   }
   bundles.push({ id: 6, name: 'S3_GENOME_LEDGER', organId: 5, stratum: 3, viable: false, data: null, source: 'NONE' });
 
+  let maxViableStratum = -1;
+  if (bundles[0].viable) {
+    maxViableStratum = 0;
+    if (bundles[1].viable || bundles[2].viable || bundles[3].viable) {
+      maxViableStratum = 1;
+      if (bundles[1].viable && (bundles[3].viable || bundles[4].viable)) {
+        maxViableStratum = 2;
+        if (bundles[3].viable && bundles[4].viable && bundles[5].viable) {
+          maxViableStratum = 3;
+        }
+      }
+    }
+  }
+
   return {
-    bootable: true,
-    fault: null,
-    detail: 'LINEAR_INTACT',
-    maxViableStratum: 3,
+    bootable: bundles[0].viable,
+    fault: bundles[0].viable ? null : 'ERR_EMPTY_STEM_NUCLEUS',
+    detail: bundles[0].viable ? 'LINEAR_INTACT' : 'Bundle 0 empty or unaligned',
+    maxViableStratum,
     bundles,
     xenografts: [],
   };

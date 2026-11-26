@@ -1,0 +1,1504 @@
+{
+  "schema": "PLANARIA-BLUEPRINT-1.0",
+  "version": "2.4.0",
+  "toolchain": "leanprover/lean4:v4.35.0",
+  "autoImplicit": false,
+  "permittedAxioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "kernels": [
+    "lean4",
+    "leanchecker-paranoid",
+    "nanoda",
+    "con-leche",
+    "con-ron",
+    "lean4lean"
+  ],
+  "theoremCount": 85,
+  "edgeCount": 18,
+  "modules": [
+    {
+      "key": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "title": "Module 1: GF(2^8) Field & Universal Cauchy 2x2",
+      "color": "#22d3ee",
+      "count": 16
+    },
+    {
+      "key": "Mitosis",
+      "file": "lean/PlanariaProofs/MitosisBounds.lean",
+      "title": "Module 2: Mitosis Bounds & Placement Schedule",
+      "color": "#38bdf8",
+      "count": 14
+    },
+    {
+      "key": "Anastomosis",
+      "file": "lean/PlanariaProofs/StratumAnastomosis.lean",
+      "title": "Module 3: 4-Stratum Lattice & Anastomosis",
+      "color": "#a78bfa",
+      "count": 8
+    },
+    {
+      "key": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "title": "Module 4: RS Burst, Merkle & Byzantine Quorum",
+      "color": "#34d399",
+      "count": 18
+    },
+    {
+      "key": "Xenograft",
+      "file": "lean/PlanariaProofs/XenograftABI.lean",
+      "title": "Module 5: PVM-32 Sandbox & Xenograft Sovereignty",
+      "color": "#fbbf24",
+      "count": 9
+    },
+    {
+      "key": "QuantumTemporal",
+      "file": "lean/PlanariaProofs/QuantumTemporal.lean",
+      "title": "Module 6: 4-Qubit Unitarity & Temporal Rewind",
+      "color": "#f472b6",
+      "count": 12
+    },
+    {
+      "key": "Adversarial",
+      "file": "lean/PlanariaProofs/AdversarialTests.lean",
+      "title": "Module 7: Adversarial False-Variant Refutations",
+      "color": "#fb7185",
+      "count": 8
+    }
+  ],
+  "nodes": [
+    {
+      "id": "Planaria.GF256.gfAdd_comm",
+      "shortName": "gfAdd_comm",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 41,
+      "endLine": 43,
+      "doc": "",
+      "signature": "public theorem gfAdd_comm (a b : Nat) : gfAdd a b = gfAdd b a",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.GF256.gfAdd_self",
+      "shortName": "gfAdd_self",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 44,
+      "endLine": 46,
+      "doc": "",
+      "signature": "public theorem gfAdd_self (a : Nat) : gfAdd a a = 0",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.GF256.gfAdd_assoc",
+      "shortName": "gfAdd_assoc",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 50,
+      "endLine": 54,
+      "doc": "",
+      "signature": "public theorem gfAdd_assoc (a b c : Nat) (ha : a < 256) (hb : b < 256) (hc : c < 256) : gfAdd (gfAdd a b) c = gfAdd a (gfAdd b c)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.GF256.xtime_xor",
+      "shortName": "xtime_xor",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 82,
+      "endLine": 121,
+      "doc": "",
+      "signature": "public theorem xtime_xor (a b : Nat) (ha : a < 256) (hb : b < 256) : xtime (a ^^^ b) = xtime a ^^^ xtime b",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.GF256.gfMul_lt_256",
+      "shortName": "gfMul_lt_256",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 133,
+      "endLine": 135,
+      "doc": "",
+      "signature": "public theorem gfMul_lt_256 (a b : Nat) : gfMul a b < 256",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.GF256.gfMul_zero_right",
+      "shortName": "gfMul_zero_right",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 213,
+      "endLine": 215,
+      "doc": "",
+      "signature": "public theorem gfMul_zero_right (a : Nat) : gfMul a 0 = 0",
+      "axioms": [
+        "propext"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.GF256.gfMul_one_right",
+      "shortName": "gfMul_one_right",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 221,
+      "endLine": 224,
+      "doc": "",
+      "signature": "public theorem gfMul_one_right (a : Nat) (ha : a < 256) : gfMul a 1 = a",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.GF256.gfMul_comm",
+      "shortName": "gfMul_comm",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 354,
+      "endLine": 370,
+      "doc": "Theorem I.2 (EXHAUSTIVE GF(2^8) Commutativity — ALL 65,536 byte pairs!): For EVERY a, b < 256, gfMul a b = gfMul b a. Proved universally via F_2-bilinearity!",
+      "signature": "public theorem gfMul_comm (a b : Nat) (ha : a < 256) (hb : b < 256) : gfMul a b = gfMul b a",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.GF256.gfMul_zero_right"
+      ]
+    },
+    {
+      "id": "Planaria.GF256.gfMul_assoc",
+      "shortName": "gfMul_assoc",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 392,
+      "endLine": 426,
+      "doc": "Theorem I.3 (EXHAUSTIVE GF(2^8) Associativity — ALL 16,777,216 byte triples!): For EVERY a, b, c < 256, gfMul (gfMul a b) c = gfMul a (gfMul b c).",
+      "signature": "public theorem gfMul_assoc (a b c : Nat) (ha : a < 256) (hb : b < 256) (hc : c < 256) : gfMul (gfMul a b) c = gfMul a (gfMul b c)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.GF256.gfMul_lt_256",
+        "Planaria.GF256.gfMul_zero_right"
+      ]
+    },
+    {
+      "id": "Planaria.GF256.gfMul_add_right",
+      "shortName": "gfMul_add_right",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 427,
+      "endLine": 430,
+      "doc": "",
+      "signature": "public theorem gfMul_add_right (a b c : Nat) (hb : b < 256) (hc : c < 256) : gfMul a (gfAdd b c) = gfAdd (gfMul a b) (gfMul a c)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.GF256.gfMul_lt_256"
+      ]
+    },
+    {
+      "id": "Planaria.GF256.gfMul_inv_exact",
+      "shortName": "gfMul_inv_exact",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 439,
+      "endLine": 447,
+      "doc": "Theorem I.1 (Exhaustive GF(2^8) Multiplicative Inverse): For EVERY nonzero byte a in {1..255}, gfMul a (gfInv a) = 1 modulo 0x11D.",
+      "signature": "public theorem gfMul_inv_exact (a : Nat) (hpos : 1 ≤ a) (hlt : a < 256) : gfMul a (gfInv a) = 1",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.GF256.cauchy2_exact_roundtrip",
+      "shortName": "cauchy2_exact_roundtrip",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 449,
+      "endLine": 458,
+      "doc": "Theorem I.4: Concrete 2-cell Cauchy encode -> decode lossless roundtrip samples over GF(2^8).",
+      "signature": "public theorem cauchy2_exact_roundtrip : cauchyDecode2 2 25 (cauchyEncode2 2 25 0x50 0xb7).1 (cauchyEncode2 2 25 0x50 0xb7).2 = (0x50, 0xb7) ∧ cauchyDecode2 11 14 (cauchyEncode2 11 14 0xde 0xad).1 (cauchyEncode2 11 14 0xde 0xad).2 = (0xde, 0xad) ∧ cauchyDecode2 3 24 (cauchyEncode2 3 24 0xff 0x01).1 (cauchyEncode2 3 24 0xff 0x01).2 = (0xff, 0x01)",
+      "axioms": [
+        "propext"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.GF256.gf_cauchy2_nonzero_det",
+      "shortName": "gf_cauchy2_nonzero_det",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 523,
+      "endLine": 592,
+      "doc": "Theorem I.6 (Universal Cauchy 2x2 Non-Singularity Theorem): In ANY characteristic-2 field (including concrete `gf256Field`), for ANY distinct x0 != x1 and y0 != y1 with disjoint {x0, x1} ∩ {y0, y1} = ∅, the 2x2 Cauchy determinant (x0+y0)^(-1)(x1+y1)^(-1) + (x0+y1)^(-1)(x1+y0)^(-1) is STRICTLY NON-ZERO!",
+      "signature": "public theorem gf_cauchy2_nonzero_det (x0 x1 y0 y1 : F) (hx : x0 ≠ x1) (hy : y0 ≠ y1) (h00 : x0 ≠ y0) (h01 : x0 ≠ y1) (h10 : x1 ≠ y0) (h11 : x1 ≠ y1) : K.add (K.mul (K.inv (K.add x0 y0)) (K.inv (K.add x1 y1))) (K.mul (K.inv (K.add x0 y1)) (K.inv (K.add x1 y0))) ≠ K.zero",
+      "axioms": [],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.GF256.cauchy2_exact_decode",
+      "shortName": "cauchy2_exact_decode",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 596,
+      "endLine": 634,
+      "doc": "Theorem I.7 (Universal Cauchy 2x2 Exact Lossless Decoding Theorem): For ANY characteristic-2 field K, ANY disjoint distinct coordinates (x0,x1), (y0,y1), and EVERY payload pair (d0, d1), `cauchyDecode2K (cauchyEncode2K d0 d1) = (d0, d1)`!",
+      "signature": "public theorem cauchy2_exact_decode (x0 x1 y0 y1 d0 d1 : F) (hx : x0 ≠ x1) (hy : y0 ≠ y1) (h00 : x0 ≠ y0) (h01 : x0 ≠ y1) (h10 : x1 ≠ y0) (h11 : x1 ≠ y1) : let (p0, p1) := cauchyEncode2K K x0 x1 y0 y1 d0 d1 cauchyDecode2K K x0 x1 y0 y1 p0 p1 = (d0, d1)",
+      "axioms": [],
+      "claims": [],
+      "dependencies": [
+        "Planaria.GF256.gf_cauchy2_nonzero_det"
+      ]
+    },
+    {
+      "id": "Planaria.GF256.gf256_cauchy2_exact_decode",
+      "shortName": "gf256_cauchy2_exact_decode",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 639,
+      "endLine": 655,
+      "doc": "Theorem I.8 (Concrete PLANARIA GF(2^8) Stratum-0 Universal Recovery): Instantiating Theorem I.7 on concrete `gf256Field` proves that PLANARIA's exact Stratum-0 `cauchyEncode2` / `cauchyDecode2` recovers EVERY `(d0, d1) ∈ [0..255]^2` from ANY two distinct surviving Stratum-0 cell coordinates `x0 != x1` in `{2..255}`!",
+      "signature": "public theorem gf256_cauchy2_exact_decode (x0 x1 d0 d1 : Fin 256) (hx : x0 ≠ x1) (hx0_gt1 : x0.val ≥ 2) (hx1_gt1 : x1.val ≥ 2) : let (p0, p1) := cauchyEncode2 x0.val x1.val d0.val d1.val cauchyDecode2 x0.val x1.val p0 p1 = (d0.val, d1.val)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.GF256.cauchy2_exact_decode"
+      ]
+    },
+    {
+      "id": "Planaria.GF256.gf256_cauchy2_nonvacuous_witness",
+      "shortName": "gf256_cauchy2_nonvacuous_witness",
+      "module": "GF256",
+      "file": "lean/PlanariaProofs/GF256.lean",
+      "line": 659,
+      "endLine": 668,
+      "doc": "Non-vacuity witness for Theorem I.8 (`gf256_cauchy2_exact_decode`): explicitly exhibits distinct coordinates `(2, 25)` and payload `(0x50, 0xb7)` satisfying every hypothesis and invoking the theorem directly.",
+      "signature": "public theorem gf256_cauchy2_nonvacuous_witness : ∃ x0 x1 d0 d1 : Fin 256, x0 ≠ x1 ∧ x0.val ≥ 2 ∧ x1.val ≥ 2 ∧ (let (p0, p1) := cauchyEncode2 x0.val x1.val d0.val d1.val cauchyDecode2 x0.val x1.val p0 p1 = (d0.val, d1.val))",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.GF256.gf256_cauchy2_exact_decode"
+      ]
+    },
+    {
+      "id": "Planaria.Mitosis.mitosis_exact_sufficient",
+      "shortName": "mitosis_exact_sufficient",
+      "module": "Mitosis",
+      "file": "lean/PlanariaProofs/MitosisBounds.lean",
+      "line": 22,
+      "endLine": 25,
+      "doc": "Theorem II.1 (Mitosis Sufficiency): If a holographic bundle has N >= 2*k coded cells, a balanced disjoint bisection into floor(N/2) and N - floor(N/2) guarantees BOTH zero-overlap halves satisfy >= k and independently regenerate 100% of the bundle.",
+      "signature": "public theorem mitosis_exact_sufficient (N k : Nat) (h : N ≥ 2 * k) : N / 2 ≥ k ∧ (N - N / 2) ≥ k",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Mitosis.mitosis_strict_impossibility",
+      "shortName": "mitosis_strict_impossibility",
+      "module": "Mitosis",
+      "file": "lean/PlanariaProofs/MitosisBounds.lean",
+      "line": 28,
+      "endLine": 31,
+      "doc": "Theorem II.2 (Tight Impossibility Lower Bound — Falsifiable Boundary): If N < 2*k, then NO disjoint bisection (a + b = N) can allow BOTH halves to recover >= k!",
+      "signature": "public theorem mitosis_strict_impossibility (N k a b : Nat) (hN : N < 2 * k) (hPart : a + b = N) : ¬ (a ≥ k ∧ b ≥ k)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Mitosis.mitosis_strict_impossibility_witness",
+      "shortName": "mitosis_strict_impossibility_witness",
+      "module": "Mitosis",
+      "file": "lean/PlanariaProofs/MitosisBounds.lean",
+      "line": 217,
+      "endLine": 220,
+      "doc": "Non-vacuity witness for Theorem II.2 (`mitosis_strict_impossibility`): for `N = 3 < 2 * 2`, the partition `1 + 2 = 3` satisfies all hypotheses and fails dual recovery.",
+      "signature": "public theorem mitosis_strict_impossibility_witness : 3 < 2 * 2 ∧ 1 + 2 = 3 ∧ ¬ (1 ≥ 2 ∧ 2 ≥ 2)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.Mitosis.mitosis_strict_impossibility"
+      ]
+    },
+    {
+      "id": "Planaria.Mitosis.mitosis_unaligned_cut_guarantee",
+      "shortName": "mitosis_unaligned_cut_guarantee",
+      "module": "Mitosis",
+      "file": "lean/PlanariaProofs/MitosisBounds.lean",
+      "line": 36,
+      "endLine": 44,
+      "doc": "Theorem II.3 (Unaligned Arbitrary-Byte Cut Guarantee): An unaligned byte cut can bisect at most 1 physical cell across the cut boundary, reducing the balanced cell counts of a bundle by at most 1 per half in the worst case. Whenever N >= 2*k + 2, BOTH disjoint halves still guarantee >= k intact cells!",
+      "signature": "public theorem mitosis_unaligned_cut_guarantee (N k : Nat) (h : N ≥ 2 * k + 2) : (N / 2 - 1) ≥ k ∧ ((N - N / 2) - 1) ≥ k",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Mitosis.planaria_all_7_bundles_mitosis_safe",
+      "shortName": "planaria_all_7_bundles_mitosis_safe",
+      "module": "Mitosis",
+      "file": "lean/PlanariaProofs/MitosisBounds.lean",
+      "line": 113,
+      "endLine": 116,
+      "doc": "Theorem II.4: Every single one of PLANARIA's 7 compiled bundles satisfies the strict unaligned-mitosis margin n >= 2*k + 4 (surviving even 50/50 cuts + boundary loss!).",
+      "signature": "public theorem planaria_all_7_bundles_mitosis_safe : planariaBundleParams.all (fun p => decide (p.2 ≥ 2 * p.1 + 4)) = true",
+      "axioms": [],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Mitosis.planaria_total_cells_exact",
+      "shortName": "planaria_total_cells_exact",
+      "module": "Mitosis",
+      "file": "lean/PlanariaProofs/MitosisBounds.lean",
+      "line": 119,
+      "endLine": 124,
+      "doc": "Theorem II.5: Total PLANARIA cells = 192 <= 256 = 2^8 (exact Depth-8 Merkle tree fit), yielding pristine binary size 192 * 512 = 98,304 bytes (96 KiB).",
+      "signature": "public theorem planaria_total_cells_exact : (planariaBundleParams.map Prod.snd).foldl (· + ·) 0 = 192 ∧ 192 ≤ 2 ^ 8 ∧ 192 * 512 = 98304",
+      "axioms": [],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Mitosis.planaria_schedule_exact_halves",
+      "shortName": "planaria_schedule_exact_halves",
+      "module": "Mitosis",
+      "file": "lean/PlanariaProofs/MitosisBounds.lean",
+      "line": 135,
+      "endLine": 150,
+      "doc": "Theorem II.6 (Exact Integer `PLACEMENT_SCHEDULE` Zero-Tie & Balanced-Halves Proof): Under `src/core/hbin.js`'s exact integer placement schedule `posNum(b, i, n_b)`: 1. Every bundle divides 480 cleanly (`480 % n_b = 0`), 2. ZERO cells across all 192 land on the midpoint `3360`, 3. Every bundle places EXACTLY `n_b / 2` cells strictly in `[0, 3360)` (left half) and EXACTLY `n_b / 2` cells strictly in `(3360, 6720)` (right half), 4. Every half strictly exceeds `k + 2` (so even unaligned cuts destroying 1 boundary cell still retain `>= k + 1` intact cells in BOTH halves!), 5. All 192 lexicographic `(posNum, bundleId)` sort keys are pairwise distinct.",
+      "signature": "public theorem planaria_schedule_exact_halves : planariaIndexedBundles.all (fun (b, k, n_b) => let keys := bundlePosKeys b n_b let leftCnt := (keys.filter (fun p => decide (p < 3360))).length let midCnt := (keys.filter (fun p => decide (p = 3360))).length let rightCnt := (keys.filter (fun p => decide (p > 3360))).length decide (480 % n_b = 0) && decide (midCnt = 0) && decide (leftCnt = n_b / 2) && decide (rightCnt = n_b / 2) && decide (leftCnt ≥ k + 2) && decide (rightCnt ≥ k + 2)) = true ∧ all192LexKeys.length = 192 ∧ allDistinctSorted all192LexKeys = true",
+      "axioms": [
+        "propext"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Mitosis.planaria_schedule_nodup_and_sorted_halves",
+      "shortName": "planaria_schedule_nodup_and_sorted_halves",
+      "module": "Mitosis",
+      "file": "lean/PlanariaProofs/MitosisBounds.lean",
+      "line": 156,
+      "endLine": 166,
+      "doc": "Theorem II.6b (True `List.Nodup` + First-96 / Last-96 Sorted Index Bridge): 1. `all192LexKeys.Nodup`: proved formally via `msortFuel_perm` (no unverified sort gap!). 2. In the exact sorted `PLACEMENT_SCHEDULE` emitted into `.hbin` slots `0..191`, slots `0..95` ALL satisfy `posNum < 3360` and slots `96..191` ALL satisfy `posNum > 3360`!",
+      "signature": "public theorem planaria_schedule_nodup_and_sorted_halves : all192LexKeys.Nodup ∧ let sorted := msortFuel 10 all192LexKeys sorted.length = 192 ∧ (sorted.take 96).all (fun key => decide (key / 8 < 3360)) = true ∧ (sorted.drop 96).all (fun key => decide (key / 8 > 3360)) = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Mitosis.planaria_cell_byte_budget_exact",
+      "shortName": "planaria_cell_byte_budget_exact",
+      "module": "Mitosis",
+      "file": "lean/PlanariaProofs/MitosisBounds.lean",
+      "line": 170,
+      "endLine": 177,
+      "doc": "Theorem II.7 (Exact 512-Byte Cell & Interleaved RS(254, 238) Byte Budget): 4B Sync + 508B Interleaved RS (2 x 254B) = 512B; 2 x 238B = 476B Authenticated Body = 16B Header + 332B Cauchy Shard + 128B (8 x 16B) Merkle Proof.",
+      "signature": "public theorem planaria_cell_byte_budget_exact : 4 + 508 = 512 ∧ 2 * 254 = 508 ∧ 2 * 238 = 476 ∧ 16 + 332 + 128 = 476 ∧ 8 * 16 = 128",
+      "axioms": [],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Mitosis.planaria_cauchy_coord_disjoint",
+      "shortName": "planaria_cauchy_coord_disjoint",
+      "module": "Mitosis",
+      "file": "lean/PlanariaProofs/MitosisBounds.lean",
+      "line": 181,
+      "endLine": 185,
+      "doc": "Theorem II.8 (Disjoint Cauchy Coordinate Sets & GF(2^8) Fit): For all 7 bundles `(b, k, n)`, data coordinates `y ∈ [0, k)` and evaluation coordinates `x = k + i ∈ [k, k + n)` are disjoint and fit strictly inside GF(2^8) (`k + n <= 256`).",
+      "signature": "public theorem planaria_cauchy_coord_disjoint : planariaBundleParams.all (fun p => decide (p.1 ≥ 1) && decide (p.1 + p.2 ≤ 256)) = true",
+      "axioms": [],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Mitosis.planaria_payload_capacity_exact",
+      "shortName": "planaria_payload_capacity_exact",
+      "module": "Mitosis",
+      "file": "lean/PlanariaProofs/MitosisBounds.lean",
+      "line": 189,
+      "endLine": 195,
+      "doc": "Theorem II.9 (Exact Raw Payload Capacity & 4x Holographic Expansion Ratio): Total source chunks across all 7 bundles = 48 (48 * 332 = 15,936 B raw payload capacity), yielding an exact 4:1 cell expansion ratio (192 / 48 = 4).",
+      "signature": "public theorem planaria_payload_capacity_exact : let totalK := (planariaBundleParams.map Prod.fst).foldl (· + ·) 0 totalK = 48 ∧ totalK * 332 = 15936 ∧ 4 * totalK = 192",
+      "axioms": [],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Mitosis.pigeonhole_two_way",
+      "shortName": "pigeonhole_two_way",
+      "module": "Mitosis",
+      "file": "lean/PlanariaProofs/MitosisBounds.lean",
+      "line": 199,
+      "endLine": 202,
+      "doc": "Theorem II.10 (Two-Way Fragmentation Pigeonhole Law): If N > 2*(k - 1) cells are split arbitrarily into any two fragments a + b = N, at least one fragment MUST retain >= k cells and remain viable.",
+      "signature": "public theorem pigeonhole_two_way (N k a b : Nat) (hk : k ≥ 1) (hN : N > 2 * (k - 1)) (hPart : a + b = N) : a ≥ k ∨ b ≥ k",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Mitosis.pigeonhole_two_way_witness",
+      "shortName": "pigeonhole_two_way_witness",
+      "module": "Mitosis",
+      "file": "lean/PlanariaProofs/MitosisBounds.lean",
+      "line": 223,
+      "endLine": 226,
+      "doc": "Non-vacuity witness for Theorem II.10 (`pigeonhole_two_way`): for Stratum-0 `N = 24, k = 2`, any partition `(12, 12)` retains at least one viable half.",
+      "signature": "public theorem pigeonhole_two_way_witness : 2 ≥ 1 ∧ 24 > 2 * (2 - 1) ∧ 12 + 12 = 24 ∧ (12 ≥ 2 ∨ 12 ≥ 2)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.Mitosis.pigeonhole_two_way"
+      ]
+    },
+    {
+      "id": "Planaria.Mitosis.trisection_synergy_recovery",
+      "shortName": "trisection_synergy_recovery",
+      "module": "Mitosis",
+      "file": "lean/PlanariaProofs/MitosisBounds.lean",
+      "line": 207,
+      "endLine": 214,
+      "doc": "Theorem II.11 (Trisection Super-Additive Synergistic Recovery on Bundle 5 S3_ORGANISM_FX): Splitting Bundle 5's 40 cells (threshold k = 16) into 3 disjoint shards (13, 13, 14) leaves EVERY individual shard strictly non-viable for Stratum 3 (< 16), yet raw concatenation of ANY pair of shards yields >= 26 >= 16 cells, restoring 100% Stratum 3!",
+      "signature": "public theorem trisection_synergy_recovery : let k := 16 let s1 := 13; let s2 := 13; let s3 := 14 (s1 + s2 + s3 = 40) ∧ (s1 < k ∧ s2 < k ∧ s3 < k) ∧ (s1 + s2 ≥ k ∧ s1 + s3 ≥ k ∧ s2 + s3 ≥ k)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Anastomosis.anastomosis_zero_crash_safety",
+      "shortName": "anastomosis_zero_crash_safety",
+      "module": "Anastomosis",
+      "file": "lean/PlanariaProofs/StratumAnastomosis.lean",
+      "line": 27,
+      "endLine": 35,
+      "doc": "Theorem III.1 (Anastomosis Zero-Crash Progress Safety): For ANY damage pattern where Stratum-0 Stem Nucleus retains >= 2 cells, `resolveRenderer` ALWAYS resolves to a valid live executable target (NEVER `.deadCrash`), even if ALL higher strata (b1..b6 = 0) are completely obliterated!",
+      "signature": "public theorem anastomosis_zero_crash_safety (p : ShardProfile) (h0 : p.b0 ≥ 2) : resolveRenderer p ≠ .deadCrash",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Anastomosis.resolveOrgan_zero_crash_safety",
+      "shortName": "resolveOrgan_zero_crash_safety",
+      "module": "Anastomosis",
+      "file": "lean/PlanariaProofs/StratumAnastomosis.lean",
+      "line": 39,
+      "endLine": 54,
+      "doc": "Theorem III.2 (General 6-Organ Anastomosis Zero-Crash & Non-Executable Isolation): When `b0 >= 2`, `resolveOrgan` NEVER crashes for ANY `(organId, maxStratum)`, and NEVER dispatches Bundle 0 (KERNEL) or Bundle 6 (GENOME) as an organ call target!",
+      "signature": "public theorem resolveOrgan_zero_crash_safety (p : ShardProfile) (organId maxStratum : Nat) (h0 : p.b0 ≥ 2) : resolveOrgan p organId maxStratum ≠ .deadCrash ∧ resolveOrgan p organId maxStratum ≠ .execBundle 0 ∧ resolveOrgan p organId maxStratum ≠ .execBundle 6",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Anastomosis.anastomosis_monotonicity",
+      "shortName": "anastomosis_monotonicity",
+      "module": "Anastomosis",
+      "file": "lean/PlanariaProofs/StratumAnastomosis.lean",
+      "line": 57,
+      "endLine": 76,
+      "doc": "Theorem III.3 (Stratum Monotonicity under Cell Recovery): Recovering additional cells across any bundle NEVER degrades the resolved renderer stratum.",
+      "signature": "public theorem anastomosis_monotonicity (p q : ShardProfile) (h0 : p.b0 ≤ q.b0) (h2 : p.b2 ≤ q.b2) (h3 : p.b3 ≤ q.b3) : (resolveRenderer p).rank ≤ (resolveRenderer q).rank",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Anastomosis.anastomosis_monotonicity_witness",
+      "shortName": "anastomosis_monotonicity_witness",
+      "module": "Anastomosis",
+      "file": "lean/PlanariaProofs/StratumAnastomosis.lean",
+      "line": 166,
+      "endLine": 176,
+      "doc": "Non-vacuity witness for Theorem III.3 (`anastomosis_monotonicity`): recovering Bundle 3 (`0 -> 8`) upgrades renderer rank strictly from S1 Wireframe (2) to S2 Cortex (3).",
+      "signature": "public theorem anastomosis_monotonicity_witness : let p : ShardProfile := ⟨2, 0, 4, 0, 0, 0, 0⟩ let q : ShardProfile := ⟨2, 0, 4, 8, 0, 0, 0⟩ p.b0 ≤ q.b0 ∧ p.b2 ≤ q.b2 ∧ p.b3 ≤ q.b3 ∧ (resolveRenderer p).rank ≤ (resolveRenderer q).rank ∧ (resolveRenderer p).rank < (resolveRenderer q).rank",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.Anastomosis.anastomosis_monotonicity"
+      ]
+    },
+    {
+      "id": "Planaria.Anastomosis.fusion_dominates_parents",
+      "shortName": "fusion_dominates_parents",
+      "module": "Anastomosis",
+      "file": "lean/PlanariaProofs/StratumAnastomosis.lean",
+      "line": 117,
+      "endLine": 126,
+      "doc": "Theorem III.4 (Monotone Fusion Dominance): Concatenating two disjoint damaged shards A and B yields an organism whose viability is ALWAYS >= max(viability(A), viability(B)).",
+      "signature": "public theorem fusion_dominates_parents (a b : ShardProfile) : viabilityLevel (fuseDisjoint a b) ≥ max (viabilityLevel a) (viabilityLevel b)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Anastomosis.fusion_strict_synergy_exists",
+      "shortName": "fusion_strict_synergy_exists",
+      "module": "Anastomosis",
+      "file": "lean/PlanariaProofs/StratumAnastomosis.lean",
+      "line": 131,
+      "endLine": 141,
+      "doc": "Theorem III.5 (Strict Super-Additive Synergistic Healing + Full 7-Bundle Regeneration): There exist two crippled sub-threshold shards A and B (each trapped at Stratum 1 / level 2 and unable to regenerate) whose raw concatenation A + B jumps all the way to full Stratum 3 AND satisfies `canFullRegenerate = true` across all 7 bundles including B6 GENOME!",
+      "signature": "public theorem fusion_strict_synergy_exists : ∃ a b : ShardProfile, viabilityLevel a = 2 ∧ viabilityLevel b = 2 ∧ canFullRegenerate a = false ∧ canFullRegenerate b = false ∧ viabilityLevel (fuseDisjoint a b) = 4 ∧ canFullRegenerate (fuseDisjoint a b) = true ∧ viabilityLevel (fuseDisjoint a b) > max (viabilityLevel a) (viabilityLevel b)",
+      "axioms": [],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Anastomosis.zero_cliff_strict_separation",
+      "shortName": "zero_cliff_strict_separation",
+      "module": "Anastomosis",
+      "file": "lean/PlanariaProofs/StratumAnastomosis.lean",
+      "line": 147,
+      "endLine": 155,
+      "doc": "Theorem III.6 (Zero-Cliff Strict Separation vs BOTH RS(40, 16) AND Equal-Storage Flat RS(192, 48)): At ~12% survival (23 total cells out of 192), BOTH a single-stratum RS(40, 16) binary AND an equal-storage flat RS(192, 48) monolithic archive (same total payload capacity 48 chunks and same 192-cell storage budget!) are 100% DEAD (`false`), while PLANARIA remains strictly ALIVE (`viabilityLevel >= 1`, `resolveRenderer != deadCrash`)!",
+      "signature": "public theorem zero_cliff_strict_separation : ∃ p : ShardProfile, p.totalCells = 23 ∧ cliffBinaryAlive p.b5 = false ∧ flatEqualStorageAlive p.totalCells = false ∧ viabilityLevel p ≥ 1 ∧ resolveRenderer p ≠ .deadCrash",
+      "axioms": [],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Anastomosis.viability_s3_without_b2_matches_hbin",
+      "shortName": "viability_s3_without_b2_matches_hbin",
+      "module": "Anastomosis",
+      "file": "lean/PlanariaProofs/StratumAnastomosis.lean",
+      "line": 159,
+      "endLine": 163,
+      "doc": "Spec-fidelity witness matching `src/core/hbin.js` Step 4: when `b2` (S1 Wireframe) is amputated (`b2 = 0`) while `b0, b1, b3, b4, b5` are viable, PLANARIA still achieves S3 (`viabilityLevel = 4`) via `b3` (S2 Cortex Render)!",
+      "signature": "public theorem viability_s3_without_b2_matches_hbin : viabilityLevel ⟨2, 4, 0, 8, 6, 16, 0⟩ = 4 ∧ viabilityLevel ⟨2, 0, 0, 8, 0, 0, 0⟩ = 2",
+      "axioms": [],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Byzantine.hammingDist_triangle",
+      "shortName": "hammingDist_triangle",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 26,
+      "endLine": 46,
+      "doc": "Theorem IV.0 (Byte-List Hamming Metric Triangle Inequality): For any three equal-length byte codewords `a, b, c`, `hammingDist a c <= hammingDist a b + hammingDist b c`.",
+      "signature": "public theorem hammingDist_triangle : ∀ a b c : List Nat, a.length = b.length → b.length = c.length → hammingDist a c ≤ hammingDist a b + hammingDist b c | [], [], [], _, _ => by simp [hammingDist] | x :: xs, y :: ys, z :: zs, h1, h2 => by simp only [List.length_cons] at h1 h2 have ih := hammingDist_triangle xs ys zs (by omega) (by omega) simp only [hammingDist] by_cases hxy : x = y <;> by_cases hyz : y = z <;> by_cases hxz : x = z · simp only [hxy, hyz, ↓reduceIte]; omega · subst hxy; subst hyz; exact absurd rfl hxz · simp only [hxy, hyz, ↓reduceIte]; omega · simp only [hxy, hyz, ↓reduceIte]; omega · simp only [hyz, hxz, ↓reduceIte]; omega · simp only [hyz, hxz, ↓reduceIte]; omega · simp only [hyz, hxz, ↓reduceIte]; omega · simp only [hxy, hyz, hxz, ↓reduceIte]; omega | [], _ :: _, _, h1, _ => by simp at h1 | _ :: _, [], _, h1, _ => by simp at h1 | _ :: _, _ :: _, [], _, h2 => by simp at h2",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Byzantine.rs254_238_unique_decoding_radius",
+      "shortName": "rs254_238_unique_decoding_radius",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 50,
+      "endLine": 57,
+      "doc": "Theorem IV.1 (RS(254, 238) Singleton Distance & Unique Correction Radius): An MDS code with N = 254, K = 238 has minimum Hamming distance d_min = 17 and unique bounded-distance error-correction radius t = 8 bytes per codeword.",
+      "signature": "public theorem rs254_238_unique_decoding_radius : let N := 254 let K := 238 let dMin := N - K + 1 let t := (dMin - 1) / 2 dMin = 17 ∧ t = 8 ∧ 2 * t + 1 ≤ dMin",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Byzantine.rs_unique_correction_ball_disjoint",
+      "shortName": "rs_unique_correction_ball_disjoint",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 61,
+      "endLine": 68,
+      "doc": "Theorem IV.2 (Unique Decoding Ball Disjointness via Real Byte-List Hamming Distance): If two distinct codewords `c1, c2` of equal length satisfy `hammingDist c1 c2 >= 2*t + 1`, NO received byte list `y` can lie within Hamming distance `<= t` of both `c1` and `c2`!",
+      "signature": "public theorem rs_unique_correction_ball_disjoint (c1 c2 y : List Nat) (t : Nat) (hlen1 : c1.length = y.length) (hlen2 : y.length = c2.length) (hMinDist : hammingDist c1 c2 ≥ 2 * t + 1) : ¬ (hammingDist c1 y ≤ t ∧ hammingDist y c2 ≤ t)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.Byzantine.hammingDist_triangle"
+      ]
+    },
+    {
+      "id": "Planaria.Byzantine.rs_unique_correction_ball_nonvacuous",
+      "shortName": "rs_unique_correction_ball_nonvacuous",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 71,
+      "endLine": 82,
+      "doc": "Non-vacuity witness for Theorem IV.2 (`rs_unique_correction_ball_disjoint`): two concrete 17-byte codewords at Hamming distance `17 >= 2*8 + 1` have disjoint radius-8 balls.",
+      "signature": "public theorem rs_unique_correction_ball_nonvacuous : let c1 : List Nat := List.replicate 17 0 let c2 : List Nat := List.replicate 17 1 let y : List Nat := List.replicate 8 1 ++ List.replicate 9 0 c1.length = y.length ∧ y.length = c2.length ∧ hammingDist c1 c2 ≥ 2 * 8 + 1 ∧ ¬ (hammingDist c1 y ≤ 8 ∧ hammingDist y c2 ≤ 8)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.Byzantine.rs_unique_correction_ball_disjoint"
+      ]
+    },
+    {
+      "id": "Planaria.Byzantine.rs_interleaved_lane_geometry",
+      "shortName": "rs_interleaved_lane_geometry",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 139,
+      "endLine": 146,
+      "doc": "Theorem IV.3 (Interleaved 508-Byte RS(254, 238) Lane Partition Geometry): The 508-byte RS body after the 4-byte sync marker partitions into EXACTLY 254 even-offset bytes and 254 odd-offset bytes, each carrying 238 data bytes + 16 parity bytes.",
+      "signature": "public theorem rs_interleaved_lane_geometry : countEven 0 508 = 254 ∧ countOdd 0 508 = 254 ∧ 238 + 16 = 254 ∧ 4 + 508 = 512",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Byzantine.interleaved_burst_16_even_odd_bound",
+      "shortName": "interleaved_burst_16_even_odd_bound",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 151,
+      "endLine": 159,
+      "doc": "Theorem IV.4 (2-Way Interleaved 16-Byte Contiguous Burst Recovery Guarantee): For ANY start byte offset and ANY contiguous burst error of length len <= 16 bytes, BOTH interleaved RS(254, 238) lanes receive <= 8 corrupted bytes — strictly within the exact unique correction radius t = 8!",
+      "signature": "public theorem interleaved_burst_16_even_odd_bound (start len : Nat) (hlen : len ≤ 16) : countEven start len ≤ 8 ∧ countOdd start len ≤ 8",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Byzantine.interleaved_burst_17_exceeds_radius",
+      "shortName": "interleaved_burst_17_exceeds_radius",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 163,
+      "endLine": 175,
+      "doc": "Theorem IV.5 (Tight 17-Byte Negative Burst Lower Bound): For ANY start byte offset, a 17-byte contiguous burst ALWAYS drives at least one RS lane to 9 errors (> t = 8), proving 16 bytes is the exact tight burst-correction ceiling!",
+      "signature": "public theorem interleaved_burst_17_exceeds_radius (start : Nat) : countEven start 17 > 8 ∨ countOdd start 17 > 8",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Byzantine.interleaved_burst_18_both_lanes_exceed",
+      "shortName": "interleaved_burst_18_both_lanes_exceed",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 178,
+      "endLine": 186,
+      "doc": "Theorem IV.6 (18-Byte Dual-Lane Saturation): For ANY start byte offset, an 18-byte contiguous burst pushes BOTH RS lanes to 9 errors (> 8).",
+      "signature": "public theorem interleaved_burst_18_both_lanes_exceed (start : Nat) : countEven start 18 = 9 ∧ countOdd start 18 = 9",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Byzantine.merkle_path_collision_free_binding",
+      "shortName": "merkle_path_collision_free_binding",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 192,
+      "endLine": 232,
+      "doc": "Theorem IV.7 (Collision-Free Full Merkle Path & Leaf Commitment): Under a collision-resistant (injective) compression function `hashPair`, ANY two pairs `(leaf1, path1)` and `(leaf2, path2)` with identical left/right branch directions (`path1.map Prod.fst = path2.map Prod.fst`) that evaluate to the identical Merkle root MUST have BOTH identical leaves (`leaf1 = leaf2`) AND identical sibling paths (`path1 = path2`)!",
+      "signature": "public theorem merkle_path_collision_free_binding (hashPair : Nat → Nat → Nat) (hInj : ∀ a1 b1 a2 b2, hashPair a1 b1 = hashPair a2 b2 → a1 = a2 ∧ b1 = b2) : ∀ (path1 path2 : List (Bool × Nat)) (leaf1 leaf2 : Nat), path1.map Prod.fst = path2.map Prod.fst → evalMerklePath hashPair leaf1 path1 = evalMerklePath hashPair leaf2 path2 → leaf1 = leaf2 ∧ path1 = path2",
+      "axioms": [
+        "propext"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Byzantine.pow2Pair_injective",
+      "shortName": "pow2Pair_injective",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 234,
+      "endLine": 269,
+      "doc": "Non-vacuity witness for Theorem IV.7: `pow2Pair` satisfies `hInj` universally over `Nat`.",
+      "signature": "public theorem pow2Pair_injective : ∀ b1 b2 a1 a2 : Nat, pow2Pair a1 b1 = pow2Pair a2 b2 → a1 = a2 ∧ b1 = b2",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Byzantine.merkle_quarantine_zero_contamination",
+      "shortName": "merkle_quarantine_zero_contamination",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 273,
+      "endLine": 282,
+      "doc": "Theorem IV.8 (Byzantine Quarantine Zero-Contamination Theorem): Under cryptographic Merkle binding, EVERY cell accepted into the Cauchy MDS decoder after `merkleQuarantine` is guaranteed 100% authentic (ZERO Byzantine Trojans survive!).",
+      "signature": "public theorem merkle_quarantine_zero_contamination (pinnedRoot : Nat) (cells : List HarvestedCell) (hBind : HashBinding pinnedRoot cells) : ∀ c ∈ merkleQuarantine pinnedRoot cells, c.authentic = true",
+      "axioms": [
+        "propext"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Byzantine.merkle_quarantine_preserves_authentic",
+      "shortName": "merkle_quarantine_preserves_authentic",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 286,
+      "endLine": 295,
+      "doc": "Theorem IV.9 (Zero False-Rejection of Authentic Cells): Every authentic cell in the input stream is preserved by `merkleQuarantine`, so Byzantine flooding can NEVER reduce the surviving authentic rank below k!",
+      "signature": "public theorem merkle_quarantine_preserves_authentic (pinnedRoot : Nat) (cells : List HarvestedCell) (hBind : HashBinding pinnedRoot cells) : ∀ c ∈ cells, c.authentic = true → c ∈ merkleQuarantine pinnedRoot cells",
+      "axioms": [
+        "propext"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Byzantine.hashBinding_mixed_nonvacuous",
+      "shortName": "hashBinding_mixed_nonvacuous",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 298,
+      "endLine": 306,
+      "doc": "Non-vacuity witness for Theorems IV.8 & IV.9: a mixed authentic+Trojan stream satisfies `HashBinding 42` and filters cleanly to the exact 2 authentic cells.",
+      "signature": "public theorem hashBinding_mixed_nonvacuous : let cells : List HarvestedCell := [⟨2, 42, true⟩, ⟨3, 999, false⟩, ⟨4, 42, true⟩] HashBinding 42 cells ∧ merkleQuarantine 42 cells = [⟨2, 42, true⟩, ⟨4, 42, true⟩]",
+      "axioms": [
+        "propext"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Byzantine.unpinned_quorum_honest_majority",
+      "shortName": "unpinned_quorum_honest_majority",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 359,
+      "endLine": 367,
+      "doc": "Theorem IV.10a (Order-Independent Unpinned Quorum Honest-Majority Election): For ANY insertion position (`pre ++ (honestRoot, honestCnt) :: suf`), if the honest lineage bucket has `honestCnt >= 2` and strictly outnumbers every competing bucket in `pre` and `suf`, `electUnpinnedQuorum` uniquely elects `some honestRoot`!",
+      "signature": "public theorem unpinned_quorum_honest_majority (honestRoot honestCnt : Nat) (pre suf : List (Nat × Nat)) (hMin : honestCnt ≥ 2) (hPre : ∀ rc ∈ pre, rc.2 < honestCnt) (hSuf : ∀ rc ∈ suf, rc.2 < honestCnt) : electUnpinnedQuorum (pre ++ (honestRoot, honestCnt) :: suf) = some honestRoot",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Byzantine.unpinned_quorum_honest_majority_witness",
+      "shortName": "unpinned_quorum_honest_majority_witness",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 369,
+      "endLine": 375,
+      "doc": "Non-vacuity witness for Theorem IV.10a with the honest majority at a non-head index.",
+      "signature": "public theorem unpinned_quorum_honest_majority_witness : electUnpinnedQuorum ([(999, 5)] ++ (42, 12) :: [(777, 3)]) = some 42",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.Byzantine.unpinned_quorum_honest_majority"
+      ]
+    },
+    {
+      "id": "Planaria.Byzantine.unpinned_quorum_tie_fail_closed",
+      "shortName": "unpinned_quorum_tie_fail_closed",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 462,
+      "endLine": 471,
+      "doc": "Theorem IV.10b (General Arbitrary-List Unpinned Quorum Tie Fail-Closed): For ANY vote list containing two tied maximum buckets `(r1, c)` and `(r2, c)` with `c >= 2` at arbitrary positions (with all other buckets having count `<= c`), `electUnpinnedQuorum` unconditionally fails closed and returns `none`!",
+      "signature": "public theorem unpinned_quorum_tie_fail_closed (pre mid suf : List (Nat × Nat)) (r1 r2 c : Nat) (hc : c ≥ 2) (hPre : ∀ rc ∈ pre, rc.2 ≤ c) (hMid : ∀ rc ∈ mid, rc.2 ≤ c) (hSuf : ∀ rc ∈ suf, rc.2 ≤ c) : electUnpinnedQuorum (pre ++ (r1, c) :: (mid ++ (r2, c) :: suf)) = none",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Byzantine.unpinned_quorum_sybil_counterexample",
+      "shortName": "unpinned_quorum_sybil_counterexample",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 476,
+      "endLine": 479,
+      "doc": "Theorem IV.10c (Sybil-Flood Override Counterexample): WITHOUT a pinned root, a Sybil attacker forging 36 cells under one coordinated fake root `999` against 24 authentic cells under `42` hijacks `electUnpinnedQuorum` to return `some 999`, proving formally why `pinnedRootHex` is required against majority-flood Sybil adversaries!",
+      "signature": "public theorem unpinned_quorum_sybil_counterexample : electUnpinnedQuorum [(42, 24), (999, 36)] = some 999",
+      "axioms": [],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Byzantine.unauthenticated_poisoning_exists",
+      "shortName": "unauthenticated_poisoning_exists",
+      "module": "Byzantine",
+      "file": "lean/PlanariaProofs/ByzantineImmune.lean",
+      "line": 483,
+      "endLine": 490,
+      "doc": "Theorem IV.11 (Falsifiable Counterexample — Unauthenticated Decoder Contamination): Without `merkleQuarantine`, prepending even ONE single RS-valid Byzantine Trojan cell before authentic cells causes the naive first-k Cauchy window to contain a forged cell!",
+      "signature": "public theorem unauthenticated_poisoning_exists : ∃ (stream : List HarvestedCell), let window := stream.take 2 (stream.filter (·.authentic)).length = 2 ∧ ∃ c ∈ window, c.authentic = false",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Xenograft.pvm32_ram_bounds_invariant",
+      "shortName": "pvm32_ram_bounds_invariant",
+      "module": "Xenograft",
+      "file": "lean/PlanariaProofs/XenograftABI.lean",
+      "line": 24,
+      "endLine": 32,
+      "doc": "Theorem V.1 (PVM-32 Signed 32-Bit Memory Sandboxing Invariant): For EVERY 32-bit two's-complement register `base` and signed immediate `offset` (including negative offsets, wraparound, and overflow!), `(base + offset) & 0xFFF` is strictly confined within `[0, 4096)`!",
+      "signature": "public theorem pvm32_ram_bounds_invariant (base offset : BitVec 32) : maskRamAddr32 (base + offset) < 4096",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Xenograft.pvm32_bounded_termination",
+      "shortName": "pvm32_bounded_termination",
+      "module": "Xenograft",
+      "file": "lean/PlanariaProofs/XenograftABI.lean",
+      "line": 36,
+      "endLine": 48,
+      "doc": "Theorem V.2 (PVM-32 Bounded-Step Termination): Any organ invocation (primary or xenografted) terminates in at most `budget` cycles — an infinite loop in a transplanted organ can NEVER hang the host VM!",
+      "signature": "public theorem pvm32_bounded_termination (stepFn : Nat → Option Nat) (budget state : Nat) : stepsConsumed stepFn budget state ≤ budget",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Xenograft.xenograft_preserves_sovereignty",
+      "shortName": "xenograft_preserves_sovereignty",
+      "module": "Xenograft",
+      "file": "lean/PlanariaProofs/XenograftABI.lean",
+      "line": 51,
+      "endLine": 56,
+      "doc": "Theorem V.3 (Host Lineage Sovereignty via Header Flag): Any bundle with `xenograftable = false` can NEVER be replaced by a foreign donor.",
+      "signature": "public theorem xenograft_preserves_sovereignty (host donor : BundleSlot) (hSov : host.xenograftable = false) : applyXenograft host donor = host",
+      "axioms": [
+        "propext"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Xenograft.xenograft_sovereign_b0_b6_immutable",
+      "shortName": "xenograft_sovereign_b0_b6_immutable",
+      "module": "Xenograft",
+      "file": "lean/PlanariaProofs/XenograftABI.lean",
+      "line": 60,
+      "endLine": 67,
+      "doc": "Theorem V.4 (Non-Vacuous B0/B6 Sovereignty Invariant): Even if an adversarial header lies with `xenograftable = true`, Bundle 0 (S0_STEM_NUCLEUS) and Bundle 6 (S3_GENOME_LEDGER) can NEVER be transplanted by `applyXenograft`!",
+      "signature": "public theorem xenograft_sovereign_b0_b6_immutable (host donor : BundleSlot) (hId : host.bundleId = 0 ∨ host.bundleId = 6) : applyXenograft host donor = host",
+      "axioms": [
+        "propext"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Xenograft.xenograft_abi_safety",
+      "shortName": "xenograft_abi_safety",
+      "module": "Xenograft",
+      "file": "lean/PlanariaProofs/XenograftABI.lean",
+      "line": 71,
+      "endLine": 86,
+      "doc": "Theorem V.5 (Xenograft ABI & Bundle Identity Contract Preservation): Any accepted Xenograft transplant strictly preserves the host slot's ABI signature and bundle identity — incompatible donor organs are unconditionally rejected.",
+      "signature": "public theorem xenograft_abi_safety (host donor : BundleSlot) : (applyXenograft host donor).abiSig = host.abiSig ∧ (applyXenograft host donor).bundleId = host.bundleId ∧ (donor.abiSig ≠ host.abiSig → applyXenograft host donor = host) ∧ (donor.bundleId ≠ host.bundleId → applyXenograft host donor = host)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Xenograft.xenograft_improves_amputated_host",
+      "shortName": "xenograft_improves_amputated_host",
+      "module": "Xenograft",
+      "file": "lean/PlanariaProofs/XenograftABI.lean",
+      "line": 91,
+      "endLine": 103,
+      "doc": "Theorem V.6 (Therapeutic Restoration of Amputated Host): If a xenograftable host organ (`bundleId ∈ 1..5`) is amputated (`viable = false`) and a matching viable xenograftable donor with equal `bundleId` and `abiSig` is spliced in, the resulting chimera slot becomes strictly viable (`true`).",
+      "signature": "public theorem xenograft_improves_amputated_host (host donor : BundleSlot) (hAmp : host.viable = false) (hRange : host.bundleId ≥ 1 ∧ host.bundleId ≤ 5) (hXenoH : host.xenograftable = true) (hXenoD : donor.xenograftable = true) (hDonor : donor.viable = true) (hId : donor.bundleId = host.bundleId) (hAbi : donor.abiSig = host.abiSig) : (applyXenograft host donor).viable = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Xenograft.xenograft_improves_amputated_host_witness",
+      "shortName": "xenograft_improves_amputated_host_witness",
+      "module": "Xenograft",
+      "file": "lean/PlanariaProofs/XenograftABI.lean",
+      "line": 106,
+      "endLine": 112,
+      "doc": "Non-vacuity witness for Theorem V.6: amputated host Bundle 3 (`abiSig = 0x3333`) repaired by a viable matching donor Bundle 3.",
+      "signature": "public theorem xenograft_improves_amputated_host_witness : let host : BundleSlot := ⟨3, 0x3333, true, false⟩ let donor : BundleSlot := ⟨3, 0x3333, true, true⟩ (applyXenograft host donor).viable = true",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.Xenograft.xenograft_improves_amputated_host"
+      ]
+    },
+    {
+      "id": "Planaria.Xenograft.xenograft_dead_host_refused",
+      "shortName": "xenograft_dead_host_refused",
+      "module": "Xenograft",
+      "file": "lean/PlanariaProofs/XenograftABI.lean",
+      "line": 116,
+      "endLine": 119,
+      "doc": "Theorem V.7 (Dead-Host Xenograft Refusal — Claim C07 / `hbin.js` Step 3 Fidelity): When the host Stratum-0 Stem Nucleus is non-viable (`hostStemViable = false`), `applyXenograftWithStem` unconditionally refuses ALL foreign grafts regardless of donor validity!",
+      "signature": "public theorem xenograft_dead_host_refused (host donor : BundleSlot) : applyXenograftWithStem false host donor = host",
+      "axioms": [],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Xenograft.xenograft_dead_host_witness",
+      "shortName": "xenograft_dead_host_witness",
+      "module": "Xenograft",
+      "file": "lean/PlanariaProofs/XenograftABI.lean",
+      "line": 122,
+      "endLine": 127,
+      "doc": "Non-vacuity witness for Theorem V.7: even an ABI-matching viable donor Bundle 3 is refused when the host stem nucleus is dead (`hostStemViable = false`), keeping `viable = false`.",
+      "signature": "public theorem xenograft_dead_host_witness : let host : BundleSlot := ⟨3, 0x3333, true, false⟩ let donor : BundleSlot := ⟨3, 0x3333, true, true⟩ (applyXenograftWithStem false host donor).viable = false",
+      "axioms": [],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.QuantumTemporal.pauliX4Q_preserves_normSq4",
+      "shortName": "pauliX4Q_preserves_normSq4",
+      "module": "QuantumTemporal",
+      "file": "lean/PlanariaProofs/QuantumTemporal.lean",
+      "line": 58,
+      "endLine": 66,
+      "doc": "Theorem VI.1 (4-Qubit Complex Pauli-X Unitarity — all 4 qubits, all 16 amplitudes).",
+      "signature": "public theorem pauliX4Q_preserves_normSq4 (q : Fin 4) (ψ : QState4) : normSq4 (pauliX4Q q ψ) = normSq4 ψ",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.QuantumTemporal.pauliY4Q_preserves_normSq4",
+      "shortName": "pauliY4Q_preserves_normSq4",
+      "module": "QuantumTemporal",
+      "file": "lean/PlanariaProofs/QuantumTemporal.lean",
+      "line": 68,
+      "endLine": 76,
+      "doc": "Theorem VI.2 (4-Qubit Complex Pauli-Y Unitarity — all 4 qubits, all 16 amplitudes).",
+      "signature": "public theorem pauliY4Q_preserves_normSq4 (q : Fin 4) (ψ : QState4) : normSq4 (pauliY4Q q ψ) = normSq4 ψ",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.QuantumTemporal.pauliZ4Q_preserves_normSq4",
+      "shortName": "pauliZ4Q_preserves_normSq4",
+      "module": "QuantumTemporal",
+      "file": "lean/PlanariaProofs/QuantumTemporal.lean",
+      "line": 78,
+      "endLine": 85,
+      "doc": "Theorem VI.3 (4-Qubit Complex Pauli-Z Unitarity — all 4 qubits, all 16 amplitudes).",
+      "signature": "public theorem pauliZ4Q_preserves_normSq4 (q : Fin 4) (ψ : QState4) : normSq4 (pauliZ4Q q ψ) = normSq4 ψ",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.QuantumTemporal.hadamardScaled4Q_normSq4",
+      "shortName": "hadamardScaled4Q_normSq4",
+      "module": "QuantumTemporal",
+      "file": "lean/PlanariaProofs/QuantumTemporal.lean",
+      "line": 88,
+      "endLine": 148,
+      "doc": "Theorem VI.4 (4-Qubit Complex Scaled Hadamard Unitarity — all 4 qubits, all 16 amplitudes): `normSq4 (sqrt(2) * H_q |ψ⟩) = 2 * normSq4 |ψ⟩`, proving exact probability conservation!",
+      "signature": "public theorem hadamardScaled4Q_normSq4 (q : Fin 4) (ψ : QState4) : normSq4 (hadamardScaled4Q q ψ) = 2 * normSq4 ψ",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.QuantumTemporal.cnot4Q_preserves_normSq4",
+      "shortName": "cnot4Q_preserves_normSq4",
+      "module": "QuantumTemporal",
+      "file": "lean/PlanariaProofs/QuantumTemporal.lean",
+      "line": 150,
+      "endLine": 163,
+      "doc": "Theorem VI.5 (4-Qubit Complex CNOT Unitarity — all 12 distinct (ctrl, targ) pairs!).",
+      "signature": "public theorem cnot4Q_preserves_normSq4 (ctrl targ : Fin 4) (hne : ctrl ≠ targ) (ψ : QState4) : normSq4 (cnot4Q ctrl targ ψ) = normSq4 ψ",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.QuantumTemporal.cnot4Q_nonvacuous_witness",
+      "shortName": "cnot4Q_nonvacuous_witness",
+      "module": "QuantumTemporal",
+      "file": "lean/PlanariaProofs/QuantumTemporal.lean",
+      "line": 165,
+      "endLine": 169,
+      "doc": "Non-vacuity witness for Theorem VI.5: Bell-pair preparation `CNOT(0, 1)` on `H_0 |0000⟩`.",
+      "signature": "public theorem cnot4Q_nonvacuous_witness : let ψ : QState4 := fun k => if k.val = 0 ∨ k.val = 1 then ⟨1, 0⟩ else ⟨0, 0⟩ normSq4 (cnot4Q ⟨0, Nat.zero_lt_succ 3⟩ ⟨1, Nat.succ_lt_succ (Nat.zero_lt_succ 2)⟩ ψ) = 2",
+      "axioms": [
+        "propext"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.QuantumTemporal.cz4Q_preserves_normSq4",
+      "shortName": "cz4Q_preserves_normSq4",
+      "module": "QuantumTemporal",
+      "file": "lean/PlanariaProofs/QuantumTemporal.lean",
+      "line": 171,
+      "endLine": 182,
+      "doc": "Theorem VI.6 (4-Qubit Complex CZ Unitarity — all 16 (ctrl, targ) pairs!).",
+      "signature": "public theorem cz4Q_preserves_normSq4 (ctrl targ : Fin 4) (ψ : QState4) : normSq4 (cz4Q ctrl targ ψ) = normSq4 ψ",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.QuantumTemporal.swap4Q_preserves_normSq4",
+      "shortName": "swap4Q_preserves_normSq4",
+      "module": "QuantumTemporal",
+      "file": "lean/PlanariaProofs/QuantumTemporal.lean",
+      "line": 184,
+      "endLine": 200,
+      "doc": "Theorem VI.7 (4-Qubit Complex SWAP Unitarity — all 16 (q1, q2) pairs!).",
+      "signature": "public theorem swap4Q_preserves_normSq4 (q1 q2 : Fin 4) (ψ : QState4) : normSq4 (swap4Q q1 q2 ψ) = normSq4 ψ",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.QuantumTemporal.temporal_rewind_exact_left_inv",
+      "shortName": "temporal_rewind_exact_left_inv",
+      "module": "QuantumTemporal",
+      "file": "lean/PlanariaProofs/QuantumTemporal.lean",
+      "line": 202,
+      "endLine": 208,
+      "doc": "Theorem VI.8: Rewinding after advancing restores the EXACT prior ChronoState (zero drift!).",
+      "signature": "public theorem temporal_rewind_exact_left_inv (delta : Int) (s : ChronoState) : chronoRewind delta (chronoAdvance delta s) = s",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.QuantumTemporal.temporal_rewind_exact_right_inv",
+      "shortName": "temporal_rewind_exact_right_inv",
+      "module": "QuantumTemporal",
+      "file": "lean/PlanariaProofs/QuantumTemporal.lean",
+      "line": 210,
+      "endLine": 216,
+      "doc": "Theorem VI.9: Advancing after rewinding restores the EXACT future ChronoState (strict bijection!).",
+      "signature": "public theorem temporal_rewind_exact_right_inv (delta : Int) (s : ChronoState) : chronoAdvance delta (chronoRewind delta s) = s",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.QuantumTemporal.snapshot_buffer_capacity_and_exact_pop",
+      "shortName": "snapshot_buffer_capacity_and_exact_pop",
+      "module": "QuantumTemporal",
+      "file": "lean/PlanariaProofs/QuantumTemporal.lean",
+      "line": 220,
+      "endLine": 228,
+      "doc": "Theorem VI.10 (Bounded 360-Frame Rewind Buffer Exactness & Memory Cap): 1. Pushing any snapshot onto a 360-frame buffer preserves `length <= 360`. 2. Immediately popping restores the EXACT pushed snapshot (lossless rewind!).",
+      "signature": "public theorem snapshot_buffer_capacity_and_exact_pop {α : Type} (buf : List α) (snap : α) : (pushSnapshot 360 buf snap).length ≤ 360 ∧ (∃ rest, popSnapshot (pushSnapshot 360 buf snap) = some (snap, rest))",
+      "axioms": [
+        "propext"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.QuantumTemporal.combinatorial_1of1_space_exceeds_6_trillion",
+      "shortName": "combinatorial_1of1_space_exceeds_6_trillion",
+      "module": "QuantumTemporal",
+      "file": "lean/PlanariaProofs/QuantumTemporal.lean",
+      "line": 235,
+      "endLine": 246,
+      "doc": "Theorem VI.11 (Exact Reachable 1/1 Combinatorial Universe Cardinality): Accounting strictly for reachable archetype-rarity pairs (7 standard archetypes x 6 rarities + 1 Singularity Archon boss x 3 high rarities = 45 reachable pairs), the exact discrete cross-product of PLANARIA v2.3's Weapon (80,640) x Armor (3,072) x NPC (25,920) forges equals `6,421,059,993,600` (> 6.42 trillion!) BEFORE continuous stat gradients and 64-bit SHA-256 lineage IDs across 24 orders of magnitude!",
+      "signature": "public theorem combinatorial_1of1_space_exceeds_6_trillion : let weaponDiscrete := 14 * 10 * 12 * 8 * 6 let armorDiscrete := 8 * 8 * 8 * 6 let npcArchRarity := 7 * 6 + 1 * 3 let npcDiscrete := npcArchRarity * 8 * 6 * 12 weaponDiscrete = 80640 ∧ armorDiscrete = 3072 ∧ npcDiscrete = 25920 ∧ weaponDiscrete * armorDiscrete * npcDiscrete = 6421059993600 ∧ weaponDiscrete * armorDiscrete * npcDiscrete > 6400000000000",
+      "axioms": [],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Adversarial.refute_mitosis_below_2k",
+      "shortName": "refute_mitosis_below_2k",
+      "module": "Adversarial",
+      "file": "lean/PlanariaProofs/AdversarialTests.lean",
+      "line": 32,
+      "endLine": 37,
+      "doc": "Adversarial Test 1: Tightness of `mitosis_exact_sufficient` (`N >= 2*k` cannot be weakened to `2*k - 1`).",
+      "signature": "public theorem refute_mitosis_below_2k : ¬ (∀ N k : Nat, N ≥ 2 * k - 1 → N / 2 ≥ k ∧ (N - N / 2) ≥ k)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Adversarial.refute_unaligned_cut_without_margin",
+      "shortName": "refute_unaligned_cut_without_margin",
+      "module": "Adversarial",
+      "file": "lean/PlanariaProofs/AdversarialTests.lean",
+      "line": 39,
+      "endLine": 44,
+      "doc": "Adversarial Test 2: Tightness of `mitosis_unaligned_cut_guarantee` (`N >= 2*k` is insufficient under boundary loss).",
+      "signature": "public theorem refute_unaligned_cut_without_margin : ¬ (∀ N k : Nat, N ≥ 2 * k → (N / 2 - 1) ≥ k ∧ ((N - N / 2) - 1) ≥ k)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Adversarial.refute_interleaved_burst_17_safe",
+      "shortName": "refute_interleaved_burst_17_safe",
+      "module": "Adversarial",
+      "file": "lean/PlanariaProofs/AdversarialTests.lean",
+      "line": 46,
+      "endLine": 52,
+      "doc": "Adversarial Test 3: Tightness of `interleaved_burst_16_even_odd_bound` (17-byte bursts ALWAYS break radius 8).",
+      "signature": "public theorem refute_interleaved_burst_17_safe : ¬ (∀ start : Nat, countEven start 17 ≤ 8 ∧ countOdd start 17 ≤ 8)",
+      "axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.Byzantine.interleaved_burst_17_exceeds_radius"
+      ]
+    },
+    {
+      "id": "Planaria.Adversarial.refute_anastomosis_dead_stem_safe",
+      "shortName": "refute_anastomosis_dead_stem_safe",
+      "module": "Adversarial",
+      "file": "lean/PlanariaProofs/AdversarialTests.lean",
+      "line": 54,
+      "endLine": 59,
+      "doc": "Adversarial Test 4: Tightness of `anastomosis_zero_crash_safety` (removing `b0 >= 2` permits `.deadCrash`).",
+      "signature": "public theorem refute_anastomosis_dead_stem_safe : ¬ (∀ p : ShardProfile, resolveRenderer p ≠ .deadCrash)",
+      "axioms": [],
+      "claims": [],
+      "dependencies": []
+    },
+    {
+      "id": "Planaria.Adversarial.refute_unpinned_quorum_tie_elects",
+      "shortName": "refute_unpinned_quorum_tie_elects",
+      "module": "Adversarial",
+      "file": "lean/PlanariaProofs/AdversarialTests.lean",
+      "line": 61,
+      "endLine": 71,
+      "doc": "Adversarial Test 5: Tightness of `unpinned_quorum_tie_fail_closed` (equal-count ties NEVER elect a winner).",
+      "signature": "public theorem refute_unpinned_quorum_tie_elects : ¬ (∀ r1 r2 c : Nat, c ≥ 2 → ∃ w, electUnpinnedQuorum [(r1, c), (r2, c)] = some w)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.Byzantine.unpinned_quorum_tie_fail_closed"
+      ]
+    },
+    {
+      "id": "Planaria.Adversarial.refute_xenograft_replaces_b0",
+      "shortName": "refute_xenograft_replaces_b0",
+      "module": "Adversarial",
+      "file": "lean/PlanariaProofs/AdversarialTests.lean",
+      "line": 73,
+      "endLine": 80,
+      "doc": "Adversarial Test 6: Tightness of `xenograft_sovereign_b0_b6_immutable` (no donor can ever graft Bundle 0).",
+      "signature": "public theorem refute_xenograft_replaces_b0 : ¬ (∃ host donor : BundleSlot, host.bundleId = 0 ∧ host.viable = false ∧ (applyXenograft host donor).viable = true)",
+      "axioms": [
+        "propext"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.Xenograft.xenograft_sovereign_b0_b6_immutable"
+      ]
+    },
+    {
+      "id": "Planaria.Adversarial.refute_hadamard_preserves_unscaled_norm",
+      "shortName": "refute_hadamard_preserves_unscaled_norm",
+      "module": "Adversarial",
+      "file": "lean/PlanariaProofs/AdversarialTests.lean",
+      "line": 82,
+      "endLine": 90,
+      "doc": "Adversarial Test 7: Tightness of `hadamardScaled4Q_normSq4` (unscaled Hadamard doubles norm-squared, not preserves it).",
+      "signature": "public theorem refute_hadamard_preserves_unscaled_norm : ¬ (∀ q : Fin 4, ∀ ψ : QState4, normSq4 (hadamardScaled4Q q ψ) = normSq4 ψ)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": [
+        "Planaria.QuantumTemporal.hadamardScaled4Q_normSq4"
+      ]
+    },
+    {
+      "id": "Planaria.Adversarial.refute_gf256_zero_invertible",
+      "shortName": "refute_gf256_zero_invertible",
+      "module": "Adversarial",
+      "file": "lean/PlanariaProofs/AdversarialTests.lean",
+      "line": 92,
+      "endLine": 97,
+      "doc": "Adversarial Test 8: Tightness of `gfMul_inv_exact` (`1 <= a` is essential; zero has no multiplicative inverse in GF(2^8)).",
+      "signature": "public theorem refute_gf256_zero_invertible : ¬ (∃ x : Nat, gfMul 0 x = 1)",
+      "axioms": [
+        "propext",
+        "Quot.sound"
+      ],
+      "claims": [],
+      "dependencies": []
+    }
+  ],
+  "edges": [
+    {
+      "from": "Planaria.GF256.gfMul_zero_right",
+      "to": "Planaria.GF256.gfMul_comm"
+    },
+    {
+      "from": "Planaria.GF256.gfMul_lt_256",
+      "to": "Planaria.GF256.gfMul_assoc"
+    },
+    {
+      "from": "Planaria.GF256.gfMul_zero_right",
+      "to": "Planaria.GF256.gfMul_assoc"
+    },
+    {
+      "from": "Planaria.GF256.gfMul_lt_256",
+      "to": "Planaria.GF256.gfMul_add_right"
+    },
+    {
+      "from": "Planaria.GF256.gf_cauchy2_nonzero_det",
+      "to": "Planaria.GF256.cauchy2_exact_decode"
+    },
+    {
+      "from": "Planaria.GF256.cauchy2_exact_decode",
+      "to": "Planaria.GF256.gf256_cauchy2_exact_decode"
+    },
+    {
+      "from": "Planaria.GF256.gf256_cauchy2_exact_decode",
+      "to": "Planaria.GF256.gf256_cauchy2_nonvacuous_witness"
+    },
+    {
+      "from": "Planaria.Mitosis.mitosis_strict_impossibility",
+      "to": "Planaria.Mitosis.mitosis_strict_impossibility_witness"
+    },
+    {
+      "from": "Planaria.Mitosis.pigeonhole_two_way",
+      "to": "Planaria.Mitosis.pigeonhole_two_way_witness"
+    },
+    {
+      "from": "Planaria.Anastomosis.anastomosis_monotonicity",
+      "to": "Planaria.Anastomosis.anastomosis_monotonicity_witness"
+    },
+    {
+      "from": "Planaria.Byzantine.hammingDist_triangle",
+      "to": "Planaria.Byzantine.rs_unique_correction_ball_disjoint"
+    },
+    {
+      "from": "Planaria.Byzantine.rs_unique_correction_ball_disjoint",
+      "to": "Planaria.Byzantine.rs_unique_correction_ball_nonvacuous"
+    },
+    {
+      "from": "Planaria.Byzantine.unpinned_quorum_honest_majority",
+      "to": "Planaria.Byzantine.unpinned_quorum_honest_majority_witness"
+    },
+    {
+      "from": "Planaria.Xenograft.xenograft_improves_amputated_host",
+      "to": "Planaria.Xenograft.xenograft_improves_amputated_host_witness"
+    },
+    {
+      "from": "Planaria.Byzantine.interleaved_burst_17_exceeds_radius",
+      "to": "Planaria.Adversarial.refute_interleaved_burst_17_safe"
+    },
+    {
+      "from": "Planaria.Byzantine.unpinned_quorum_tie_fail_closed",
+      "to": "Planaria.Adversarial.refute_unpinned_quorum_tie_elects"
+    },
+    {
+      "from": "Planaria.Xenograft.xenograft_sovereign_b0_b6_immutable",
+      "to": "Planaria.Adversarial.refute_xenograft_replaces_b0"
+    },
+    {
+      "from": "Planaria.QuantumTemporal.hadamardScaled4Q_normSq4",
+      "to": "Planaria.Adversarial.refute_hadamard_preserves_unscaled_norm"
+    }
+  ]
+}

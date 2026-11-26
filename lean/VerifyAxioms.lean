@@ -1,11 +1,15 @@
-import PlanariaProofs
+module
+
+public import PlanariaProofs
 
 /-!
-# PLANARIA v2.3.0 — Standalone Axiom Audit Script (`VerifyAxioms.lean`)
+# PLANARIA v2.4.0 — Standalone Axiom Audit Script (`VerifyAxioms.lean`)
 
-Runs `#print axioms` on all 70 machine-checked theorems across all 6 pure Lean 4.35.0
-modules. Every declaration MUST depend strictly on `[propext, Classical.choice, Quot.sound]`
-(or zero axioms) with ZERO `sorryAx`, `Lean.ofReduceBool`, `Lean.trustCompiler`, or custom axioms.
+Runs `#print axioms` on all 85 machine-checked theorems across all 7 pure Lean 4.35.0
+modules (with `autoImplicit = false` and `relaxedAutoImplicit = false`).
+Every declaration MUST depend strictly on `[propext, Classical.choice, Quot.sound]`
+(or zero axioms) with ZERO `sorryAx`, `Lean.ofReduceBool`, `Lean.trustCompiler`,
+`_native`, or custom axioms.
 -/
 
 -- Module 1: GF(2^8) Concrete Field, Universal Cauchy 2x2 Decoding & Non-Vacuity Witness (16)
@@ -26,9 +30,10 @@ modules. Every declaration MUST depend strictly on `[propext, Classical.choice, 
 #print axioms Planaria.GF256.gf256_cauchy2_exact_decode
 #print axioms Planaria.GF256.gf256_cauchy2_nonvacuous_witness
 
--- Module 2: Mitosis Bounds, Integer Placement Schedule & Byte Budgets (12)
+-- Module 2: Mitosis Bounds, Integer Placement Schedule, Byte Budgets & Non-Vacuity Witnesses (14)
 #print axioms Planaria.Mitosis.mitosis_exact_sufficient
 #print axioms Planaria.Mitosis.mitosis_strict_impossibility
+#print axioms Planaria.Mitosis.mitosis_strict_impossibility_witness
 #print axioms Planaria.Mitosis.mitosis_unaligned_cut_guarantee
 #print axioms Planaria.Mitosis.planaria_all_7_bundles_mitosis_safe
 #print axioms Planaria.Mitosis.planaria_total_cells_exact
@@ -38,21 +43,24 @@ modules. Every declaration MUST depend strictly on `[propext, Classical.choice, 
 #print axioms Planaria.Mitosis.planaria_cauchy_coord_disjoint
 #print axioms Planaria.Mitosis.planaria_payload_capacity_exact
 #print axioms Planaria.Mitosis.pigeonhole_two_way
+#print axioms Planaria.Mitosis.pigeonhole_two_way_witness
 #print axioms Planaria.Mitosis.trisection_synergy_recovery
 
--- Module 3: 4-Stratum Lattice, 6-Organ Anastomosis & Zero-Cliff Separation (7)
+-- Module 3: 4-Stratum Lattice, 6-Organ Anastomosis, Zero-Cliff Separation & Witness (8)
 #print axioms Planaria.Anastomosis.anastomosis_zero_crash_safety
 #print axioms Planaria.Anastomosis.resolveOrgan_zero_crash_safety
 #print axioms Planaria.Anastomosis.anastomosis_monotonicity
+#print axioms Planaria.Anastomosis.anastomosis_monotonicity_witness
 #print axioms Planaria.Anastomosis.fusion_dominates_parents
 #print axioms Planaria.Anastomosis.fusion_strict_synergy_exists
 #print axioms Planaria.Anastomosis.zero_cliff_strict_separation
 #print axioms Planaria.Anastomosis.viability_s3_without_b2_matches_hbin
 
--- Module 4: Byte-List Hamming, Tight Burst Bounds, Merkle, Executable Quorum & Witnesses (16)
+-- Module 4: Byte-List Hamming, Tight Burst Bounds, Full Merkle Path, General Quorum & Witnesses (18)
 #print axioms Planaria.Byzantine.hammingDist_triangle
 #print axioms Planaria.Byzantine.rs254_238_unique_decoding_radius
 #print axioms Planaria.Byzantine.rs_unique_correction_ball_disjoint
+#print axioms Planaria.Byzantine.rs_unique_correction_ball_nonvacuous
 #print axioms Planaria.Byzantine.rs_interleaved_lane_geometry
 #print axioms Planaria.Byzantine.interleaved_burst_16_even_odd_bound
 #print axioms Planaria.Byzantine.interleaved_burst_17_exceeds_radius
@@ -63,11 +71,12 @@ modules. Every declaration MUST depend strictly on `[propext, Classical.choice, 
 #print axioms Planaria.Byzantine.merkle_quarantine_preserves_authentic
 #print axioms Planaria.Byzantine.hashBinding_mixed_nonvacuous
 #print axioms Planaria.Byzantine.unpinned_quorum_honest_majority
+#print axioms Planaria.Byzantine.unpinned_quorum_honest_majority_witness
 #print axioms Planaria.Byzantine.unpinned_quorum_tie_fail_closed
 #print axioms Planaria.Byzantine.unpinned_quorum_sybil_counterexample
 #print axioms Planaria.Byzantine.unauthenticated_poisoning_exists
 
--- Module 5: BitVec 32 Sandboxing, Bounded Fuel, B0/B6 Sovereignty & Witness (7)
+-- Module 5: BitVec 32 Sandboxing, Bounded Fuel, B0/B6 Sovereignty, Dead-Host Refusal & Witnesses (9)
 #print axioms Planaria.Xenograft.pvm32_ram_bounds_invariant
 #print axioms Planaria.Xenograft.pvm32_bounded_termination
 #print axioms Planaria.Xenograft.xenograft_preserves_sovereignty
@@ -75,6 +84,8 @@ modules. Every declaration MUST depend strictly on `[propext, Classical.choice, 
 #print axioms Planaria.Xenograft.xenograft_abi_safety
 #print axioms Planaria.Xenograft.xenograft_improves_amputated_host
 #print axioms Planaria.Xenograft.xenograft_improves_amputated_host_witness
+#print axioms Planaria.Xenograft.xenograft_dead_host_refused
+#print axioms Planaria.Xenograft.xenograft_dead_host_witness
 
 -- Module 6: Full 4-Qubit Complex Unitarity, 360-Frame Rewind, 6.42T Space & Witness (12)
 #print axioms Planaria.QuantumTemporal.pauliX4Q_preserves_normSq4
@@ -89,3 +100,13 @@ modules. Every declaration MUST depend strictly on `[propext, Classical.choice, 
 #print axioms Planaria.QuantumTemporal.temporal_rewind_exact_right_inv
 #print axioms Planaria.QuantumTemporal.snapshot_buffer_capacity_and_exact_pop
 #print axioms Planaria.QuantumTemporal.combinatorial_1of1_space_exceeds_6_trillion
+
+-- Module 7: Adversarial False-Variant Refutations (Playbook #12) (8)
+#print axioms Planaria.Adversarial.refute_mitosis_below_2k
+#print axioms Planaria.Adversarial.refute_unaligned_cut_without_margin
+#print axioms Planaria.Adversarial.refute_interleaved_burst_17_safe
+#print axioms Planaria.Adversarial.refute_anastomosis_dead_stem_safe
+#print axioms Planaria.Adversarial.refute_unpinned_quorum_tie_elects
+#print axioms Planaria.Adversarial.refute_xenograft_replaces_b0
+#print axioms Planaria.Adversarial.refute_hadamard_preserves_unscaled_norm
+#print axioms Planaria.Adversarial.refute_gf256_zero_invertible

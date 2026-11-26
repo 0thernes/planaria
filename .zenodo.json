@@ -1,8 +1,9 @@
 {
   "title": "PLANARIA: Progressive Holographic Executable Binaries with Autonomous Vascular Anastomosis, Merkle Byzantine Immunity, and 6-Kernel Machine-Checked Formal Proofs",
-  "version": "2.3.0",
+  "version": "2.4.0",
+  "publication_date": "2026-11-25",
   "upload_type": "software",
-  "description": "A zero-dependency progressive holographic executable architecture (.hbin), Plang compiler, PVM-32 vascular anastomosis VM, 4-qubit temporal-quantum WebGL2 Studio, and 70-theorem pure Lean 4.35.0 formal verification suite checked across six independent kernels.",
+  "description": "A zero-dependency progressive holographic executable architecture (.hbin), Plang compiler, PVM-32 vascular anastomosis VM, 4-qubit temporal-quantum WebGL2 Studio, clean-room Python 3 differential oracle, interactive Lean 4.35.0 Proof Blueprint, and 85-theorem pure Lean 4.35.0 formal verification suite checked across six independent kernels.",
   "creators": [
     {
       "name": "Donahue, Alexander Stephen",
@@ -31,5 +32,5 @@
       "scheme": "url"
     }
   ],
-  "notes": "Non-commercial research and play license (Cosmogonic License — see LICENSE and LEGAL.md). AI coding and proof-engineering assistance disclosed in paper, README.md, and docs/run-log.md."
+  "notes": "Non-commercial research and play license (Cosmogonic License — see LICENSE and LEGAL.md; Build Standard audit scripts carved out under CC BY 4.0 per THIRD_PARTY_NOTICES.md). AI coding and proof-engineering assistance disclosed in paper, README.md, LEGAL.md, and docs/run-log.md."
 }

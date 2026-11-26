@@ -1,7 +1,7 @@
 name: Falsification / Counterexample / Security Audit Report
 description: Submit a counterexample, Byzantine attack bypass, coding-bound violation, prior-art citation, or Lean 4 scope critique
 title: "[Falsification]: "
-labels: ["verification", "falsification", "security"]
+labels: ["falsification", "security"]
 body:
   - type: markdown
     attributes:

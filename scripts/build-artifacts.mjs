@@ -58,8 +58,15 @@ for (const name of programs) {
 // Phase 2: Atomic temp-file write + rename so partial failures never desync .hbin & manifest.json
 function writeAtomic(targetPath, data) {
   const tmpPath = `${targetPath}.${process.pid}.tmp`;
-  fs.writeFileSync(tmpPath, data);
-  fs.renameSync(tmpPath, targetPath);
+  try {
+    fs.writeFileSync(tmpPath, data);
+    fs.renameSync(tmpPath, targetPath);
+  } catch (err) {
+    try {
+      if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+    } catch { /* best-effort cleanup */ }
+    throw err;
+  }
 }
 
 for (const { name, compiled } of compiledBatch) {

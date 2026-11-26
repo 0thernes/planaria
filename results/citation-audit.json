@@ -1,0 +1,200 @@
+{
+  "schema": "PLANARIA-CITATION-AUDIT-1.0",
+  "auditedAt": "2026-11-26T03:23:46.571Z",
+  "totalBibitems": 22,
+  "totalDoisChecked": 19,
+  "resolvedCount": 19,
+  "retractedCount": 0,
+  "entries": [
+    {
+      "key": "reed1960",
+      "doi": "10.1137/0108018",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 1960,
+      "firstAuthor": "Reed",
+      "title": "Polynomial Codes Over Certain Finite Fields"
+    },
+    {
+      "key": "chien1964",
+      "doi": "10.1109/TIT.1964.1053699",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 1964,
+      "firstAuthor": "Chien",
+      "title": "Cyclic decoding procedures for Bose- Chaudhuri-Hocquenghem codes"
+    },
+    {
+      "key": "singleton1964",
+      "doi": "10.1109/TIT.1964.1053661",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 1964,
+      "firstAuthor": "Singleton",
+      "title": "Maximum distanceq-nary codes"
+    },
+    {
+      "key": "forney1965",
+      "doi": "10.1109/TIT.1965.1053825",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 1965,
+      "firstAuthor": "Forney",
+      "title": "On decoding BCH codes"
+    },
+    {
+      "key": "berlekamp1968",
+      "doi": "10.1142/9407",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 2014,
+      "firstAuthor": "Berlekamp",
+      "title": "Algebraic Coding Theory"
+    },
+    {
+      "key": "massey1969",
+      "doi": "10.1109/TIT.1969.1054260",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 1969,
+      "firstAuthor": "Massey",
+      "title": "Shift-register synthesis and BCH decoding"
+    },
+    {
+      "key": "merkle1987",
+      "doi": "10.1007/3-540-48184-2_32",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 1988,
+      "firstAuthor": "Merkle",
+      "title": "A Digital Signature Based on a Conventional Encryption Function"
+    },
+    {
+      "key": "albanese1996",
+      "doi": "10.1109/18.556670",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 1996,
+      "firstAuthor": "Albanese",
+      "title": "Priority encoding transmission"
+    },
+    {
+      "key": "luby2002",
+      "doi": "10.1109/SFCS.2002.1181950",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": null,
+      "firstAuthor": "Luby",
+      "title": "LT codes"
+    },
+    {
+      "key": "reddien2004",
+      "doi": "10.1146/annurev.cellbio.20.010403.095114",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 2004,
+      "firstAuthor": "Reddien",
+      "title": "FUNDAMENTALS OF PLANARIAN REGENERATION"
+    },
+    {
+      "key": "plank2006",
+      "doi": "10.1109/NCA.2006.43",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": null,
+      "firstAuthor": "James S. Plank",
+      "title": "Optimizing Cauchy Reed-Solomon Codes for Fault-Tolerant Network Storage Applications"
+    },
+    {
+      "key": "bernstein2012",
+      "doi": "10.1007/s13389-012-0027-1",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 2012,
+      "firstAuthor": "Bernstein",
+      "title": "High-speed high-security signatures"
+    },
+    {
+      "key": "fips180",
+      "doi": "10.6028/NIST.FIPS.180-4",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 2015,
+      "firstAuthor": "",
+      "title": "Secure hash standard"
+    },
+    {
+      "key": "demoura2021",
+      "doi": "10.1007/978-3-030-79876-5_37",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 2021,
+      "firstAuthor": "Moura",
+      "title": "The Lean 4 Theorem Prover and Programming Language"
+    },
+    {
+      "key": "horodecki1995",
+      "doi": "10.1016/0375-9601(95)00214-N",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 1995,
+      "firstAuthor": "Horodecki",
+      "title": "Violating Bell inequality by mixed states: necessary and sufficient condition"
+    },
+    {
+      "key": "mermin1990",
+      "doi": "10.1103/PhysRevLett.65.1838",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 1990,
+      "firstAuthor": "Mermin",
+      "title": "Extreme quantum entanglement in a superposition of macroscopically distinct states"
+    },
+    {
+      "key": "wilson1927",
+      "doi": "10.1080/01621459.1927.10502953",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 1927,
+      "firstAuthor": "Wilson",
+      "title": "Probable Inference, the Law of Succession, and Statistical Inference"
+    },
+    {
+      "key": "mcnemar1947",
+      "doi": "10.1007/BF02295996",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 1947,
+      "firstAuthor": "McNemar",
+      "title": "Note on the Sampling Error of the Difference Between Correlated Proportions or Percentages"
+    },
+    {
+      "key": "cohen1988",
+      "doi": "10.4324/9780203771587",
+      "status": 200,
+      "resolved": true,
+      "retracted": false,
+      "year": 2013,
+      "firstAuthor": "Cohen",
+      "title": "Statistical Power Analysis for the Behavioral Sciences"
+    }
+  ]
+}

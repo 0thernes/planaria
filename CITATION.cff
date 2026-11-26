@@ -1,8 +1,8 @@
 cff-version: 1.2.0
-title: "PLANARIA v2.3 — Progressive Holographic Executable Architecture (.hbin), Plang Compiler, PVM-32 Anastomosis VM, 4-Qubit Temporal-Quantum WebGL2 Studio & 70 Pure Lean 4.35.0 Multi-Kernel Proofs"
+title: "PLANARIA v2.4 — Progressive Holographic Executable Architecture (.hbin), Plang Compiler, PVM-32 Anastomosis VM, 4-Qubit Temporal-Quantum WebGL2 Studio, Python Differential Oracle & 85 Pure Lean 4.35.0 Multi-Kernel Proofs"
 message: "If you reference, verify, or build upon PLANARIA in academic or independent non-commercial research, please cite this software and technical preprint using the metadata below."
 type: software
-version: "2.3.0"
+version: "2.4.0"
 date-released: "2026-11-25"
 authors:
   - family-names: "Donahue"
@@ -12,7 +12,6 @@ authors:
     orcid: "https://orcid.org/0009-0006-8168-9648"
 repository-code: "https://github.com/0thernes/planaria"
 url: "https://github.com/0thernes/planaria"
-license: "NOASSERTION"
 license-url: "https://github.com/0thernes/planaria/blob/main/LICENSE"
 keywords:
   - holographic-executables

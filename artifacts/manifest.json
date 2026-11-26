@@ -6,8 +6,8 @@
       "source": "programs/quantum_chronicle.plang",
       "name": "QUANTUM_CHRONICLE",
       "bytes": 98304,
-      "lineageRootHex": "09b9ce24a0a181f485406f2d5ad5324c",
-      "sha256Hex": "14844a15539ee678a35bb2c09ef6bf726c2c7a50f1ec16f4ed886b515c0a19ab",
+      "lineageRootHex": "917d90dceecc8be9f47e523ff39d9b6e",
+      "sha256Hex": "d41408cee6edc3f80265d5b5f0b19c602d1565820a050957ef9690a6384f197d",
       "totalInstructions": 426,
       "totalCodeBytes": 1704,
       "bundles": [
@@ -66,10 +66,10 @@
       "source": "programs/aegis_drift.plang",
       "name": "AEGIS_DRIFT",
       "bytes": 98304,
-      "lineageRootHex": "b0b2f1e397e21270977a2a5b7bfad758",
-      "sha256Hex": "011f93b8a735e6019d36a21225bc5711cc3304a69062fb32c48292f0b3b29a1f",
-      "totalInstructions": 991,
-      "totalCodeBytes": 3964,
+      "lineageRootHex": "4f72e7e292b0ece834259950ff02b800",
+      "sha256Hex": "12b1e3eb05ef62957842cf5c057d509c656bae89278459148b822b309b328392",
+      "totalInstructions": 1000,
+      "totalCodeBytes": 4000,
       "bundles": [
         {
           "bundleId": 0,
@@ -98,10 +98,10 @@
         {
           "bundleId": 3,
           "name": "S2_CORTEX_RENDER",
-          "instructions": 176,
-          "bytes": 704,
+          "instructions": 179,
+          "bytes": 716,
           "capacityBytes": 2656,
-          "utilizationPct": 26.5
+          "utilizationPct": 27
         },
         {
           "bundleId": 4,
@@ -114,10 +114,10 @@
         {
           "bundleId": 5,
           "name": "S3_ORGANISM_FX",
-          "instructions": 131,
-          "bytes": 524,
+          "instructions": 137,
+          "bytes": 548,
           "capacityBytes": 5312,
-          "utilizationPct": 9.9
+          "utilizationPct": 10.3
         }
       ]
     },
@@ -126,8 +126,8 @@
       "source": "programs/synth_reactor.plang",
       "name": "SYNTH_REACTOR",
       "bytes": 98304,
-      "lineageRootHex": "c61ac049c1e5fa34eec90c7fec7f4b35",
-      "sha256Hex": "987d159ec31814398d2591a59b13f52363a8464d6602f82cb01762b3fbd60ab0",
+      "lineageRootHex": "863ac05d26947b382e017a92e09ae46e",
+      "sha256Hex": "63dbacf6c0757f63d482c47dde0f6a7315bf9bfd8266e4f3317c98cb94b26f24",
       "totalInstructions": 645,
       "totalCodeBytes": 2580,
       "bundles": [
@@ -186,8 +186,8 @@
       "source": "programs/cipher_vault.plang",
       "name": "CIPHER_VAULT",
       "bytes": 98304,
-      "lineageRootHex": "1abcda703778272dd61f7704b83844a4",
-      "sha256Hex": "09916c53c472866375a4bc3bca806fabbb97a53100845a39937eb0996a89f7bd",
+      "lineageRootHex": "47dae7cb244e4dfc0eed17cb89366b68",
+      "sha256Hex": "95f8e0535e974680d9304f799b89ca3fb0312f9605edd67afc1441d57337c829",
       "totalInstructions": 534,
       "totalCodeBytes": 2136,
       "bundles": [

@@ -16,6 +16,15 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+.skip-link {
+  position: absolute; left: -9999px; top: 0;
+  background: var(--cyan); color: #04070c; font-weight: 700;
+  padding: 8px 14px; border-radius: 0 0 4px 0; z-index: 999; text-decoration: none;
+}
+.skip-link:focus { left: 0; outline: 2px solid #fff; outline-offset: 2px; }
+.sub-link { color: var(--emerald); text-decoration: underline; }
+.sub-link:hover { color: #fff; }
+
 body {
   background: radial-gradient(circle at 20% 0%, #101b32 0%, var(--bg) 55%);
   color: var(--text);
@@ -59,13 +68,16 @@ select, button, input[type="range"] {
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 5px 9px;
+  min-height: 26px;
+  min-width: 26px;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
-input[type="range"] { padding: 0; cursor: ew-resize; accent-color: var(--cyan); }
+.btn-compact { padding: 4px 8px; font-size: 10px; min-height: 26px; }
+input[type="range"] { padding: 0; min-height: 24px; cursor: ew-resize; accent-color: var(--cyan); }
 button:hover, select:hover { border-color: var(--cyan); background: #142233; }
 button:disabled { opacity: 0.65; cursor: not-allowed; }
-button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, .item-card:focus-visible {
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, .item-card:focus-visible, canvas:focus-visible, a:focus-visible {
   outline: 2px solid var(--cyan);
   outline-offset: 2px;
 }
@@ -114,6 +126,7 @@ button.active { background: rgba(16, 245, 168, 0.2); border-color: var(--emerald
 .badge {
   display: inline-block; padding: 2px 7px; border-radius: 3px;
   font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+  white-space: nowrap; flex-shrink: 0;
 }
 .badge-s3 { background: rgba(168, 85, 247, 0.22); color: #d8b4fe; border: 1px solid var(--violet); }
 .badge-s2 { background: rgba(16, 245, 168, 0.18); color: var(--emerald); border: 1px solid var(--emerald); }
@@ -180,12 +193,12 @@ button.active { background: rgba(16, 245, 168, 0.2); border-color: var(--emerald
 .ab-btn {
   position: relative;
   display: flex; flex-direction: column; align-items: flex-start;
-  padding: 6px 7px; text-align: left; background: #070e16;
+  padding: 5px 6px; text-align: left; background: #070e16;
   border: 1px solid var(--border); border-radius: 4px;
 }
-.ab-key { font-size: 10px; font-weight: 700; color: var(--gold); }
-.ab-name { font-size: 10px; color: #f1f5f9; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
-.ab-cd { font-size: 10px; color: var(--cyan); margin-top: 2px; }
+.ab-key { font-size: 9.5px; font-weight: 700; color: var(--gold); }
+.ab-name { font-size: 9px; letter-spacing: -0.02em; color: #f1f5f9; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+.ab-cd { font-size: 9.5px; color: var(--cyan); margin-top: 2px; }
 .ab-btn.on-cd { opacity: 0.65; border-color: #243347; }
 
 /* QUANTUM TELEMETRY & HEISENBERG STRIP */
@@ -280,7 +293,13 @@ button.active { background: rgba(16, 245, 168, 0.2); border-color: var(--emerald
 .legend-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; font-size: 10px; color: var(--muted); }
 .swatch { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
 
+.skill-rank { color: var(--gold); white-space: nowrap; flex-shrink: 0; margin-left: 6px; }
+
 @media (prefers-reduced-motion: reduce) {
   .brand-dot { animation: none; }
   .meter-fill, select, button { transition: none; }
 }
+html.reduced-motion .brand-dot { animation: none; }
+html.reduced-motion .meter-fill,
+html.reduced-motion select,
+html.reduced-motion button { transition: none; }

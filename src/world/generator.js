@@ -1,9 +1,9 @@
 /**
- * PLANARIA v2.0 — Endless 1/1 Procedural Combinatorial Universe Forge
+ * PLANARIA v2.4 — Endless 1/1 Procedural Combinatorial Universe Forge
  *
  * Generates mathematically unique 1/1 NPCs, Bosses, Weapons, Armors, Abilities,
- * Adaptive Skill Trees, and Multi-Order 3D Stages across 6 Orders of Magnitude
- * (10^-15 m Planck Foam -> 10^9 m Event-Horizon Singularity).
+ * Adaptive Skill Trees, and Multi-Order 3D Stages across 6 Scale Realms spanning
+ * 24 Orders of Magnitude (10^-15 m Planck Foam -> 10^9 m Event-Horizon Singularity).
  *
  * Every generated entity carries a deterministic SHA-256 1/1 Lineage Genome ID,
  * unique continuous stat gradients, distinct 3D geometry & color harmonics, and
@@ -14,12 +14,20 @@ import { sha256, toHex } from '../core/sha256.js';
 
 const TEXT_ENCODER = new TextEncoder();
 
+function safeSeedString(seed) {
+  try {
+    return String(seed);
+  } catch {
+    return '[object NullProto]';
+  }
+}
+
 /**
  * Deterministic 128-bit sfc32 PRNG seeded directly from FIPS 180-4 SHA-256(seed)
  * — genuine 128-bit cryptographic state space (> 2^64 distinct genomes, zero 32-bit FNV collisions!).
  */
 export function seededRng(seed) {
-  const digest = sha256(TEXT_ENCODER.encode(String(seed)));
+  const digest = sha256(TEXT_ENCODER.encode(safeSeedString(seed)));
   const dv = new DataView(digest.buffer, digest.byteOffset, digest.byteLength);
   let a = dv.getUint32(0, true);
   let b = dv.getUint32(4, true);
@@ -180,8 +188,8 @@ export const RARITY_TIERS = [
 ];
 
 function rollRarity(rng, luckBoost = 0) {
-  // Smooth multiplicative luck curve (monotonic across tiers; avoids bimodal pile-up at tier 5!)
-  const luck = Math.max(0, Number.isFinite(luckBoost) ? luckBoost : 0);
+  // Smooth multiplicative luck curve (monotonic across tiers; clamped against Infinity overflow)
+  const luck = Math.max(0, Math.min(20, Number.isFinite(luckBoost) ? luckBoost : 0));
   const weights = RARITY_TIERS.map((tier) => tier.weight * Math.pow(1 + luck * 0.25, tier.id));
   const total = weights.reduce((s, w) => s + w, 0);
   const r = rng() * total;
@@ -429,7 +437,7 @@ export function forgeNPC(seed, stage = 1, wave = 1, isBoss = false, playerProfil
   const speedScale = 1 + 1.2 * (1 - Math.exp(-s * 0.04));
 
   return {
-    id: forcedId ?? Math.floor(rng() * 1e9),
+    id: forcedId ?? (1 + Math.floor(rng() * 1e9)),
     seed,
     lineageId,
     name: isBoss
@@ -491,7 +499,7 @@ export const ABILITIES = [
   { key: 'T', name: 'CHRONO-FORK ECHO',  cd: 7.5,  cost: 25, desc: 'Fork timeline: summon your Past Self from the last 4s to fight beside you!' },
   { key: 'F', name: 'CHRONO-WELL',       cd: 6.0,  cost: 18, desc: 'Deploy a 3D spherical Time-Dilation Well (0.16x enemy & bullet speed!)' },
   { key: 'V', name: 'WAVE COLLAPSE',     cd: 8.5,  cost: 30, desc: 'Measure the 4-qubit statevector: Born-collapse supernova scaling with entropy & CHSH!' },
-  { key: 'X', name: 'ORDER SHIFT',       cd: 1.5,  cost: 0,  desc: 'Shift spatial Scale Order across 6 Orders of Magnitude (10^-15 m -> 10^9 m)!' },
+  { key: 'X', name: 'ORDER SHIFT',       cd: 1.5,  cost: 0,  desc: 'Shift spatial Scale Realm across 24 Orders of Magnitude (10^-15 m -> 10^9 m)!' },
   { key: 'C', name: 'FORGE 1/1 LOOT',    cd: 2.0,  cost: 0,  desc: 'Synthesize a brand-new 1/1 Quantum Weapon & Armor from current SHA-256 entropy!' },
 ];
 

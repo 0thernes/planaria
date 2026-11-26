@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self';">
+  <title>PLANARIA v2.4.0 — Interactive Lean 4.35.0 Proof Blueprint</title>
+  <link rel="stylesheet" href="./blueprint.css">
+</head>
+<body>
+  <header>
+    <div class="title-wrap">
+      <h1>PLANARIA v2.4.0 — INTERACTIVE LEAN 4.35.0 PROOF BLUEPRINT</h1>
+      <p id="bp-subtitle">Loading machine-checked dependency graph…</p>
+    </div>
+    <nav class="nav-links" aria-label="Blueprint navigation">
+      <a class="pill" href="../">← 3D Vivisection Studio</a>
+      <a class="pill" href="./blueprint.json">blueprint.json</a>
+      <a class="pill" href="../results/lean4-audit.txt">lean4-audit.txt</a>
+      <a class="pill" href="../results/lean4-multi-kernel.txt">6-Kernel Log</a>
+    </nav>
+  </header>
+  <main>
+    <section class="kpi-grid" id="kpi-grid" aria-label="Formal verification metrics"></section>
+    <section class="layout">
+      <div class="card">
+        <h2>Interactive Theorem Dependency Graph (7 Pure Modules · Click Any Node)</h2>
+        <div class="dag-wrap">
+          <svg id="dag-svg" role="img" aria-label="Lean 4.35.0 theorem dependency graph"></svg>
+        </div>
+      </div>
+      <aside class="card inspector" aria-label="Theorem inspector">
+        <h2>Theorem Inspector</h2>
+        <div id="inspector-body" class="muted">Select a theorem node or table row to inspect its Lean 4.35.0 signature, exact axiom footprint, and dependency edges.</div>
+      </aside>
+    </section>
+    <section class="card" style="margin-top:18px;">
+      <h2>All Audited Theorems (<span id="table-count">0</span>)</h2>
+      <div class="controls">
+        <input id="search-input" type="search" placeholder="Filter by theorem name, signature, docstring, or Claim ID (e.g., C04, merkle, Cauchy)…" aria-label="Filter theorems">
+        <select id="mod-filter" aria-label="Filter by Lean module">
+          <option value="">All 7 Modules</option>
+        </select>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Theorem</th><th>Module</th><th>Axioms</th><th>Claims</th><th>Source</th></tr>
+        </thead>
+        <tbody id="thm-tbody"></tbody>
+      </table>
+    </section>
+  </main>
+  <script type="module" src="./blueprint.js"></script>
+</body>
+</html>

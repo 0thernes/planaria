@@ -110,4 +110,19 @@ public theorem xenograft_improves_amputated_host_witness :
   xenograft_improves_amputated_host ⟨3, 0x3333, true, false⟩ ⟨3, 0x3333, true, true⟩
     rfl (by decide) rfl rfl rfl rfl rfl
 
+/-- Theorem V.7 (Dead-Host Xenograft Refusal — Claim C07 / `hbin.js` Step 3 Fidelity):
+    When the host Stratum-0 Stem Nucleus is non-viable (`hostStemViable = false`),
+    `applyXenograftWithStem` unconditionally refuses ALL foreign grafts regardless of donor validity! -/
+public theorem xenograft_dead_host_refused (host donor : BundleSlot) :
+    applyXenograftWithStem false host donor = host := by
+  rfl
+
+/-- Non-vacuity witness for Theorem V.7: even an ABI-matching viable donor Bundle 3 is refused
+    when the host stem nucleus is dead (`hostStemViable = false`), keeping `viable = false`. -/
+public theorem xenograft_dead_host_witness :
+    let host : BundleSlot := ⟨3, 0x3333, true, false⟩
+    let donor : BundleSlot := ⟨3, 0x3333, true, true⟩
+    (applyXenograftWithStem false host donor).viable = false := by
+  decide
+
 end Planaria.Xenograft

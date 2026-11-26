@@ -1,4 +1,4 @@
-# PLANARIA v2.3.0 — One-Word Task Runner (Build Standard A31, A36, B01)
+# PLANARIA v2.4.0 — One-Word Task Runner (Build Standard A31, A36, B01)
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
 default:
@@ -15,6 +15,18 @@ test:
 
 mutate:
   node scripts/mutation-test.mjs
+
+fuzz:
+  node scripts/fuzz.mjs
+
+oracle:
+  ./scripts/dev.sh oracle
+
+blueprint:
+  ./scripts/dev.sh blueprint
+
+axioms:
+  node scripts/check-readme-axioms.mjs
 
 lint:
   ./scripts/dev.sh lint
@@ -50,7 +62,7 @@ deploy:
   node scripts/build-pages.mjs
   @echo "Static GitHub Pages site staged in _site/. Push to main or run: gh workflow run pages.yml"
 
-rollback tag="v2.2.0":
+rollback tag="v2.3.0":
   @echo "Rolling back live Pages deployment to tagged release {{tag}}..."
   git checkout "{{tag}}" -- src/web programs artifacts results
   node scripts/build-pages.mjs

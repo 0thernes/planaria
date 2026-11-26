@@ -1,28 +1,32 @@
 # PLANARIA
 
-> Progressive Holographic Executable Architecture (`.hbin`), Plang Compiler, PVM-32 Vascular Anastomosis VM, 4-Qubit Temporal-Quantum WebGL2 Studio, and 6-Kernel Pure Lean 4.35.0 Formal Verification Suite (`v2.3.0`).
+> Progressive Holographic Executable Architecture (`.hbin`), Plang Compiler, PVM-32 Vascular Anastomosis VM, 4-Qubit Temporal-Quantum WebGL2 Studio, Clean-Room Python 3 Differential Oracle, Interactive Proof Blueprint, and 6-Kernel Pure Lean 4.35.0 Formal Verification Suite (`v2.4.0`).
 
 ## Core Documentation
 
 - [README](README.md): Overview, quickstart, 5-second verbatim Lean `#print axioms` audit, architecture, and live Studio guide
 - [AGENTS](AGENTS.md): Canonical instructions, one-word commands, hard rules R1–R8, and known pitfalls
-- [CLAIMS](CLAIMS.md): Numbered falsifiable claims ledger with exact evidence paths and refutation criteria
-- [LIMITATIONS](LIMITATIONS.md): Explicit system boundaries, real-vs-metaphor separation, threats to validity, and open dilemmas
+- [CLAIMS](CLAIMS.md): Numbered falsifiable claims ledger (`C01`–`C10`) with exact evidence paths and refutation criteria
+- [LIMITATIONS](LIMITATIONS.md): Explicit system boundaries, real-vs-metaphor separation, storage ratios, threats to validity, and open dilemmas
 - [REPLICATION](REPLICATION.md): Step-by-step clean-clone reproduction protocol and independent replication log
-- [VERIFICATION](VERIFICATION.md): 28-suite harness, 10/10 mutation testing, and 6-kernel Lean 4.35.0 verification guide
-- [SUMMARY](SUMMARY.md): Executive technical summary of PLANARIA v2.3.0
+- [VERIFICATION](VERIFICATION.md): 30-suite harness, 12/12 mutation testing, 2,000-case fuzzer, Python 3 oracle, and 6-kernel Lean 4.35.0 verification guide
+- [SUMMARY](SUMMARY.md): Executive technical summary of PLANARIA v2.4.0
 - [INDEX](INDEX.md): Complete repository index and table of contents
 
-## Formal Proofs & Scientific Paper
+## Formal Proofs, Blueprint & Scientific Paper
 
-- [White Paper (Markdown)](paper/WHITE_PAPER.md): Full academic paper with Claims Ledger, Statement-Fidelity Audit, 6-Kernel Proofs, and statistical evaluation
-- [Challenge Specification (Lean 4.35.0)](lean/Challenge.lean): Standalone human-auditable formal specification of all 70 theorems
+- [White Paper (Markdown)](paper/WHITE_PAPER.md): Full 12-section academic paper with Claims Ledger, Statement-Fidelity Audit, 6-Kernel Proofs, and statistical evaluation
+- [Interactive Proof Blueprint](blueprint/index.html): Zero-CDN SVG dependency graph & inspector covering all 85 Lean 4.35.0 theorems (`blueprint/blueprint.json`)
+- [Challenge Specification (Lean 4.35.0)](lean/Challenge.lean): Standalone zero-proof formal specification of all 85 theorems (`autoImplicit = false`)
 - [Formalization Manifest](formalization.yaml): Machine-readable Lean 4.35.0 toolchain, kernel, and module manifest
-- [10-Pass Red-Team & Mega-Atlas Review](docs/reviews/2026-11-25-10-pass-red-team-audit.md): Full 3-cycle findings ledger, Statement-Fidelity Audit, and 1,900-problem Mega-Atlas check
+- [Mega-Atlas Cross-Check](docs/MEGA_ATLAS_CROSSCHECK.md): Programmatic audit of all 1,900 Unsolved Problems Mega-Atlas entries (`0 / 1,900` solved)
+- [Literature Search Log](docs/LITERATURE_SEARCH.md): Dated prior-art search & live Crossref DOI verification log
+- [Submission Readiness Dossier](docs/SUBMISSION_READINESS.md): 43-item Playbook v1.3 scorecard, ACM/NeurIPS checklists & artifact datasheet
+- [10-Pass Red-Team & Mega-Atlas Review](docs/reviews/2026-11-25-10-pass-red-team-audit.md): Full multi-cycle findings ledger, Statement-Fidelity Audit, and Aaronson checklist
 
 ## Engineering Reference
 
-- [Architecture](docs/architecture.md): 5-layer system design and data/control-flow diagrams
+- [Architecture](docs/architecture.md): 5-layer system design, exact `BUNDLE_SPECS`, `PLACEMENT_SCHEDULE`, and data/control-flow diagrams
 - [Benchmarks](docs/benchmarks.md): Reproducible 4-architecture Monte Carlo survival, Wilson CIs, McNemar/Holm–Bonferroni statistics, and JIT latency profiles
 - [Threat Model](docs/threat-model.md): STRIDE security analysis, Merkle immune boundaries, and Sybil/DoS mitigations
 - [Operations](docs/operations.md): Runtime operations, `/healthz`, artifact backups, and offsite mirror/bundle protocol

@@ -78,6 +78,10 @@ const FONT_5X7 = {
  */
 export const PALETTE_RGBA = new Uint32Array(256);
 (function initPalette() {
+  const isLittleEndian = new Uint8Array(new Uint32Array([0x01020304]).buffer)[0] === 4;
+  const packRGBA = isLittleEndian
+    ? (r, g, b) => ((255 << 24) | (b << 16) | (g << 8) | r) >>> 0
+    : (r, g, b) => ((r << 24) | (g << 16) | (b << 8) | 255) >>> 0;
   const named = [
     [6, 10, 14],      // 0: Deep surgical obsidian
     [16, 28, 38],     // 1: Dark slate grid
@@ -98,13 +102,13 @@ export const PALETTE_RGBA = new Uint32Array(256);
   ];
   for (let i = 0; i < 16; i++) {
     const [r, g, b] = named[i];
-    PALETTE_RGBA[i] = (255 << 24) | (b << 16) | (g << 8) | r;
+    PALETTE_RGBA[i] = packRGBA(r, g, b);
   }
   for (let i = 16; i < 256; i++) {
     const r = ((i >> 5) & 7) * 36;
     const g = ((i >> 2) & 7) * 36;
     const b = (i & 3) * 85;
-    PALETTE_RGBA[i] = (255 << 24) | (b << 16) | (g << 8) | r;
+    PALETTE_RGBA[i] = packRGBA(r, g, b);
   }
 })();
 
@@ -159,6 +163,11 @@ export class PVM32 {
     this.lastTrap = null;
     this.lastRegisters = new Int32Array(32);
     this.alive = false;
+
+    // Pre-allocated zero-GC undo journal for transactional RAM rollback on nested ORGAN_CALL traps
+    this._undoAddrs = new Int32Array(16384);
+    this._undoVals = new Int32Array(16384);
+    this._undoTop = 0;
   }
 
   /** Reset RAM, framebuffer, audio, and frame counter (preserving constructor seed by default). */
@@ -199,10 +208,12 @@ export class PVM32 {
       const spec = BUNDLE_SPECS[b];
       const bun = decoded?.bundles?.[b];
       if (bun && bun.viable && bun.data) {
-        this.bundleViable[b] = true;
         // Bundle 6 (GENOME) holds non-executable UTF-8 JSON metadata — never load as bytecode!
-        this.bundleCode[b] = spec.organId === ORGAN_IDS.GENOME ? null : bytesToWords(bun.data);
-        this.bundleSources[b] = bun.source;
+        const code = spec.organId === ORGAN_IDS.GENOME ? null : bytesToWords(bun.data);
+        const usable = spec.organId === ORGAN_IDS.GENOME ? bun.data.length > 0 : Boolean(code);
+        this.bundleViable[b] = usable;
+        this.bundleCode[b] = usable ? code : null;
+        this.bundleSources[b] = usable ? bun.source : 'MISSING';
       } else {
         this.bundleViable[b] = false;
         this.bundleCode[b] = null;
@@ -268,9 +279,7 @@ export class PVM32 {
     this.lastFrameRoutes = [];
     this.lastFrameInsns = 0;
 
-    const safeBudget = Number.isInteger(maxInsnBudget) && maxInsnBudget > 0
-      ? maxInsnBudget
-      : (maxInsnBudget === undefined ? 16000 : 0);
+    const safeBudget = Number.isInteger(maxInsnBudget) && maxInsnBudget > 0 ? maxInsnBudget : 0;
 
     if (!this.alive || !this.bundleCode[0]) {
       this.silenceVoices();
@@ -404,6 +413,20 @@ export class PVM32 {
         }
         case OP.STW: {
           const addr = (regs[rs1] + signExt16((word >>> 16) & 0xffff)) & 0xfff;
+          if (depth > 0) {
+            if (this._undoTop >= this._undoAddrs.length) {
+              const nextLen = this._undoAddrs.length * 2;
+              const nextA = new Int32Array(nextLen);
+              const nextV = new Int32Array(nextLen);
+              nextA.set(this._undoAddrs);
+              nextV.set(this._undoVals);
+              this._undoAddrs = nextA;
+              this._undoVals = nextV;
+            }
+            this._undoAddrs[this._undoTop] = addr;
+            this._undoVals[this._undoTop] = this.ram[addr];
+            this._undoTop++;
+          }
           this.ram[addr] = regs[rd];
           break;
         }
@@ -440,7 +463,7 @@ export class PVM32 {
 
         case OP.SYSCALL: {
           const scId = signExt16((word >>> 16) & 0xffff);
-          const scRes = this._syscall(scId, regs, budget.voiceTouched, bundleId);
+          const scRes = this._syscall(scId, regs, budget, bundleId);
           if (scRes === null) {
             this.lastRegisters.set(regs);
             return false;
@@ -457,18 +480,32 @@ export class PVM32 {
 
           for (const resolvedId of candidates) {
             if (budget.remaining <= 0) break;
-            // Reserve headroom for Kernel fallback & sibling organs so a runaway organ cannot starve B0
+            // Zero-allocation transactional rollback guard: mark undo journal & voice flags so a
+            // trapped/runaway organ (or xenograft) leaves zero dirty RAM mutations on fallback!
+            const undoMark = this._undoTop;
+            const vt = budget.voiceTouched;
+            const v0 = vt[0], v1 = vt[1], v2 = vt[2], v3 = vt[3];
             const reserve = depth === 0 ? Math.min(2000, Math.floor(budget.remaining / 5)) : 0;
             const childCap = Math.min(budget.remaining, Math.max(1, budget.remaining - reserve));
             const childBudget = {
               remaining: childCap,
-              voiceTouched: budget.voiceTouched,
+              voiceTouched: vt,
               childInsns: 0,
             };
             const ok = this._execBundle(resolvedId, childBudget, depth + 1);
             const used = childCap - childBudget.remaining;
             budget.remaining = Math.max(0, budget.remaining - used);
             budget.childInsns += used;
+
+            if (!ok) {
+              for (let u = this._undoTop - 1; u >= undoMark; u--) {
+                this.ram[this._undoAddrs[u]] = this._undoVals[u];
+              }
+              this._undoTop = undoMark;
+              vt[0] = v0; vt[1] = v1; vt[2] = v2; vt[3] = v3;
+            } else if (depth === 0) {
+              this._undoTop = 0;
+            }
 
             this.lastFrameRoutes.push({
               organId,
@@ -477,7 +514,8 @@ export class PVM32 {
               resolvedBundle: resolvedId,
               resolvedStratum: BUNDLE_SPECS[resolvedId].stratum,
               source: this.bundleSources[resolvedId],
-              insns: used,
+              insns: Math.max(0, used - childBudget.childInsns),
+              totalInsns: used,
               trapped: !ok,
             });
 
@@ -526,25 +564,40 @@ export class PVM32 {
     return false;
   }
 
-  _syscall(id, regs, voiceTouched, bundleId = 0) {
+  _syscall(id, regs, budget, bundleId = 0) {
+    const voiceTouched = budget.voiceTouched;
     const a1 = regs[1], a2 = regs[2], a3 = regs[3], a4 = regs[4], a5 = regs[5], a6 = regs[6], a7 = regs[7];
     switch (id) {
       case SYSCALL.CLEAR:
+        budget.remaining = Math.max(0, budget.remaining - 64);
         this.fb.fill(PALETTE_RGBA[a1 & 0xff]);
         return 0;
       case SYSCALL.PIXEL:
         this._plot(a1, a2, PALETTE_RGBA[a3 & 0xff]);
         return 0;
       case SYSCALL.LINE:
+        budget.remaining = Math.max(0, budget.remaining - 2);
         this._line(a1, a2, a3, a4, PALETTE_RGBA[a5 & 0xff]);
         return 0;
-      case SYSCALL.RECT:
+      case SYSCALL.RECT: {
+        if (a6 !== 0 && a3 > 0 && a4 > 0) {
+          const cw = Math.min(FB_WIDTH, a3);
+          const ch = Math.min(FB_HEIGHT, a4);
+          budget.remaining = Math.max(0, budget.remaining - Math.ceil((cw * ch) / 256));
+        }
         this._rect(a1, a2, a3, a4, PALETTE_RGBA[a5 & 0xff], a6 !== 0);
         return 0;
-      case SYSCALL.CIRCLE:
+      }
+      case SYSCALL.CIRCLE: {
+        if (a5 !== 0 && a3 > 0) {
+          const cr = Math.min(120, a3);
+          budget.remaining = Math.max(0, budget.remaining - Math.ceil((3.15 * cr * cr) / 256));
+        }
         this._circle(a1, a2, a3, PALETTE_RGBA[a4 & 0xff], a5 !== 0);
         return 0;
+      }
       case SYSCALL.TRI: {
+        budget.remaining = Math.max(0, budget.remaining - 4);
         const col = PALETTE_RGBA[a7 & 0xff];
         this._line(a1, a2, a3, a4, col);
         this._line(a3, a4, a5, a6, col);
@@ -557,12 +610,12 @@ export class PVM32 {
       case SYSCALL.LABEL: {
         let s = '';
         for (let k = 0; k < 4; k++) {
-          const ch = (a3 >>> (k * 8)) & 0x7f;
-          if (ch >= 32) s += String.fromCharCode(ch);
+          const ch = (a3 >>> (k * 8)) & 0xff;
+          if (ch >= 0x20 && ch <= 0x7e) s += String.fromCharCode(ch);
         }
         for (let k = 0; k < 4; k++) {
-          const ch = (a4 >>> (k * 8)) & 0x7f;
-          if (ch >= 32) s += String.fromCharCode(ch);
+          const ch = (a4 >>> (k * 8)) & 0xff;
+          if (ch >= 0x20 && ch <= 0x7e) s += String.fromCharCode(ch);
         }
         this._drawText(a1, a2, s, PALETTE_RGBA[a5 & 0xff]);
         return 0;
@@ -586,7 +639,7 @@ export class PVM32 {
         v.freqHz = Math.max(0, Math.min(8000, (a3 | 0) / 16));
         v.vol = Math.max(0, Math.min(100, a4 | 0)) / 100;
         v.detune = Math.max(-2400, Math.min(2400, a5 | 0));
-        v.filter = a6 <= 0 ? 2400 : Math.max(120, Math.min(12000, a6 | 0));
+        v.filter = a6 <= 0 ? 1800 : Math.max(120, Math.min(12000, a6 | 0));
         voiceTouched[a1] = true;
         return 0;
       }
@@ -604,6 +657,8 @@ export class PVM32 {
       case SYSCALL.FRAME:
         return (this.frameCount & 0x7fffffff) | 0;
       case SYSCALL.GLOW: {
+        // Charge proportional blitter fuel (19,200 pixels) so hostile organs cannot freeze the host thread
+        budget.remaining = Math.max(0, budget.remaining - 128);
         const decay = Math.max(0, Math.min(250, a1));
         const b = this.fbBytes;
         for (let i = 0; i < b.length; i += 4) {
@@ -733,7 +788,7 @@ export class PVM32 {
   _circle(cx, cy, r, col, filled) {
     if (r < 0) return;
     if (r === 0) { this._plot(cx, cy, col); return; }
-    if (r > 90) r = 90;
+    if (r > 120) r = 120;
     let x = r, y = 0, err = 1 - r;
     while (x >= y) {
       if (filled) {

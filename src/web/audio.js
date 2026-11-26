@@ -29,7 +29,10 @@ export class PlanariaAudio {
       this._suspendTimer = null;
     }
 
-    if (!this.ctx || this.ctx.state === 'closed') {
+    if (!this.ctx || !this.ready || !this.node || this.ctx.state === 'closed') {
+      if (this.ctx && this.ctx.state !== 'closed') {
+        await this.ctx.close().catch(() => {});
+      }
       this.ctx = null;
       this.node = null;
       this.ready = false;
@@ -60,9 +63,19 @@ export class PlanariaAudio {
         node.onprocessorerror = () => {
           this.enabled = false;
           this.ready = false;
+          try { node.disconnect(); } catch { /* ignore */ }
+          this.node = null;
+          ctx.close().catch(() => {});
+          if (this.ctx === ctx) this.ctx = null;
         };
         node.connect(ctx.destination);
         await resumePromise;
+        if (ctx.state !== 'running') {
+          await ctx.resume();
+        }
+        if (ctx.state !== 'running') {
+          throw new Error(`AudioContext remained ${ctx.state} after user gesture (autoplay blocked).`);
+        }
         this.ctx = ctx;
         this.node = node;
         this.ready = true;
@@ -91,6 +104,9 @@ export class PlanariaAudio {
       }, 35);
     } else {
       await this.ctx.resume();
+      if (this.ctx.state !== 'running') {
+        throw new Error(`AudioContext remained ${this.ctx.state} on resume.`);
+      }
       this.enabled = true;
     }
     return this.enabled;
@@ -104,5 +120,24 @@ export class PlanariaAudio {
   mute() {
     this.enabled = false;
     if (this.node) this.node.port.postMessage({ type: 'mute' });
+  }
+
+  dispose() {
+    if (this._suspendTimer) {
+      clearTimeout(this._suspendTimer);
+      this._suspendTimer = null;
+    }
+    this.enabled = false;
+    this.ready = false;
+    if (this.node) {
+      try { this.node.port.postMessage({ type: 'mute' }); } catch { /* ignore */ }
+      try { this.node.disconnect(); } catch { /* ignore */ }
+      this.node = null;
+    }
+    if (this.ctx) {
+      const ctxRef = this.ctx;
+      this.ctx = null;
+      ctxRef.close().catch(() => {});
+    }
   }
 }

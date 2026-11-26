@@ -1,6 +1,6 @@
 {
   "schema": "PLANARIA-BENCHMARKS-1.2",
-  "generatedAt": "2026-11-26T00:09:59.532Z",
+  "generatedAt": "2026-11-26T03:08:29.265Z",
   "environment": {
     "nodeVersion": "v25.8.2",
     "platform": "win32",
@@ -21,56 +21,56 @@
     {
       "name": "QUANTUM_CHRONICLE",
       "bytes": 98304,
-      "lineageRootHex": "09b9ce24a0a181f485406f2d5ad5324c",
-      "sha256Hex": "14844a15539ee678a35bb2c09ef6bf726c2c7a50f1ec16f4ed886b515c0a19ab",
+      "lineageRootHex": "917d90dceecc8be9f47e523ff39d9b6e",
+      "sha256Hex": "d41408cee6edc3f80265d5b5f0b19c602d1565820a050957ef9690a6384f197d",
       "instructions": 426,
       "codeBytes": 1704
     },
     {
       "name": "AEGIS_DRIFT",
       "bytes": 98304,
-      "lineageRootHex": "b0b2f1e397e21270977a2a5b7bfad758",
-      "sha256Hex": "011f93b8a735e6019d36a21225bc5711cc3304a69062fb32c48292f0b3b29a1f",
-      "instructions": 991,
-      "codeBytes": 3964
+      "lineageRootHex": "4f72e7e292b0ece834259950ff02b800",
+      "sha256Hex": "12b1e3eb05ef62957842cf5c057d509c656bae89278459148b822b309b328392",
+      "instructions": 1000,
+      "codeBytes": 4000
     },
     {
       "name": "SYNTH_REACTOR",
       "bytes": 98304,
-      "lineageRootHex": "c61ac049c1e5fa34eec90c7fec7f4b35",
-      "sha256Hex": "987d159ec31814398d2591a59b13f52363a8464d6602f82cb01762b3fbd60ab0",
+      "lineageRootHex": "863ac05d26947b382e017a92e09ae46e",
+      "sha256Hex": "63dbacf6c0757f63d482c47dde0f6a7315bf9bfd8266e4f3317c98cb94b26f24",
       "instructions": 645,
       "codeBytes": 2580
     },
     {
       "name": "CIPHER_VAULT",
       "bytes": 98304,
-      "lineageRootHex": "1abcda703778272dd61f7704b83844a4",
-      "sha256Hex": "09916c53c472866375a4bc3bca806fabbb97a53100845a39937eb0996a89f7bd",
+      "lineageRootHex": "47dae7cb244e4dfc0eed17cb89366b68",
+      "sha256Hex": "95f8e0535e974680d9304f799b89ca3fb0312f9605edd67afc1441d57337c829",
       "instructions": 534,
       "codeBytes": 2136
     }
   ],
   "performance": {
-    "compileAll4SpeciesMs": 40.3,
-    "meanFullDecodeMs": 5.998,
+    "compileAll4SpeciesMs": 48.61,
+    "meanFullDecodeMs": 9.858,
     "decodeLatencyDistribution": {
       "n": 40,
-      "meanMs": 5.998,
-      "medianMs": 5.994,
-      "iqrMs": 0.268,
-      "p95Ms": 6.526
+      "meanMs": 9.858,
+      "medianMs": 9.669,
+      "iqrMs": 1.217,
+      "p95Ms": 12.891
     },
-    "meanPvm32FrameMs": 0.052,
+    "meanPvm32FrameMs": 0.088,
     "frameLatencyDistribution": {
       "n": 400,
-      "meanMs": 0.052,
-      "medianMs": 0.041,
-      "iqrMs": 0.006,
-      "p95Ms": 0.111
+      "meanMs": 0.088,
+      "medianMs": 0.06,
+      "iqrMs": 0.023,
+      "p95Ms": 0.192
     },
-    "effectiveFrameRateHeadroomFps": 19231,
-    "pvm32ThroughputMIPS": 42.85
+    "effectiveFrameRateHeadroomFps": 11364,
+    "pvm32ThroughputMIPS": 28.04
   },
   "survivalCurve": [
     {
@@ -1189,7 +1189,7 @@
       "trojansInjected": 1,
       "immuneOnQuarantined": 1,
       "immuneOnExactMatch": true,
-      "immuneOffB0CorruptedBytes": 470,
+      "immuneOffB0CorruptedBytes": 469,
       "immuneOffPoisoned": true
     },
     {
@@ -1203,7 +1203,7 @@
       "trojansInjected": 20,
       "immuneOnQuarantined": 20,
       "immuneOnExactMatch": true,
-      "immuneOffB0CorruptedBytes": 469,
+      "immuneOffB0CorruptedBytes": 470,
       "immuneOffPoisoned": true
     },
     {
@@ -1229,7 +1229,7 @@
       "rightBytes": 49152,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 13.95
+      "dualDecodeRegenMs": 19.55
     },
     {
       "cutByteOffset": 49153,
@@ -1238,7 +1238,7 @@
       "rightBytes": 49151,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 14.21
+      "dualDecodeRegenMs": 21.28
     },
     {
       "cutByteOffset": 49177,
@@ -1247,7 +1247,7 @@
       "rightBytes": 49127,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 13.21
+      "dualDecodeRegenMs": 20.2
     },
     {
       "cutByteOffset": 48701,
@@ -1256,7 +1256,7 @@
       "rightBytes": 49603,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 13.07
+      "dualDecodeRegenMs": 17.23
     },
     {
       "cutByteOffset": 49597,
@@ -1265,7 +1265,7 @@
       "rightBytes": 48707,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 12.57
+      "dualDecodeRegenMs": 17.58
     },
     {
       "cutByteOffset": 49000,
@@ -1274,7 +1274,7 @@
       "rightBytes": 49304,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 13.3
+      "dualDecodeRegenMs": 17.17
     }
   ],
   "xenograftMatrix": [

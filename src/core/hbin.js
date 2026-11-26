@@ -163,6 +163,9 @@ for (let i = 0; i < 256; i++) {
 }
 
 export function syncBitDistance(buf, offset) {
+  if (!buf || !Number.isInteger(offset) || offset < 0 || offset + 4 > buf.length) {
+    throw new RangeError(`syncBitDistance offset ${offset} out of bounds for length ${buf ? buf.length : 0}`);
+  }
   return (
     POPCOUNT8[buf[offset] ^ SYNC_WORD[0]] +
     POPCOUNT8[buf[offset + 1] ^ SYNC_WORD[1]] +
@@ -528,20 +531,26 @@ export function decodeHbin(rawBytes, options = {}) {
 
   // Step 1: Byte-granular sliding-window fuzzy sync correlator + iterative cadence flywheel.
   // Never jumps blindly across unverified/repaired offsets -> eliminates Overlap-Eclipse & Cell-Eating!
-  // Also detects synthetic repeated SYNC_WORD flooding (`PLN\xb7PLN\xb7PLN\xb7`) in O(1) without exhausting RS budget.
+  // Dense fuzzy sync-flood suppression: if >= 2 additional fuzzy sync matches occur within
+  // [offset + 1 .. offset + 16], skip the synthetic flood decoy without burning rsFailedCells.
+  // Authentic cells have pseudorandom RS-armored bodies after the 4-byte sync word, so the
+  // last/real cell after any flood prefix (stride 4, stride 5, 1-bit-flipped, etc.) is never skipped.
   for (let offset = 0; offset <= limit; offset++) {
     if (harvestedOffsets.has(offset)) continue;
     const isFlywheel = flywheelOffsets.has(offset);
     const dist = syncBitDistance(buf, offset);
     if (dist <= SYNC_MAX_BIT_ERRORS || isFlywheel) {
-      if (
-        !isFlywheel &&
-        dist === 0 &&
-        offset + 12 <= buf.length &&
-        syncBitDistance(buf, offset + 4) === 0 &&
-        syncBitDistance(buf, offset + 8) === 0
-      ) {
-        continue;
+      if (!isFlywheel && offset + 20 <= buf.length) {
+        let denseHits = 0;
+        for (let look = 1; look <= 16; look++) {
+          if (syncBitDistance(buf, offset + look) <= SYNC_MAX_BIT_ERRORS) {
+            denseHits++;
+            if (denseHits >= 2) break;
+          }
+        }
+        if (denseHits >= 2) {
+          continue;
+        }
       }
       tryHarvestAt(offset, dist, isFlywheel);
       if (truncatedByBudget) break;
@@ -584,9 +593,10 @@ export function decodeHbin(rawBytes, options = {}) {
         tieCount++;
       }
     }
-    if (bestUnique < 2 && rootGroups.size > 1) {
+    // Strictly enforce >= 2 unique authentic cells AND no tie (exact parity with Lean electUnpinnedQuorum).
+    if (bestUnique < 2) {
       primaryRootHex = null;
-      quorumAmbiguous = true;
+      quorumAmbiguous = rootGroups.size > 0;
     } else if (tieCount > 1) {
       primaryRootHex = null;
       quorumAmbiguous = true;
@@ -670,33 +680,45 @@ export function decodeHbin(rawBytes, options = {}) {
             )
           : { ok: false, reason: 'inconsistent_bundle_headers' };
 
+        // Executable bundles (B0..B5) require >= 4 aligned bytecode bytes; Genome (B6) requires > 0 bytes.
+        // Prevents zero-length partial-regen or omitted optional bundles from inflating maxViableStratum
+        // or locking out future cross-species Xenografting!
+        const nonEmptyPayload =
+          spec.organId === ORGAN_IDS.GENOME
+            ? origLen > 0
+            : origLen >= 4 && origLen % 4 === 0;
+        const isViable = dec.ok && nonEmptyPayload;
+
         bundles[b] = {
           id: b,
           name: spec.name,
           organId: spec.organId,
           stratum: spec.stratum,
           abiSig: headerAbiSig,
-          xenograftable: (headerFlags & 0x01) !== 0,
+          xenograftable: spec.xenograftable && (headerFlags & 0x01) !== 0,
           k: spec.k,
           n: spec.n,
           cellsFound: count,
-          viable: dec.ok,
-          data: dec.ok ? dec.data : null,
-          source: 'PRIMARY',
-          lineageRootHex: uniqCells[0].impliedRootHex,
-          speciesTag: headerSpeciesTag,
+          viable: isViable,
+          data: isViable ? dec.data : null,
+          source: isViable ? 'PRIMARY' : 'MISSING',
+          lineageRootHex: isViable ? uniqCells[0].impliedRootHex : null,
+          speciesTag: isViable ? headerSpeciesTag : null,
         };
       } else {
         const hostAllowsXeno = count > 0
           ? uniqCells.every((c) => (c.header.flags & 0x01) !== 0)
           : spec.xenograftable;
+        // Preserve actual host abiSig from surviving sub-threshold cells (matching Lean Theorem V.5)
+        const hostAbiSig = count > 0 ? uniqCells[0].header.abiSig : spec.abiSig;
+        const hostAbiConsistent = count === 0 || uniqCells.every((c) => c.header.abiSig === hostAbiSig);
         bundles[b] = {
           id: b,
           name: spec.name,
           organId: spec.organId,
           stratum: spec.stratum,
-          abiSig: spec.abiSig,
-          xenograftable: spec.xenograftable && hostAllowsXeno,
+          abiSig: hostAbiSig,
+          xenograftable: spec.xenograftable && hostAllowsXeno && hostAbiConsistent,
           k: spec.k,
           n: spec.n,
           cellsFound: count,
@@ -718,10 +740,11 @@ export function decodeHbin(rawBytes, options = {}) {
   // so dead/absent/tie-rejected hosts can NEVER be hijacked by foreign donor clusters!
   const xenografts = [];
   if (allowXenograft && primaryRootHex && bundles[0].viable && donorGroups.size > 0) {
-    // Sort donors by UNIQUE cell count descending, then lexical rootHex for full determinism
+    // Sort donors by UNIQUE cell count descending, then deterministic code-point rootHex
     const sortedDonors = Array.from(donorGroups.entries()).sort((a, b) => {
       const diff = (rootUniqueCounts.get(b[0]) || 0) - (rootUniqueCounts.get(a[0]) || 0);
-      return diff !== 0 ? diff : a[0].localeCompare(b[0]);
+      if (diff !== 0) return diff;
+      return a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0);
     });
     for (const [donorRootHex, donorCells] of sortedDonors) {
       const donorBundles = decodeGroup(donorCells);
@@ -731,7 +754,7 @@ export function decodeHbin(rawBytes, options = {}) {
         if (
           !bundles[b].viable &&
           donorBundles[b].viable &&
-          donorBundles[b].abiSig === spec.abiSig &&
+          donorBundles[b].abiSig === bundles[b].abiSig &&
           donorBundles[b].xenograftable
         ) {
           bundles[b] = {
@@ -744,12 +767,27 @@ export function decodeHbin(rawBytes, options = {}) {
             bundleName: spec.name,
             organName: ORGAN_NAMES[spec.organId],
             stratum: spec.stratum,
-            abiSig: spec.abiSig,
+            abiSig: bundles[b].abiSig,
             donorRootHex,
             donorSpeciesTag: donorBundles[b].speciesTag,
             donorCellsUsed: donorBundles[b].cellsFound,
           });
         }
+      }
+    }
+  }
+
+  // Classify foreign donor cells strictly: only cells belonging to actually-grafted organs count as
+  // active XENOGRAFT donor cells; non-grafted foreign cells (including dead-host or sovereign B0/B6)
+  // are quarantined so dead hosts never misreport active xenografts.
+  const graftedKeySet = new Set(xenografts.map((x) => `${x.donorRootHex}:${x.bundleId}`));
+  const acceptedDonorCells = [];
+  for (const [dRoot, dCells] of donorGroups.entries()) {
+    for (const c of dCells) {
+      if (graftedKeySet.has(`${dRoot}:${c.header.bundleId}`)) {
+        acceptedDonorCells.push(c);
+      } else {
+        quarantinedCells.push(c);
       }
     }
   }
@@ -813,23 +851,19 @@ export function decodeHbin(rawBytes, options = {}) {
       };
     }
   }
-  if (allowXenograft) {
-    for (const [, dCells] of donorGroups.entries()) {
-      for (const c of dCells) {
-        if (c.header.leafIdx < TOTAL_CELLS && !slotMap[c.header.leafIdx]) {
-          slotMap[c.header.leafIdx] = {
-            status: 'XENOGRAFT',
-            bundleId: c.header.bundleId,
-            stratum: c.header.stratum,
-            organId: c.header.organId,
-            evalX: c.header.evalX,
-            rsErrorsFixed: c.rsErrorsFixed,
-            syncBitErrors: c.syncBitErrors,
-            byteOffset: c.byteOffset,
-            impliedRootHex: c.impliedRootHex,
-          };
-        }
-      }
+  for (const c of acceptedDonorCells) {
+    if (c.header.leafIdx < TOTAL_CELLS && !slotMap[c.header.leafIdx]) {
+      slotMap[c.header.leafIdx] = {
+        status: 'XENOGRAFT',
+        bundleId: c.header.bundleId,
+        stratum: c.header.stratum,
+        organId: c.header.organId,
+        evalX: c.header.evalX,
+        rsErrorsFixed: c.rsErrorsFixed,
+        syncBitErrors: c.syncBitErrors,
+        byteOffset: c.byteOffset,
+        impliedRootHex: c.impliedRootHex,
+      };
     }
   }
 
@@ -850,7 +884,7 @@ export function decodeHbin(rawBytes, options = {}) {
       rsTotalByteErrorsFixed,
       rsFailedCells,
       byzantineQuarantined: quarantinedCells.length,
-      xenograftDonorCells: Array.from(donorGroups.values()).reduce((a, g) => a + g.length, 0),
+      xenograftDonorCells: acceptedDonorCells.length,
       unalignedRecoveries,
       flywheelRecoveries,
       truncatedByBudget,

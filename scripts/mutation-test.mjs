@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * PLANARIA v2.3 — Surgical Mutation Testing Harness (Build Standard B13)
+ * PLANARIA — Surgical Mutation Testing Harness (Build Standard B13)
  *
- * Plants 10 real-world high-severity single-line mutants across Layer 1-3 critical paths,
- * runs `node test/verify.mjs`, verifies EVERY mutant is KILLED (non-zero exit), and restores
- * the exact original file contents unconditionally in `finally`.
+ * Plants 12 real-world high-severity single-line mutants across Layer 1-4 critical paths,
+ * runs `node test/verify.mjs`, verifies EVERY mutant is KILLED (non-zero exit without spawn error),
+ * and restores the exact original file contents unconditionally in `finally` AND on SIGINT/SIGTERM.
  */
 
 import fs from 'node:fs';
@@ -13,6 +13,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const VERSION = fs.readFileSync(path.join(ROOT, 'VERSION'), 'utf8').trim();
 
 const MUTANTS = [
   {
@@ -85,25 +86,59 @@ const MUTANTS = [
     find: 'if (!Number.isFinite(n)) return fallback;',
     replace: 'if (false && !Number.isFinite(n)) return fallback;',
   },
+  {
+    id: 'M11',
+    file: 'server.mjs',
+    desc: 'Disable HTTP path-traversal & hidden-dotfile segment guard',
+    find: "if (seg === '.' || seg === '..' || seg.startsWith('.')) return true;",
+    replace: 'if (false) return true;',
+  },
+  {
+    id: 'M12',
+    file: 'src/quantum/temporal.js',
+    desc: 'Drop weapons snapshot cloning on temporal rewind (breaks inventory rollback)',
+    find: 'weapons: Array.isArray(worldState.weapons) ? worldState.weapons.map(cloneWeaponSnap) : null,',
+    replace: 'weapons: null,',
+  },
 ];
+
+let activeRestore = null;
+function restoreIfActive() {
+  if (activeRestore) {
+    const { fullPath, original } = activeRestore;
+    activeRestore = null;
+    try {
+      fs.writeFileSync(fullPath, original, 'utf8');
+    } catch { /* best-effort restore */ }
+  }
+}
+
+for (const sig of ['SIGINT', 'SIGTERM']) {
+  process.on(sig, () => {
+    restoreIfActive();
+    process.exit(130);
+  });
+}
 
 let killed = 0;
 let survived = 0;
 
 console.log('========================================================================');
-console.log(' PLANARIA v2.3.0 — SURGICAL MUTATION TESTING HARNESS (10 MUTANTS)');
+console.log(` PLANARIA v${VERSION} — SURGICAL MUTATION TESTING HARNESS (${MUTANTS.length} MUTANTS)`);
 console.log('========================================================================');
 
 for (const m of MUTANTS) {
   const fullPath = path.join(ROOT, m.file);
   const original = fs.readFileSync(fullPath, 'utf8');
-  if (!original.includes(m.find)) {
-    console.error(`  [ERROR] ${m.id}: Target pattern not found in ${m.file}`);
+  const parts = original.split(m.find);
+  if (parts.length !== 2) {
+    console.error(`  [ERROR] ${m.id}: Expected exactly 1 match in ${m.file}, found ${parts.length - 1}`);
     survived++;
     continue;
   }
-  const mutated = original.replace(m.find, m.replace);
+  const mutated = original.replace(m.find, () => m.replace);
   const t0 = performance.now();
+  activeRestore = { fullPath, original };
   try {
     fs.writeFileSync(fullPath, mutated, 'utf8');
     const res = spawnSync(process.execPath, [path.join(ROOT, 'test/verify.mjs')], {
@@ -112,15 +147,18 @@ for (const m of MUTANTS) {
       timeout: 30000,
     });
     const dt = (performance.now() - t0).toFixed(0);
-    if (res.status !== 0) {
+    if (res.error == null && res.status !== 0) {
       killed++;
       console.log(`  [KILLED]   ${m.id} (${m.file}): ${m.desc} (${dt} ms)`);
+    } else if (res.error != null) {
+      survived++;
+      console.error(`  [ERROR]    ${m.id} (${m.file}): test runner error: ${res.error.message} (${dt} ms)`);
     } else {
       survived++;
       console.error(`  [SURVIVED] ${m.id} (${m.file}): ${m.desc} (${dt} ms)`);
     }
   } finally {
-    fs.writeFileSync(fullPath, original, 'utf8');
+    restoreIfActive();
   }
 }
 

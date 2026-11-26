@@ -582,16 +582,26 @@ export class Renderer3D {
       this._programs = [];
       this._vaos = [];
       this._buffers = [];
-      this._initPrograms();
-      this._initMeshes();
-      this._contextLost = false;
-      if (typeof this.onContextStateChange === 'function') this.onContextStateChange(false);
+      try {
+        this._initPrograms();
+        this._initMeshes();
+        this._contextLost = false;
+        if (typeof this.onContextStateChange === 'function') this.onContextStateChange(false);
+      } catch {
+        this._contextLost = true;
+        if (typeof this.onContextStateChange === 'function') this.onContextStateChange(true);
+      }
     };
     canvas.addEventListener('webglcontextlost', this._onContextLost, false);
     canvas.addEventListener('webglcontextrestored', this._onContextRestored, false);
 
-    this._initPrograms();
-    this._initMeshes();
+    try {
+      this._initPrograms();
+      this._initMeshes();
+    } catch (err) {
+      this.dispose();
+      throw err;
+    }
   }
 
   _compileShader(type, src) {
@@ -621,6 +631,7 @@ export class Renderer3D {
       if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
         const log = gl.getProgramInfoLog(p);
         gl.deleteProgram(p);
+        p = null;
         throw new Error(`Program link error: ${log}`);
       }
       this._programs.push(p);
@@ -863,8 +874,18 @@ export class Renderer3D {
 
     const realm = world.activeRealm;
     const rawStratum = world.hbinState.bootable ? Math.max(0, world.hbinState.maxStratum) : -1;
-    // Live Bundle 3 (S2_CORTEX_RENDER) anastomosis coupling: amputating Cortex degrades 3D to S1 wireframe!
-    const stratum = rawStratum >= 2 && world.hbinState.hasCortexRender === false ? 1 : rawStratum;
+    // Live per-organ anastomosis coupling:
+    //   - Amputating BOTH B2 (Wireframe) & B3 (Cortex) degrades 3D to S0 emergency beacon!
+    //   - Amputating B3 (Cortex) degrades to S1 wireframe!
+    //   - Amputating B5 (S3 Organism FX) caps visual flourish at S2!
+    let stratum = rawStratum;
+    if (rawStratum >= 1 && world.hbinState.hasCortexRender === false && world.hbinState.hasWireframe === false) {
+      stratum = 0;
+    } else if (rawStratum >= 2 && world.hbinState.hasCortexRender === false) {
+      stratum = 1;
+    } else if (rawStratum >= 3 && world.hbinState.hasOrganismFx === false) {
+      stratum = 2;
+    }
     const t = world.temporal.worldTime;
     const xeno = world.hbinState.xenografts > 0 ? 1.0 : 0.0;
     const rewind = world.temporal.rewinding ? 1.0 : 0.0;
@@ -1124,7 +1145,7 @@ export class Renderer3D {
     // 5. 3D LINES PASS: BELL/GHZ ENTANGLEMENT TETHERS, RETROCAUSAL FUTURE-CONES, TIMELINE TRAIL, ZENO GAZE
     let lOff = 0;
     const pushLine = (x0, y0, z0, x1, y1, z1, r, g, b, a) => {
-      if (lOff + 14 >= this._lineData.length) return;
+      if (lOff + 14 > this._lineData.length) return;
       const d = this._lineData;
       d[lOff++] = x0; d[lOff++] = y0; d[lOff++] = z0; d[lOff++] = r; d[lOff++] = g; d[lOff++] = b; d[lOff++] = a;
       d[lOff++] = x1; d[lOff++] = y1; d[lOff++] = z1; d[lOff++] = r; d[lOff++] = g; d[lOff++] = b; d[lOff++] = a;
