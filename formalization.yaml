@@ -51,22 +51,22 @@ adversarial_refutation_count: 8
 modules:
   - name: "PlanariaProofs.GF256"
     theorems: 16
-    scope: "Complete GF(2^8) mod 0x11D field axioms, universal Cauchy 2x2 non-singularity & lossless decode + non-vacuity witness"
+    scope: "GF(2^8) mod 0x11D field laws (gf256Field), universal 2x2 Cauchy non-singularity and exact decode (k = 2 only; k > 2 is tested, not proved) + non-vacuity witness"
   - name: "PlanariaProofs.MitosisBounds"
     theorems: 14
-    scope: "Zero-overlap mitosis sufficiency/impossibility, exact integer PLACEMENT_SCHEDULE Nodup + sorted halves, 512B cell budget + witnesses"
+    scope: "Placement counting for zero-overlap mitosis (each half holds n_b/2 >= k+2 cells per bundle; sufficiency/impossibility arithmetic), PLACEMENT_SCHEDULE Nodup + sorted halves, 512B cell budget literals + witnesses; decoding of the halves is tested, not proved"
   - name: "PlanariaProofs.StratumAnastomosis"
     theorems: 8
-    scope: "4-stratum viability lattice bit-exact to hbin.js, 6-organ anastomosis zero-crash, super-additive fusion, RS(40,16) & RS(192,48) separation + witness"
+    scope: "4-stratum viability lattice (matches hbin.js Step 4 by inspection and tests), 6-organ anastomosis zero-crash in the model, super-additive fusion, single-profile definitional separation vs RS(40,16) & RS(192,48) + witness"
   - name: "PlanariaProofs.ByzantineImmune"
     theorems: 18
-    scope: "Byte-list Hamming triangle, RS(254,238) radius t=8, tight 16B/17B/18B burst bounds, full dual-path Merkle commitment, arbitrary-position & arbitrary-list unpinned quorum + witnesses"
+    scope: "Byte-list Hamming triangle, RS(254,238) radius t=8 as Singleton arithmetic (no RS code or decoder formalized), even/odd burst-to-lane counting bounds (16B/17B/18B), dual-path Merkle commitment for an abstract injective hash, quarantine filter under the HashBinding hypothesis, arbitrary-position & arbitrary-list unpinned quorum + witnesses"
   - name: "PlanariaProofs.XenograftABI"
     theorems: 9
     scope: "BitVec 32 RAM sandboxing, bounded fuel termination, B0/B6 host sovereignty, dead-host stem-viability refusal, xenograft ABI safety + witnesses"
   - name: "PlanariaProofs.QuantumTemporal"
     theorems: 12
-    scope: "Full 4-qubit 16-amplitude complex unitarity (X/Y/Z/H/CNOT/CZ/SWAP), 360-frame rewind exactness, 6,421,059,993,600 reachable build space"
+    scope: "4-qubit 16-amplitude integer norm preservation for X/Y/Z/CNOT/CZ/SWAP (scaled H doubles the norm), 360-frame list-based rewind exactness, literal arithmetic product 6,421,059,993,600 (reachability not modelled)"
   - name: "PlanariaProofs.AdversarialTests"
     theorems: 8
     scope: "Formal kernel-checked refutations (¬ P) of 8 deliberately weakened false variants across all six theorem families"

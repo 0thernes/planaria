@@ -2,6 +2,15 @@
 
 All notable changes to **PLANARIA** are documented in this file.
 
+## [Unreleased] - 2026-11-26
+
+### Claim corrections from the 2026-11-26 statement audit (documentation only)
+- `CLAIMS.md`: split C02 and C03 into the Lean part (placement counts; burst-to-lane counting and Singleton arithmetic) and the tested part (both-halves regeneration; RS repair of 8 errors per lane). Marked the C06 quarantine theorem as conditional on `HashBinding`, C09 as an arithmetic check, C04 as a definitional illustration, and the C05 JS correspondence as inspection plus tests. C08 now says the scaled Hadamard doubles the integer norm. C10 states the four-way axiom breakdown and "six kernel checks".
+- `README.md`: corrected the axiom breakdown (15 axiom-free, 12 `propext`, 40 `propext` + `Quot.sound`, 18 with all three), described the kernel checks without claiming six independent kernels, added a short "What Lean covers" paragraph, and renamed "The Five Unnatural Phenomena" to "Five Engineering Properties".
+- `LIMITATIONS.md` §2.7, `formalization.yaml` module scopes, `CITATION.cff` abstract and `docs/` (ADR-0001, ADR-0003, `faq.md`, `glossary.md`, `MASTER_REPORT.md`) aligned with the audit.
+- `ERRATA.md`: recorded the paper, transcript and Lean statement issues that are not fixed in place. Audit log: <https://github.com/0thernes/0thernes-research-archive/blob/main/docs/reviews/2026-11-26-statement-audit.md>.
+- No Lean, source, data or paper files changed; `MANIFEST.sha256` lines for the edited files were updated.
+
 ## [2.4.0] - 2026-11-25
 
 ### Second Full 3-Cycle Deep-Dive Hardening, Clean-Room Python Oracle, Interactive Blueprint & 85 Pure Lean 4.35.0 Proofs

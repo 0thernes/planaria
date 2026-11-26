@@ -19,5 +19,5 @@ Each cell is armored internally by two byte-interleaved `RS(254, 238)` codewords
 
 ## Consequences
 
-- **Positive:** Survives `88%` random spatial obliteration in Stratum 0 ("12% Ghost"), guarantees zero-overlap 50/50 bit-exact dual mitosis across arbitrary prime cuts (proved in `Planaria.Mitosis.planaria_schedule_nodup_and_sorted_halves`), and repairs simultaneous 16-byte bursts across all 192 cells.
+- **Positive:** Survives `88%` random spatial obliteration in Stratum 0 ("12% Ghost"), gives zero-overlap 50/50 bit-exact dual mitosis across the tested prime cuts (the placement counts are proved in `Planaria.Mitosis.planaria_schedule_exact_halves` and `Planaria.Mitosis.planaria_schedule_nodup_and_sorted_halves`; decoding and regeneration of both halves are tested, not proved), and in tests repairs simultaneous 16-byte bursts across all 192 cells.
 - **Negative / Trade-off:** `98,304` B represents a `4.0×` cell expansion (`6.17×` vs. `15,936 B` payload capacity; `24.6×–57.7×` vs. compiled species bytecode), and full 100%-organ regeneration requires surviving Stratum 3's threshold (`B5: k=16/40`) rather than flat `RS(192, 48)`'s 25% all-or-nothing cliff. Both regimes are measured side-by-side in `docs/benchmarks.md`.

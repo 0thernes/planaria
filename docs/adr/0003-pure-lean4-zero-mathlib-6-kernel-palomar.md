@@ -11,7 +11,7 @@ Formal proof suites tied to multi-gigabyte Mathlib snapshots suffer toolchain ch
 
 1. Pin `leanprover/lean4:v4.35.0` with **zero Mathlib dependencies**, **`autoImplicit = false`**, **`relaxedAutoImplicit = false`**, and line-1 `module` headers across ALL `.lean` files (`Spec.lean`, `GF256`, `MitosisBounds`, `StratumAnastomosis`, `ByzantineImmune`, `XenograftABI`, `QuantumTemporal`, `AdversarialTests`, `PlanariaProofs`, `VerifyAxioms`, `Challenge`, `Solution`), proving **85 theorems** (including 10 non-vacuity witnesses and 8 formal adversarial refutations).
 2. Factor all pure shared definitions into `lean/PlanariaProofs/Spec.lean` (zero proofs, zero `sorry`) so `lean/Challenge.lean` imports ONLY `PlanariaProofs.Spec` while sharing bit-identical kernel constants with `lean/Solution.lean`.
-3. Verify `Solution` across **6 independent kernels** (`lean4`, `leanchecker`, `leanchecker-paranoid`, `nanoda_bin`, `con-leche --verified`, `con-ron --verified`, plus `lean4lean`, `lake check --paranoid`, `lake comparator --paranoid`, AND a live negative tampering test in Ubuntu Linux CI).
+3. Check `Solution` with `leanchecker`, `leanchecker-paranoid`, `lake check --paranoid` and `lake comparator --paranoid`, which together report six kernel checks (Lean default and paranoid, lean4lean, nanoda, con-leche, con-ron; the first two share the Lean C++ kernel), and run a live negative tampering test in Ubuntu CI.
 4. Generate an interactive zero-CDN SVG Proof Blueprint (`blueprint/index.html` + `blueprint/blueprint.json`) checked 1:1 against `comparator.json` and `results/lean4-audit.txt` in CI (`npm run check:blueprint`).
 
 ## Consequences

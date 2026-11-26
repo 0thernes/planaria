@@ -2,6 +2,7 @@ cff-version: 1.2.0
 title: "PLANARIA v2.4 — Progressive Holographic Executable Architecture (.hbin), Plang Compiler, PVM-32 Anastomosis VM, 4-Qubit Temporal-Quantum WebGL2 Studio, Python Differential Oracle & 85 Pure Lean 4.35.0 Multi-Kernel Proofs"
 message: "If you reference, verify, or build upon PLANARIA in academic or independent non-commercial research, please cite this software and technical preprint using the metadata below."
 type: software
+abstract: "PLANARIA is an erasure-coded executable format (.hbin), a compiler (Plang), a sandboxed virtual machine (PVM-32) and a browser studio, with a Lean 4.35.0 model of selected invariants. Lean proves GF(2^8) field laws, 2x2 Cauchy decoding (k = 2 only), placement-schedule counts, burst-to-lane counting, an abstract Merkle path lemma, quorum election, RAM masking and integer gate norms (85 audited theorems, kernel-checked by Lean, with six kernel checks in CI). Cauchy recovery for k > 2, Reed-Solomon decoding, both-halves regeneration and the survival benchmarks are tested, not proved. No open problem is addressed."
 version: "2.4.0"
 date-released: "2026-11-25"
 authors:

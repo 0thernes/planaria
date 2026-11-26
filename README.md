@@ -15,7 +15,7 @@ PLANARIA is a zero-dependency progressive holographic executable architecture (`
 
 ![PLANARIA Interactive 3D Temporal-Quantum & Surgical Vivisection Studio](docs/media/studio-v2-3.png)
 
-> Cut a `98,304`-byte `.hbin` executable cleanly in half at an arbitrary unaligned prime byte offset (`49177`): **BOTH** disjoint halves independently boot at full Stratum 3 and regenerate the 100.000% SHA-256 bit-exact parent binary (independently cross-checked in Python 3). Obliterate **80%–92%** of the file (past the cliff where monolithic `LINBIN01`, `RS(40,16)`, and equal-storage flat `RS(192,48)` are all **0.0%** alive), and PLANARIA remains bootable (**95.0%** at 80%, **82.5%** at 88%, **65.0%** at 92%, Holm–Bonferroni $p_{\text{Holm}} \le 6.26 \times 10^{-7}$).
+> Cut a `98,304`-byte `.hbin` executable cleanly in half at an arbitrary unaligned prime byte offset (`49177`): **BOTH** disjoint halves independently boot at full Stratum 3 and regenerate a SHA-256-identical copy of the parent binary in the test suite (cross-checked in Python 3; tested, not proved in Lean). Obliterate **80%–92%** of the file (past the cliff where monolithic `LINBIN01`, `RS(40,16)`, and equal-storage flat `RS(192,48)` are all **0.0%** alive), and PLANARIA remains bootable (**95.0%** at 80%, **82.5%** at 88%, **65.0%** at 92%, Holm–Bonferroni $p_{\text{Holm}} \le 6.26 \times 10^{-7}$).
 
 ---
 
@@ -23,7 +23,7 @@ PLANARIA is a zero-dependency progressive holographic executable architecture (`
 
 1. [Navigation & Publications](#navigation--publications)
 2. [Five-Second Formal Proof Audit (`#print axioms`, 85 Theorems, 6 Kernels, Blueprint)](#five-second-formal-proof-audit-print-axioms-85-theorems-6-kernels-blueprint)
-3. [Why PLANARIA Exists (The Five Unnatural Phenomena)](#why-planaria-exists-the-five-unnatural-phenomena)
+3. [Five Engineering Properties](#five-engineering-properties)
 4. [Architecture Overview](#architecture-overview)
 5. [Quickstart & Full Independent Verification](#quickstart--full-independent-verification)
 6. [Usage & Examples (CLI Torture, Surgery & Runnable Scripts)](#usage--examples-cli-torture-surgery--runnable-scripts)
@@ -46,7 +46,7 @@ PLANARIA is a zero-dependency progressive holographic executable architecture (`
 | **[REPLICATION.md](REPLICATION.md)** & **[VERIFICATION.md](VERIFICATION.md)** | Clean-clone reproduction playbook, SHA-256 manifests (`MANIFEST.sha256`, `data/MANIFEST.sha256`) & 73-file Ed25519 attestation |
 | **[docs/benchmarks.md](docs/benchmarks.md)** & **[docs/preregistration.md](docs/preregistration.md)** | Pre-registered hypotheses `H1`–`H4`, Wilson 95% CIs, McNemar/Holm–Bonferroni tables, latency budgets & longitudinal [`results/bench-history.csv`](results/bench-history.csv) |
 | **[docs/reviews/2026-11-25-10-pass-red-team-audit.md](docs/reviews/2026-11-25-10-pass-red-team-audit.md)** | Complete multi-cycle red-team review, classified findings (all 10 classes), Statement-Fidelity Audit Table & Aaronson checklist |
-| **[lean/README.md](lean/README.md)** & **[formalization.yaml](formalization.yaml)** | 85 pure Lean 4.35.0 theorems across 7 modules (`autoImplicit=false`, `AdversarialTests.lean`, `Challenge.lean`, `Solution.lean`, `comparator.json`, 6 independent kernels) |
+| **[lean/README.md](lean/README.md)** & **[formalization.yaml](formalization.yaml)** | 85 pure Lean 4.35.0 theorems across 7 modules (`autoImplicit=false`, `AdversarialTests.lean`, `Challenge.lean`, `Solution.lean`, `comparator.json`, six kernel checks) |
 | **[SUMMARY.md](SUMMARY.md)**, **[INDEX.md](INDEX.md)** & **[docs/index.md](docs/index.md)** | Standalone executive summary, complete file/theorem index & documentation hub (`architecture.md`, `adr/0001..0004`, `threat-model.md`, `operations.md`, `faq.md`, `glossary.md`) |
 | **[LEGAL.md](LEGAL.md)** & **[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)** | Authorship, AI-assistance & copyrightability disclosure, Export-Control self-screen, zero-dep notice & non-commercial license (CC BY 4.0 audit carve-out) |
 
@@ -54,7 +54,9 @@ PLANARIA is a zero-dependency progressive holographic executable architecture (`
 
 ## Five-Second Formal Proof Audit (`#print axioms`, 85 Theorems, 6 Kernels, Blueprint)
 
-Every formal claim is proved in **pure Lean 4 (`leanprover/lean4:v4.35.0`, `module` system on all 12 `.lean` files, `autoImplicit = false`, `relaxedAutoImplicit = false`, zero Mathlib)** across standalone [`lean/Challenge.lean`](lean/Challenge.lean) and [`lean/Solution.lean`](lean/Solution.lean) (including 10 non-vacuity witnesses and 8 formal false-variant refutations in `AdversarialTests.lean`), mapped 1:1 in the interactive Proof Blueprint ([blueprint/index.html](blueprint/index.html)), and independently checked by **6 distinct Lean kernels** (`lean4`, `leanchecker`, `leanchecker-paranoid`, `nanoda_bin`, `con-leche --verified`, `con-ron --verified`, plus `lean4lean`, `lake check --paranoid`, `lake comparator --paranoid`, and a **live negative tamper rejection test** inside `bubblewrap` on Ubuntu CI; see [results/lean4-multi-kernel.txt](results/lean4-multi-kernel.txt)).
+The 85 audited theorems are proved in **pure Lean 4 (`leanprover/lean4:v4.35.0`, `module` system on all 12 `.lean` files, `autoImplicit = false`, `relaxedAutoImplicit = false`, zero Mathlib)** across standalone [`lean/Challenge.lean`](lean/Challenge.lean) and [`lean/Solution.lean`](lean/Solution.lean) (including 10 non-vacuity witnesses and 8 formal false-variant refutations in `AdversarialTests.lean`), mapped 1:1 in the interactive Proof Blueprint ([blueprint/index.html](blueprint/index.html)). They are kernel-checked by Lean (`lake build`, `leanchecker`, `leanchecker-paranoid`); CI also runs `lake check --paranoid`, `lake comparator --paranoid` on the 85 comparator targets, and a **live negative tamper rejection test** inside `bubblewrap` on Ubuntu CI. The CI log reports six kernel checks (Lean default and paranoid, lean4lean, nanoda, con-leche, con-ron); the first two share the Lean C++ kernel. See [results/lean4-multi-kernel.txt](results/lean4-multi-kernel.txt).
+
+**What Lean covers.** The theorems are about a Lean model, not the JavaScript runtime. Lean proves the $\mathrm{GF}(2^8)$ field laws, $2 \times 2$ Cauchy decoding ($k = 2$ only), placement-schedule counts, burst-to-lane counting for the two RS lanes, an abstract Merkle path lemma, quorum election, RAM masking and integer gate norms. Cauchy recovery for $k > 2$, Reed-Solomon decoding, both-halves regeneration and the survival benchmarks are tested, not proved. The Merkle quarantine theorem assumes a root-authenticity correspondence (`HashBinding`). Several of the 85 are literal arithmetic or definitional checks. See [CLAIMS.md](CLAIMS.md) and [LIMITATIONS.md](LIMITATIONS.md) §2.7.
 
 ```bash
 cd lean && lake build && lake env lean VerifyAxioms.lean
@@ -62,7 +64,7 @@ cd lean && lake build && lake env lean VerifyAxioms.lean
 
 <!-- AXIOM-AUDIT-START -->
 **Verified Axiom Audit (`85/85` theorems · `results/lean4-audit.txt` SHA-256 `13d723722ac5d5af...` — checked automatically by `npm run check:axioms`):**  
-`0` `sorryAx` · `0` `Lean.ofReduceBool` · `0` `Lean.trustCompiler` · `0` `_native` · `0` custom axioms · **15 purely constructive zero-axiom proofs** + **70 standard `[propext, Classical.choice, Quot.sound]`**.
+`0` `sorryAx` · `0` `Lean.ofReduceBool` · `0` `Lean.trustCompiler` · `0` `_native` · `0` custom axioms · **15 axiom-free**, **12 `[propext]` only**, **40 `[propext, Quot.sound]`**, **18 `[propext, Classical.choice, Quot.sound]`** (all within the allowlist `{propext, Classical.choice, Quot.sound}`).
 
 ```text
 'Planaria.GF256.gfMul_comm' depends on axioms: [propext, Classical.choice, Quot.sound]
@@ -85,9 +87,11 @@ cd lean && lake build && lake env lean VerifyAxioms.lean
 
 ---
 
-## Why PLANARIA Exists (The Five Unnatural Phenomena)
+## Five Engineering Properties
 
-1. **Zero-Overlap Planarian Binary Mitosis**: Slice a pristine `98,304`-byte `.hbin` binary right down the middle — even at an unaligned prime byte offset like `49177` (zero shared bytes) — and **BOTH halves independently boot at Stratum 3 and regenerate the 100.000% SHA-256 bit-exact original 96 KiB executable** (`17.17–21.28 ms` combined; independently verified bit-for-bit in Python 3).
+These are measured in the test suites and benchmarks; [CLAIMS.md](CLAIMS.md) says which parts are proved in Lean.
+
+1. **Zero-Overlap Planarian Binary Mitosis**: Slice a pristine `98,304`-byte `.hbin` binary right down the middle — even at an unaligned prime byte offset like `49177` (zero shared bytes) — and **both halves independently boot at Stratum 3 and regenerate a SHA-256-identical copy of the original 96 KiB executable** (`17.17–21.28 ms` combined; cross-checked in Python 3).
 2. **Zero-Cliff Graceful Degradation ("The 12% Ghost")**: Delete **80%–92%** of the binary (past the hard cliff where monolithic `LINBIN01`, `RS(40,16)`, and equal-storage flat `RS(192,48)` are all **0.0%** alive). PLANARIA steps down across 4 nested holographic strata (`S3 -> S2 -> S1 -> S0 Stem Nucleus`) and continues executing live via hardware `ORGAN_CALL` **Control-Flow Anastomosis** with zero-allocation transactional trap rollback.
 3. **File-Wide Simultaneous 16-Byte Burst Radiation Self-Healing**: Inject a **16-byte contiguous burst error inside EVERY SINGLE ONE of the 192 cells simultaneously** (`3,072` corrupted bytes = `3.13%` file-wide corruption), shift by `137` unaligned garbage bytes, shuffle all 192 cells, and inner 2-way interleaved `RS(254, 238)` (Berlekamp–Massey + Chien + Forney) heals **192/192 cells** to 100% bit-exactness (failing cleanly with 0 silent miscorrections at the tight `18 B` bound).
 4. **Cryptographic Byzantine Immune System & Overlap-Eclipse Defense**: Every 512-byte cell carries a 128-byte Depth-8 domain-separated (`0x00`/`0x01`/`0x02 || "PLN\0"`) SHA-256-128 Merkle inclusion proof harvested via an Overlap-Eclipse-resistant sliding correlator with iterative backward flywheel and $O(1)$ sync-flood bypass. Inject `1–192` RS-valid forged Trojans — **100% are quarantined before touching Cauchy GF($2^8$) decoding** (toggling quarantine OFF allows **1 single Trojan** to corrupt `469/472` bytes of `S0_STEM_NUCLEUS`).
@@ -218,6 +222,6 @@ Reproduced verbatim in [results/benchmarks.json](results/benchmarks.json) (`PLAN
 
 ## Epistemic Scope, Limitations & Licensing
 
-- **No open pure-mathematics or physics conjectures are claimed solved (`0 / 1,900` in the Unsolved Problems Mega-Atlas; see [docs/MEGA_ATLAS_CROSSCHECK.md](docs/MEGA_ATLAS_CROSSCHECK.md)).** All underlying coding, cryptographic, and quantum-information primitives are credited to established literature; PLANARIA's contribution is a formally verified, adversarially hardened computer-systems architecture. See [LIMITATIONS.md](LIMITATIONS.md) and [CLAIMS.md](CLAIMS.md).
-- **AI Assistance Disclosure:** Built under Alexander Stephen Donahue's direction with substantive AI engineering/formalization assistance (Google DeepMind / Antigravity agents), audited by 6 independent Lean kernels, 30 verification suites, 12 surgical mutants, 2,000 fuzz cases, and an independent Python 3 differential oracle. See [LEGAL.md](LEGAL.md).
+- **No open pure-mathematics or physics conjectures are claimed solved (`0 / 1,900` in the Unsolved Problems Mega-Atlas; see [docs/MEGA_ATLAS_CROSSCHECK.md](docs/MEGA_ATLAS_CROSSCHECK.md)).** All underlying coding, cryptographic, and quantum-information primitives are credited to established literature; the field laws, $2 \times 2$ Cauchy inversion and counting bounds proved in Lean are textbook results. PLANARIA's contribution is an engineering architecture with a Lean 4 model of selected invariants; the JavaScript runtime is tested, not proved. See [LIMITATIONS.md](LIMITATIONS.md) and [CLAIMS.md](CLAIMS.md).
+- **AI Assistance Disclosure:** Built under Alexander Stephen Donahue's direction with substantive AI engineering/formalization assistance (Google DeepMind / Antigravity agents), checked by six Lean kernel checks, 30 verification suites, 12 surgical mutants, 2,000 fuzz cases, and an independent Python 3 differential oracle. See [LEGAL.md](LEGAL.md).
 - **License:** Copyright © 2026 **Alexander Stephen Donahue (0thernes)** `<0_0@0thernes.art>`. Licensed under the **COSMOGONIC LICENSE — NON-COMMERCIAL RESEARCH & PLAY** ([LICENSE](LICENSE); Build Standard audit tooling explicitly carved out as CC BY 4.0; trade-off vs. OSI documented in [ADR-0004](docs/adr/0004-non-commercial-license-vs-osi-dilemma.md)).

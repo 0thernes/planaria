@@ -156,7 +156,7 @@ packs `AEGIS_DRIFT`'s `S1_CORE_LOGIC` (including its `v2.2.0` `SPECIES_MAGIC` se
 
 - **Exact 4-Qubit Statevector Engine (`src/quantum/qengine.js`)**: 16 complex amplitudes supporting `X`, `Y`, `Z`, `H`, `S`, `T`, `RX`, `RY`, `RZ`, `CNOT`, `CZ`, `SWAP`, Born-rule measurement collapse, rotation-invariant Horodecki 3×3 tensor Bell-CHSH ($S_{\max} = 2\sqrt{2}$), and 4-qubit Mermin GHZ ($|M_4| = 4.0$).
 - **$O(1)$ Reversible Temporal Rewind (`src/quantum/temporal.js`)**: 360-frame circular `RingBuffer` capturing complete player, NPC (`speed`, `mitosisDone`, coordinates, HP), stage, cooldown, Chrono-Well, Echo-Clone, and quantum snapshots with exact lockstep trail restoration.
-- **Deterministic 1/1 Combinatorial Forge (`src/world/generator.js`)**: 128-bit SHA-256 `sfc32` PRNG and 64-bit `XXXX-XXXX-XXXX-XXXX` lineage IDs spanning an exact Lean-verified **`6,421,059,993,600`** reachable Weapon × Armor × NPC cross-product across 24 spatial orders of magnitude.
+- **Deterministic 1/1 Combinatorial Forge (`src/world/generator.js`)**: 128-bit SHA-256 `sfc32` PRNG and 64-bit `XXXX-XXXX-XXXX-XXXX` lineage IDs spanning a **`6,421,059,993,600`** Weapon × Armor × NPC cross-product (Lean checks only the product of the hard-coded factors; reachability rests on the generator tests) across 24 spatial orders of magnitude.
 
 ---
 
