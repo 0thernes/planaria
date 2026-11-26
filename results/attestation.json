@@ -2,7 +2,7 @@
   "schema": "PLANARIA-ATTESTATION-1.2",
   "signatureMode": "ephemeral-self-consistency-seal",
   "trustBoundary": "Ephemeral session Ed25519 key: proves internal bundle self-consistency against the embedded public key; external authenticity comes from git commit / GitHub release / SLSA provenance / Software Heritage archival.",
-  "timestamp": "2026-11-26T03:25:49.316Z",
+  "timestamp": "2026-11-26T03:40:54.573Z",
   "digests": {
     "package.json": "8b817a9c88e2528ca85fb4aa0d7112fc77aedd3bcc6061fa4c0a6ec417d2e6ab",
     "VERSION": "2ad7b0c3f0ede58c3165b7a8a5479e890a758d39bfe8683eaef50ce6afad7232",
@@ -41,7 +41,7 @@
     "scripts/check-blueprint.mjs": "3687a3358efa6bf406dfc6dc251c0f702f32ae3299547316a010a06fe135a3b1",
     "scripts/check-readme-axioms.mjs": "9a84551dbb244d64290521c3069ff24e24b7c145d4446b73d21d79a0fbae023f",
     "scripts/lint-check.mjs": "f36a26283099e090fd7bb96941dc893ab681988927870318b4ed7814074eabdf",
-    "scripts/check-citations.mjs": "69f62efc25a3ac4fcb98bceba0457a1440c2e0c2d185038ccdeaa2b3f27096ad",
+    "scripts/check-citations.mjs": "3c8a60db59d47a6f93ec52a6c57ee9fdc6501381b6b2c6c290cd6f3c17f74b9f",
     "scripts/build-pages.mjs": "56cf4406693bb77b039ec8a905fdcb6886032d2c79a8104bbd46a595139d4d3b",
     "test/verify.mjs": "e5313774b3b3051f252957765f2d21873a9467764b823b674368d9eeff45c33c",
     "reference/planaria_oracle.py": "c1b4d2266b65e60e29b193ea3dc07f19504d8fe66456c60d406e014261101ad3",
@@ -74,11 +74,11 @@
     "dist/arxiv_submission.tar.gz": "0ae6c8f2b21c0e26d667eeb6a62e3c1dd35a32708074b0c2feefe8cfb4381d93",
     "results/benchmarks.json": "b35596355b33631e33f09b0b869d669147237b694480ac0716aadb8534ee6430",
     "results/bench-history.csv": "fad2d68eb24a96db3e315b618eae0e3c442bdf527a4a2868c6abbc7982e21d29",
-    "results/citation-audit.json": "6ba25a8d7a1b0b84c860e762b30ba33d9d90537c56f7109cb0eb2b797a1121fd",
+    "results/citation-audit.json": "4208272520fda9031ed7d0b125190c06df5749387676a0a27823c9d8f49d5005",
     "results/lean4-audit.txt": "13d723722ac5d5afd7ab20306f9996f4a97282ad95123f799f954a76e28a6e8c",
     "results/lean4-multi-kernel.txt": "85341caa13f36528655830280a1eb733f0313a5610ed9b6acf474c2ea8e1bdc3"
   },
-  "ed25519PublicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA9X+BR6pLB1X98buqQfYE9SUcK6/Ok0gJktWv1IP0csA=\n-----END PUBLIC KEY-----\n",
-  "ed25519SignatureHex": "38e8284e91a9b1237322a1fd5688bddae7be8857f808fbdb7ce2967190dc041c5546e713e2315baae7f233afc686cd3996669ef7e5c0258561727c8e11876407",
+  "ed25519PublicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAdMYmBZG4w+N+f+rKHqOli9bHPJO827zbKp54n42iFvo=\n-----END PUBLIC KEY-----\n",
+  "ed25519SignatureHex": "e50d0d7c2d606b66137c09cb1d846c9a7f18c313dfbfbb13e7a83804b75cd43783584745d66aaa2e0d5bd66f694df464c9a8bd03f243177f907807bed1b96103",
   "selfVerified": true
 }

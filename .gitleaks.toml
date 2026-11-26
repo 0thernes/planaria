@@ -1,0 +1,10 @@
+title = "PLANARIA Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Exclude benign bibliographic BibTeX cite keys in results/citation-audit.json (e.g., berlekamp1968 flagged by generic-api-key entropy heuristic)"
+paths = [
+  '''^results/citation-audit\.json$''',
+]

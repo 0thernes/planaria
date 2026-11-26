@@ -127,7 +127,7 @@ if (LIVE) {
       clearTimeout(timer);
       if (!res.ok) {
         liveFail++;
-        results.push({ key, doi, status: res.status, resolved: false, retracted: null });
+        results.push({ citeKey: key, doi, status: res.status, resolved: false, retracted: null });
         console.error(`  [FAIL] ${key}: ${doi} -> HTTP ${res.status}`);
         continue;
       }
@@ -149,10 +149,10 @@ if (LIVE) {
         liveFail++;
         console.error(`  [RETRACTED] ${key}: ${doi} (${title})`);
       }
-      results.push({ key, doi, status: res.status, resolved: true, retracted, year, firstAuthor, title });
+      results.push({ citeKey: key, doi, status: res.status, resolved: true, retracted, year, firstAuthor, title });
     } catch (err) {
       liveFail++;
-      results.push({ key, doi, status: 0, resolved: false, retracted: null, error: String(err.message || err) });
+      results.push({ citeKey: key, doi, status: 0, resolved: false, retracted: null, error: String(err.message || err) });
       console.error(`  [ERROR] ${key}: ${doi} -> ${err.message || err}`);
     }
   }
