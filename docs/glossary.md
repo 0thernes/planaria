@@ -1,0 +1,21 @@
+# Technical Glossary (`v2.3.0`)
+
+- **Anastomosis (Vascular Control-Flow Anastomosis):** Deterministic runtime rerouting in `PVM-32` (`ORGAN_CALL`) where a missing or damaged high-stratum organ (`B2`–`B4`) gracefully falls back down the viability lattice (`S3 -> S2 -> S1 -> S0`) without trapping or halting execution.
+- **Byzantine Cell:** A forged `512`-byte cell that passes inner `RS(254, 238)` parity checks (and sync framing) but carries an invalid or rival-lineage Merkle proof intended to poison outer GF($2^8$) Cauchy MDS linear decoding.
+- **Cauchy MDS Matrix:** A $k \times n$ matrix over $\mathrm{GF}(2^8)$ with entries $C_{i,j} = (x_i \oplus y_j)^{-1}$ for pairwise distinct $x_i, y_j$. Every $k \times k$ submatrix is invertible (Maximum Distance Separable), allowing exact reconstruction from any $k$ surviving shards.
+- **CHSH Inequality (Horodecki Criterion):** Bell nonlocality bound $S \le 2$ for local hidden-variable theories and $S \le 2\sqrt{2} \approx 2.8284$ in quantum mechanics; computed exactly in `src/quantum/qengine.js` via eigenvalues of $T^\top T$ for the reduced 2-qubit state.
+- **Coprime Scatter Schedule (`CELL_SCHEDULE`):** Permutation placing the `192` `.hbin` cells in ascending order of `((73 * idx + 19 * bundleId + 11) mod 192, bundleId, shardIdx)`, guaranteeing zero-overlap planarian mitosis across half-cuts.
+- **Equal-Storage Baseline (`RS(192, 48)`):** Flat all-or-nothing MDS control using the identical `98,304`-byte file size and `192`-cell granularity as `.hbin` ($k = 48$, $25\%$ cliff), isolating the survival gain of progressive stratification from raw redundancy overhead.
+- **`.hbin` (Holographic Binary):** PLANARIA's headerless `98,304`-byte (`192 × 512` B) self-synchronizing executable format.
+- **Interleaved `RS(254, 238)`:** Two byte-interleaved Reed–Solomon codewords per `512`-byte cell, correcting up to $8$ random byte errors per lane or a $16$-byte contiguous burst per cell while strictly rejecting $\ge 9$ errors per lane.
+- **Iterative Backward Flywheel:** Decoder recovery mechanism in `src/core/hbin.js` that steps backward in `512`-byte strides from any synchronized cell to recover preceding cells whose `4`-byte `PLN\xB7` sync header was obliterated.
+- **Lineage Root (`lineageRootHex`):** The 128-bit truncated root of the Depth-8 domain-separated SHA-256 Merkle tree committing to all `192` authentic cells of a compiled organism.
+- **Mermin Witness ($|M_4|$):** 4-qubit multipartite nonlocality observable with classical bound $|M_4| \le 2$ and quantum maximum $|M_4| = 8$ on $\mathrm{GHZ}_4 = (|0000\rangle + |1111\rangle)/\sqrt{2}$.
+- **Mitosis (Zero-Overlap Planarian Mitosis):** Splitting a `.hbin` binary into two disjoint byte regions (exact or unaligned prime cut) such that each half independently recovers all 7 bundles and regenerates the bit-exact `98,304`-byte parent binary.
+- **Overlap-Eclipse Attack:** Adversarial attack overwriting authentic cells with RS-valid cells from a rival Merkle root to starve or hijack Cauchy recovery.
+- **Palomar Comparator (`Challenge.lean` / `Solution.lean`):** Lean 4.35.0 verification protocol checking that `Solution.lean` proves every theorem declared in a standalone zero-import `Challenge.lean` using only standard axioms, verified across independent kernels.
+- **`Plang`:** PLANARIA's structured 7-bundle systems programming language compiled to `PVM-32` RISC bytecode.
+- **`PVM-32`:** PLANARIA's deterministic 32-bit sandboxed register virtual machine (`4,096`-word `& 0xFFF` RAM, bounded per-frame fuel, 6-organ anastomosis, Bundle 6 non-executable).
+- **Sovereign Bundles (`B0`, `B6`):** The Stem Nucleus (`B0`) and Genome Metadata (`B6`), which are architecturally prohibited from cross-species xenograft replacement.
+- **Stratum (`S0`–`S3`):** Progressive protection tier (`S0` = Stem Nucleus `k=4/36`, `S1` = Core Logic `k=8/40`, `S2` = Primary Graphics `k=16/48`, `S3` = HD FX / Audio Synth / State Schema / Genome `68` cells).
+- **Xenograft (Cross-Species Chimera):** Transplanting viable non-sovereign organ bundles (`B1`–`B5`) from an authentic donor species into a living amputated host species (`B0` viable) after strict ABI signature matching.

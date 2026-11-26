@@ -1,0 +1,117 @@
+# yaml-language-server: $schema=./repo-standard.schema.json
+# Project manifest for the Build Standard for LLMs v1.2.0. Read by scripts/audit-repo.sh and Audit-Repo.ps1.
+standard: "1.2.0"
+name: "planaria"
+description: "Progressive Holographic Executable Architecture (.hbin), Plang Compiler, PVM-32 Anastomosis VM, 4-Qubit Temporal-Quantum WebGL2 Studio & 6-Kernel Pure Lean 4.35.0 Proofs"
+owner: "Alexander Stephen Donahue (0thernes)"
+year: "2026"
+project_type: research
+stack: [node, lean4, latex]
+flags:
+  public: true
+  package: true
+  visual: true
+  ui: true
+  native: false
+  ai: false
+  personal_data: false
+  service: true
+  deployed: true
+  api: true
+  perf: true
+  concurrent: true
+  numeric: true
+  experimental: true
+  ml: false
+  formal: true
+items:
+  A01: {status: done}  # README with a one-line purpose [core]
+  A02: {status: done}  # Badge ribbon [recommended]
+  A03: {status: done}  # Quickstart that works from a clean clone [core]
+  A04: {status: done}  # Usage examples [core]
+  A05: {status: done}  # Demo media [recommended]
+  A06: {status: done}  # LICENSE [core]
+  A07: {status: done}  # CHANGELOG [core]
+  A08: {status: done}  # Semantic version, tags and a single version source [core]
+  A09: {status: done}  # Automated tests that pass [core]
+  A10: {status: done}  # Informational CI [core]
+  A11: {status: done}  # Releases [recommended]
+  A12: {status: done}  # .gitignore [core]
+  A13: {status: done}  # .gitattributes and .editorconfig [recommended]
+  A14: {status: done}  # CONTRIBUTING guide [recommended]
+  A15: {status: done}  # CODE_OF_CONDUCT [recommended]
+  A16: {status: done}  # SECURITY.md [core]
+  A17: {status: done}  # SUPPORT.md [recommended]
+  A18: {status: done}  # Issue templates [recommended]
+  A19: {status: done}  # About description and topics [core]
+  A20: {status: done}  # docs/ folder [recommended]
+  A21: {status: done}  # Architecture Decision Records [recommended]
+  A22: {status: done}  # CITATION.cff [advanced]
+  A23: {status: done}  # Clean history and correct identity [core]
+  A24: {status: done}  # No secrets, build output or huge files committed [core]
+  A25: {status: done}  # Cross-platform CI [recommended]
+  A26: {status: done}  # Social preview image [recommended]
+  A27: {status: done}  # Pages demo or docs site [advanced]
+  A28: {status: done}  # Package manifest [recommended]
+  A29: {status: done}  # ROADMAP.md [recommended]
+  A30: {status: done}  # Labels for the finding classes [recommended]
+  A31: {status: done}  # Task runner with one-word commands [core]
+  A32: {status: done}  # Agent entry points: AGENTS.md canonical, plus CLAUDE.md, GEMINI.md, Cursor rules, llms.txt [core]
+  A33: {status: done}  # Environment and configuration documented [core]
+  A34: {status: done}  # Observability basics: logs, errors, health (/healthz + structured stderr) [recommended]
+  A35: {status: done}  # Data, migrations, backups and an offsite repo mirror [recommended]
+  A36: {status: done}  # One-command deploy and rollback [recommended]
+  A37: {status: done}  # Performance budgets (docs/benchmarks.md + CI timing report) [advanced]
+  A38: {status: done}  # Accessibility and internationalization (WAI-ARIA tabs/meters/keyboard/reduced-motion) [core]
+  A39: {status: done}  # Third-party licensing and attribution [recommended]
+  A40: {status: n/a, note: "Zero AI SDKs or runtime models shipped (ai: false)."}
+  A41: {status: done}  # Deprecation and upgrade path [advanced]
+  A42: {status: done}  # Maintenance status [recommended]
+  A43: {status: done}  # examples/ directory [recommended]
+  A44: {status: done}  # FAQ and glossary [recommended]
+  A45: {status: n/a, note: "Zero personal data collected, stored, or transmitted (personal_data: false)."}
+  B01: {status: done}  # Reproducible build from a clean clone [core]
+  B02: {status: done}  # Pinned toolchains and lockfiles (package-lock.json + lean/lean-toolchain + lean/lake-manifest.json) [core]
+  B03: {status: done}  # Determinism checks (bit-exact artifacts/*.hbin & PVM-32 framebuffer hash parity) [core]
+  B04: {status: done}  # CLAIMS.md ledger [core]
+  B05: {status: done}  # Falsifiable tests per claim (28 suites + 70 Lean theorems mapped in CLAIMS.md) [core]
+  B06: {status: done}  # Negative tests (tight RS 9B/17B, sub-S0, Sybil tie, traversal/XSS, compiler rejects) [core]
+  B07: {status: done}  # Regression test per fixed bug (Suites 17-26 lock every Cycle 1 & v2.2 fix) [core]
+  B08: {status: done}  # Golden and snapshot tests (Suite 24 bit-exact SHA-256 artifacts + manifest parity) [recommended]
+  B09: {status: done}  # Contract and API tests (Suites 22-23 CLI exit codes, HTTP headers, /healthz, package exports) [recommended]
+  B10: {status: done}  # Property-based tests (Suite 25 prop_check across GF256, RS, Cauchy, SHA-256, 4Q) [core]
+  B11: {status: done}  # Differential testing (Suite 03 SHA-256 vs OpenSSL; Lean GF256/Anastomosis vs JS) [recommended]
+  B12: {status: done}  # Reference implementation as test oracle (Node crypto SHA-256 + gfMulDirect + LINBIN01) [recommended]
+  B13: {status: done}  # Mutation testing (scripts/mutation-test.mjs — 10/10 mutants killed = 100%) [recommended]
+  B14: {status: done}  # Metamorphic testing (Suite 27 permutation, shift & local-unitary invariance) [advanced]
+  B15: {status: n/a, note: "Zero native C/C++/asm code (native: false); property-based fuzzing covered in Suite 25."}
+  B16: {status: n/a, note: "Zero native C/C++/asm code (native: false); memory-safe JS + BitVec 32 Lean sandbox."}
+  B17: {status: done}  # Static analysis and linters, report-only (scripts/lint-check.mjs + optional eslint) [recommended]
+  B18: {status: done}  # Strict type checking (jsconfig.json + Lean 4.35.0 dependent type checker across 6 kernels) [recommended]
+  B19: {status: done}  # Concurrency and race testing (lock-free AudioWorklet ring + HTTP concurrent request isolation) [advanced]
+  B20: {status: done}  # Numeric and floating-point stability (Suite 13/25/26 NaN/Infinity/unitarity/float64 phase reduction) [advanced]
+  B21: {status: done}  # Failure injection (Suite 06-10 & 18-23 obliteration, radiation, Trojans, amputations, WebGL context loss) [advanced]
+  B22: {status: done}  # Formal specification and proof (lean/ — 70 theorems, Palomar Challenge/Solution, 6 independent kernels) [advanced]
+  B23: {status: n/a, note: "Finite-state protocol safety (anastomosis, quorum, sovereignty) is machine-checked directly in Lean 4.35.0; no separate TLA+/Alloy model."}
+  B24: {status: n/a, note: "Runtime targets zero-dependency ES2022/WebGL2 browsers and Node.js >=20; critical algebraic/protocol specs are proved in Lean 4.35.0."}
+  B25: {status: n/a, note: "Zero C/C++/Rust runtime implementation (native: false); JS verified via 28 suites + 10/10 mutation testing."}
+  B26: {status: done}  # Honest benchmarks (docs/benchmarks.md + results/benchmarks.json with 4 baselines) [core]
+  B27: {status: done}  # Performance tracking over time, report-only (CI benchmark JSON artifact + docs/benchmarks.md history) [advanced]
+  B28: {status: done}  # Controls and multiple seeds (40 paired seeds/point across Linear, RS(40,16), RS(192,48), PLANARIA) [core]
+  B29: {status: done}  # Significance testing (exact two-sided paired McNemar binomial tests in benchmarks.json) [core]
+  B30: {status: done}  # Effect sizes and confidence intervals (Wilson 95% CIs, risk difference, Cohen's h) [core]
+  B31: {status: done}  # Multiple-comparison correction (Holm-Bonferroni step-down p_Holm across all 25 thresholds) [recommended]
+  B32: {status: done}  # Pre-registration of hypotheses (docs/preregistration.md) [advanced]
+  B33: {status: n/a, note: "No ML training or model selection (ml: false)."}
+  B34: {status: n/a, note: "No runtime LLM or AI model inference (ai: false)."}
+  B35: {status: done}  # Security scanning, report-only (gitleaks + osv-scanner in .github/workflows/ci.yml) [recommended]
+  B36: {status: done}  # Threat model (docs/threat-model.md — STRIDE + Sybil/DoS/XSS/traversal mitigations) [recommended]
+  B37: {status: done}  # Release hashes and checksums (SHA256SUMS in release.yml + MANIFEST.sha256) [core]
+  B38: {status: done}  # Build provenance and attestations (actions/attest-build-provenance@v4 + results/attestation.json) [recommended]
+  B39: {status: done}  # Data checksums and dataset versioning (data/MANIFEST.sha256 + artifacts/manifest.json) [recommended]
+  B40: {status: done}  # Audit trail (docs/run-log.md covering Cycles 1-3 + Git history) [recommended]
+  B41: {status: done}  # Limitations and real-vs-metaphor (LIMITATIONS.md) [core]
+  B42: {status: done}  # What would prove us wrong (CLAIMS.md explicit falsification column) [core]
+  B43: {status: done}  # Replication protocol (REPLICATION.md) [core]
+  B44: {status: done}  # Independent replication log (REPLICATION.md table, honestly marked awaiting external replication) [advanced]
+  B45: {status: done}  # Peer and red-team review (docs/reviews/2026-11-25-10-pass-red-team-audit.md) [recommended]

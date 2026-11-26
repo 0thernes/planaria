@@ -1,93 +1,135 @@
-name: PLANARIA CI & Formal Verification
+name: PLANARIA CI (Cross-Platform Tests, 6-Kernel Lean 4.35, Paper & Security)
 
 on:
   push:
-    branches: [main, master]
-  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
 
 jobs:
-  verify-runtime:
-    name: Build 4 .hbin Artifacts, 24-Suite Falsification & Security Audit
-    runs-on: ubuntu-latest
+  node-matrix:
+    name: Build, 28 Suites, 10 Mutants & Benchmarks (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Compile all 4 .plang living species -> .hbin artifacts
+      - name: Deterministic artifact build
         run: npm run build
-      - name: Run 24-suite falsifiable verification, security & quantum-temporal harness
+      - name: 28-suite verification, property-based & metamorphic harness
         run: npm test
-      - name: Verify CLI unaligned bisect -> fuse -> heal bit-exact SHA-256 & Xenograft roundtrip
-        run: |
-          node bin/planaria.mjs --version
-          node bin/planaria.mjs inspect artifacts/quantum_chronicle.hbin
-          node bin/planaria.mjs inspect artifacts/aegis_drift.hbin
-          node bin/planaria.mjs bisect artifacts/aegis_drift.hbin /tmp/l.hbin /tmp/r.hbin --offset 49177
-          node bin/planaria.mjs fuse /tmp/l.hbin /tmp/r.hbin -o /tmp/fused.hbin --gap 53
-          node bin/planaria.mjs heal /tmp/r.hbin -o /tmp/healed.hbin
-          cmp artifacts/aegis_drift.hbin /tmp/healed.hbin
-          node bin/planaria.mjs xenograft artifacts/aegis_drift.hbin artifacts/synth_reactor.hbin -o /tmp/chimera.hbin
-          node bin/planaria.mjs run /tmp/chimera.hbin --frames 30
-      - name: Run Monte Carlo survival curve & Ed25519 attestation benchmark
+      - name: 10-mutant surgical mutation testing (100% kill target)
+        run: npm run mutate
+      - name: Static analysis, security-sink & citation hygiene
+        run: npm run lint && npm run check:citations
+      - name: Build static GitHub Pages bundle
+        run: npm run pages
+      - name: Run 4-architecture statistical benchmarks (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
         run: npm run benchmark
+      - name: Upload benchmark JSON artifact (report-only tracking)
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: planaria-benchmarks-json
+          path: results/benchmarks.json
 
-  verify-lean4:
-    name: Pure Lean 4 v4.35.0 Kernel Proof Audit (62 Theorems — Strict Allowlist)
+  lean-6kernel:
+    name: Pure Lean 4.35.0 — 70 Theorems & 6-Kernel Palomar Comparator
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - name: Install elan & Lean 4 v4.35.0 toolchain
+      - uses: actions/checkout@v4
+      - name: Install bubblewrap for Palomar multi-kernel sandbox
+        run: sudo apt-get update && sudo apt-get install -y bubblewrap
+      - name: Install elan & pinned Lean 4.35.0 toolchain
         run: |
-          curl https://elan.lean-lang.org/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
-          echo "$HOME/.elan/bin" >> $GITHUB_PATH
-      - name: Clean-build all 62 Lean 4 theorems and enforce strict axiom allowlist
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Build PlanariaProofs, Solution & Challenge (zero sorry/admit/native_decide)
         working-directory: lean
         run: |
-          lake clean
-          lake build 2>&1 | tee /tmp/lean-ci.log
-          python3 - <<'PY'
-          import re, sys
-          ALLOWED = {"propext", "Classical.choice", "Quot.sound"}
-          with open("/tmp/lean-ci.log", "r", encoding="utf-8") as f:
-              text = f.read()
-          if "sorryAx" in text or "ofReduceBool" in text or "trustCompiler" in text:
-              print("ERROR: Forbidden axiom (sorryAx / ofReduceBool / trustCompiler) detected!")
-              sys.exit(1)
-          audited = 0
-          for line in text.splitlines():
-              m_none = re.search(r"'(Planaria\.[^']+)' does not depend on any axioms", line)
-              m_deps = re.search(r"'(Planaria\.[^']+)' depends on axioms: \[([^\]]*)\]", line)
-              if m_none:
-                  audited += 1
-              elif m_deps:
-                  audited += 1
-                  axioms = {a.strip() for a in m_deps.group(2).split(",") if a.strip()}
-                  bad = axioms - ALLOWED
-                  if bad:
-                      print(f"ERROR: Disallowed axioms {bad} in {m_deps.group(1)}")
-                      sys.exit(1)
-          print(f"STRICT AXIOM ALLOWLIST PASSED: {audited} Planaria theorems audited (all strictly within {sorted(ALLOWED)}).")
-          if audited < 62:
-              print(f"ERROR: Expected >= 62 audited theorems, found {audited}")
-              sys.exit(1)
-          PY
+          lake build
+          lake build Challenge
+          lake env lean VerifyAxioms.lean > /tmp/lean4-audit.txt
+          cat /tmp/lean4-audit.txt
+          COUNT=$(grep -cE "depends on axioms:|does not depend on any axioms" /tmp/lean4-audit.txt)
+          echo "Audited theorem count: $COUNT"
+          test "$COUNT" -eq 70
+          if grep -E "sorryAx|ofReduceBool|trustCompiler" /tmp/lean4-audit.txt; then
+            echo "FORBIDDEN AXIOM DETECTED" >&2
+            exit 1
+          fi
+      - name: Run independent paranoid & multi-kernel checks (lake check + comparator)
+        working-directory: lean
+        run: |
+          lake env leanchecker --fresh Solution
+          lake env leanchecker-paranoid --fresh Solution
+          lake check --paranoid
+          lake comparator --config comparator.json --paranoid
 
-  verify-paper:
-    name: AMS-LaTeX White Paper & arXiv Bundle Build (Tectonic)
+  paper-pdf:
+    name: AMS-LaTeX White Paper & Standalone arXiv Verification
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - name: Install Tectonic TeX engine
+      - uses: actions/checkout@v4
+      - name: Install Tectonic
         run: |
           curl --proto '=https' --tlsv1.2 -fsSL https://drop-sh.fullyjustified.net | sh
           sudo mv tectonic /usr/local/bin/tectonic
-          tectonic --version
-      - name: Compile paper/main.tex and verify dist/arxiv_submission.tar.gz standalone
+      - name: Compile paper/main.tex
         run: |
-          mkdir -p /tmp/pdf-out /tmp/arxiv-check/out
-          tectonic -X compile paper/main.tex --outdir /tmp/pdf-out --keep-logs
-          test -s /tmp/pdf-out/main.pdf
-          tar -xzf dist/arxiv_submission.tar.gz -C /tmp/arxiv-check
-          tectonic -X compile /tmp/arxiv-check/main.tex --outdir /tmp/arxiv-check/out
-          test -s /tmp/arxiv-check/out/main.pdf
+          mkdir -p /tmp/paper-out
+          tectonic -X compile paper/main.tex --outdir /tmp/paper-out
+          ls -lh /tmp/paper-out/main.pdf
+      - name: Verify standalone dist/arxiv_submission.tar.gz compiles cleanly
+        run: |
+          mkdir -p /tmp/arxiv-test
+          tar -xzf dist/arxiv_submission.tar.gz -C /tmp/arxiv-test
+          tectonic -X compile /tmp/arxiv-test/main.tex --outdir /tmp/arxiv-test
+          ls -lh /tmp/arxiv-test/main.pdf
+      - name: Generate CI SHA256SUMS and SLSA provenance attestation
+        run: |
+          sha256sum artifacts/*.hbin dist/Donahue_2026_planaria.pdf dist/arxiv_submission.tar.gz > SHA256SUMS
+          cat SHA256SUMS
+      - name: Attest build provenance (SLSA)
+        uses: actions/attest-build-provenance@v4
+        continue-on-error: true
+        with:
+          subject-path: |
+            artifacts/*.hbin
+            dist/Donahue_2026_planaria.pdf
+            dist/arxiv_submission.tar.gz
+            SHA256SUMS
+
+  audit-and-security:
+    name: Build Standard v1.2.0 Audit & Report-Only Security Scans
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run Build Standard v1.2.0 self-audit (report-only)
+        continue-on-error: true
+        run: bash scripts/audit-repo.sh .
+      - name: Secret scan via gitleaks (report-only)
+        continue-on-error: true
+        run: |
+          GITLEAKS_VER="8.21.2"
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VER}/gitleaks_${GITLEAKS_VER}_linux_x64.tar.gz" | tar -xz -C /tmp gitleaks
+          /tmp/gitleaks detect --source . --no-banner --redact
+      - name: Dependency vulnerability scan via osv-scanner (report-only)
+        continue-on-error: true
+        run: |
+          OSV_VER="1.9.1"
+          curl -sSL "https://github.com/google/osv-scanner/releases/download/v${OSV_VER}/osv-scanner_linux_amd64" -o /tmp/osv-scanner
+          chmod +x /tmp/osv-scanner
+          /tmp/osv-scanner --lockfile=package-lock.json

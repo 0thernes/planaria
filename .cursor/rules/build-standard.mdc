@@ -1,0 +1,6 @@
+---
+description: PLANARIA repository instructions and Build Standard v1.2.0 pointer
+alwaysApply: true
+---
+
+Read and follow `AGENTS.md` (canonical project rules, commands, hard rules R1-R8, and known traps) and `docs/build-standard.md` (Build Standard for LLMs v1.2.0) before modifying code, proofs, or papers.

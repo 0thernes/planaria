@@ -1,12 +1,13 @@
 /**
- * PLANARIA v2.2 — 24-Suite Falsifiable Verification, Security & Adversarial Torture Harness
+ * PLANARIA v2.3 — 28-Suite Falsifiable Verification, Property-Based, Security & Adversarial Harness
  *
  * Verifies BOTH positive mathematical/operational guarantees AND negative tight-bound
  * Popperian falsification boundaries across all 5 architectural layers:
  *   Layer 1: GF(2^8), Interleaved RS(254,238), Cauchy MDS, SHA-256, Depth-8 Merkle, .hbin
  *   Layer 2: Plang Compiler (Lexer/Parser/Codegen), PVM-32 VM, Linear Control Twin, 4 Species
  *   Layer 3: 4-Qubit QuantumRegister (CHSH/Mermin), TemporalEngine, Generator, 3D World
- *   Layer 4: Hardened CLI (9 commands), Hardened HTTP Server (CSP/Traversal/XSS), On-Disk Artifacts
+ *   Layer 4: Hardened CLI (9 commands), Hardened HTTP Server (CSP/Traversal/XSS/Healthz), Artifacts
+ *   Layer 5: Property-Based (`prop_check`), Cycle 1 Regressions, Metamorphic Invariants & Examples
  */
 
 import assert from 'node:assert/strict';
@@ -104,7 +105,7 @@ function httpRequest(port, reqPath, method = 'GET') {
 }
 
 console.log('========================================================================');
-console.log(' PLANARIA v2.2.0 — 24-SUITE FALSIFIABLE VERIFICATION & SECURITY HARNESS');
+console.log(' PLANARIA v2.3.0 — 28-SUITE FALSIFIABLE VERIFICATION & SECURITY HARNESS');
 console.log('========================================================================');
 
 const qchronSrc = fs.readFileSync(path.join(ROOT, 'programs/quantum_chronicle.plang'), 'utf8');
@@ -737,7 +738,7 @@ await suite('Suite 22: End-to-End CLI Audit (compile/inspect/run/bisect/fuse/hea
   try {
     const ver = runCli(['--version']);
     assert.equal(ver.status, 0);
-    assert.match(ver.stdout, /planaria v2\.2\.0/);
+    assert.match(ver.stdout, /planaria v2\.3\.0/);
 
     const hbinOut = path.join(tmp, 'nested', 'aegis.hbin');
     assert.equal(runCli(['compile', path.join(ROOT, 'programs/aegis_drift.plang'), '-o', hbinOut]).status, 0);
@@ -797,7 +798,15 @@ await suite('Suite 23: server.mjs HTTP Security Containment (CSP, Traversal, Dot
     assert.equal(rHome.headers['x-content-type-options'], 'nosniff');
     assert.equal(rHome.headers['x-frame-options'], 'DENY');
     assert.ok(rHome.headers['content-security-policy']?.includes("default-src 'self'"));
-    assert.match(rHome.body, /PLANARIA v2\.2/);
+    assert.match(rHome.body, /PLANARIA v2\.3/);
+
+    const rHealth = await httpRequest(port, '/healthz');
+    assert.equal(rHealth.status, 200);
+    assert.equal(JSON.parse(rHealth.body).status, 'ok');
+
+    const rHead404 = await httpRequest(port, '/does-not-exist', 'HEAD');
+    assert.equal(rHead404.status, 404);
+    assert.equal(rHead404.body, '');
 
     const rHead = await httpRequest(port, '/src/web/app.js', 'HEAD');
     assert.equal(rHead.status, 200);
@@ -841,6 +850,246 @@ await suite('Suite 24: On-Disk Built artifacts/*.hbin & manifest.json Bit-Exact 
     assert.equal(entry.sha256Hex, comp.sha256Hex);
     assert.equal(entry.lineageRootHex, comp.lineageRootHex);
   }
+});
+
+// SUITE 25: Property-Based Randomized Verification (`prop_check`, Build Standard B10)
+await suite('Suite 25: Property-Based Testing (GF256, RS, Cauchy, SHA-256, 4Q Unitarity, Rewind)', () => {
+  const rng = makeRng(20261125);
+  const randByte = () => Math.floor(rng() * 256);
+
+  // 1. 120 randomized GF(2^8) field axioms (distributivity, associativity, inverse, power)
+  for (let i = 0; i < 120; i++) {
+    const a = randByte(), b = randByte(), c = randByte();
+    assert.equal(gfMul(a, gfAdd(b, c)), gfAdd(gfMul(a, b), gfMul(a, c)));
+    assert.equal(gfMul(gfMul(a, b), c), gfMul(a, gfMul(b, c)));
+    if (a > 0) assert.equal(gfMul(a, gfInv(a)), 1);
+  }
+
+  // 2. 30 randomized RS(254,238) encode + 1..8 random byte corruptions -> exact recovery
+  for (let i = 0; i < 30; i++) {
+    const msg = new Uint8Array(RS_K);
+    for (let j = 0; j < RS_K; j++) msg[j] = randByte();
+    const cw = rsEncode(msg);
+    const corrupted = cw.slice();
+    const nErr = 1 + (i % 8);
+    const idxs = new Set();
+    while (idxs.size < nErr) idxs.add(Math.floor(rng() * cw.length));
+    for (const idx of idxs) corrupted[idx] ^= 1 + (randByte() % 255);
+    const dec = rsDecode(corrupted);
+    assert.equal(dec.ok, true);
+    assert.equal(dec.errorsCorrected, nErr);
+    assert.deepEqual(dec.data, msg);
+  }
+
+  // 3. 25 randomized Cauchy MDS encodes + random k-subset decodes
+  for (let i = 0; i < 25; i++) {
+    const k = 2 + (i % 6);
+    const n = k + 4 + (i % 8);
+    const payload = new Uint8Array(k * 17);
+    for (let j = 0; j < payload.length; j++) payload[j] = randByte();
+    const shards = cauchyEncode(payload, k, n, 17);
+    const chosen = [...shards].sort(() => rng() - 0.5).slice(0, k);
+    const rec = cauchyDecode(chosen, k, 17, payload.length);
+    assert.equal(rec.ok, true);
+    assert.deepEqual(rec.data, payload);
+  }
+
+  // 4. 30 randomized SHA-256 parity checks vs Node OpenSSL
+  for (let i = 0; i < 30; i++) {
+    const len = Math.floor(rng() * 200);
+    const buf = new Uint8Array(len);
+    for (let j = 0; j < len; j++) buf[j] = randByte();
+    const expected = crypto.createHash('sha256').update(buf).digest('hex');
+    assert.equal(toHex(sha256(buf)), expected);
+  }
+
+  // 5. 25 randomized 4-qubit unitary circuits preserve total norm = 1.0 within 1e-12
+  for (let i = 0; i < 25; i++) {
+    const qr = new QuantumRegister(4);
+    for (let g = 0; g < 12; g++) {
+      const q = Math.floor(rng() * 4);
+      const q2 = (q + 1 + Math.floor(rng() * 3)) % 4;
+      const op = g % 7;
+      if (op === 0) qr.H(q);
+      else if (op === 1) qr.X(q);
+      else if (op === 2) qr.Y(q);
+      else if (op === 3) qr.Z(q);
+      else if (op === 4) qr.CNOT(q, q2);
+      else if (op === 5) qr.RZ(q, rng() * Math.PI * 2);
+      else qr.RY(q, rng() * Math.PI * 2);
+    }
+    let normSq = 0;
+    for (let k = 0; k < qr.dim; k++) normSq += qr.re[k] * qr.re[k] + qr.im[k] * qr.im[k];
+    assert.ok(Math.abs(normSq - 1.0) < 1e-12);
+  }
+});
+
+// SUITE 26: Cycle 1 Security, Compiler, Codec & 3D Engine Regression Lock
+await suite('Suite 26: Cycle 1 Regression Lock (Compiler r18/Proto, DoS Bypass, Dead-Host Xeno, Rewind SP)', () => {
+  // 1. Dead host with amputated B3/B4 + viable donor must NEVER graft (kills Mutant M02)
+  const deadHost = amputateBundles(aegis.bytes, [0, 3, 4], true, 77).bytes;
+  const deadXeno = decodeHbin(concatShards(deadHost, synth.bytes, 19), {
+    pinnedRootHex: aegis.lineageRootHex,
+    allowXenograft: true,
+  });
+  assert.equal(deadXeno.bootable, false);
+  assert.equal(deadXeno.xenografts.length, 0);
+
+  // 2. Duplicate evalX in Cauchy decode must deduplicate and report insufficient_rank (kills Mutant M05)
+  const shards = cauchyEncode(new Uint8Array([1, 2, 3, 4]), 2, 4, 2);
+  const dupDec = cauchyDecode([shards[0], shards[0]], 2, 2, 4);
+  assert.equal(dupDec.ok, false);
+  assert.equal(dupDec.reason, 'insufficient_rank');
+
+  // 3. Exact r17/r18 boundary expression (tempBase=17, right=Number) must throw scratch-register overflow instead of silently clobbering r18 (kills M06)
+  const deepProg = `
+    program DEEP_NEST;
+    bundle S0_STEM_NUCLEUS {
+      let guard = 777;
+      let x = (mem[0] + (mem[1] + (mem[2] + (mem[3] + (99999 * 88888))))) + mem[4];
+      mem[9] = guard;
+      mem[1] = x;
+    }
+  `;
+  assert.throws(() => compilePlangToHbin(deepProg), /scratch register overflow/i);
+
+  // 4. Object.prototype names as identifiers & empty return zeroing r1
+  const protoProg = `
+    program PROTO_SAFE;
+    const toString = 7;
+    bundle S0_STEM_NUCLEUS {
+      fn constructor() {
+        let valueOf = 99;
+        return;
+      }
+      let hasOwnProperty = toString + 3;
+      let r = constructor();
+      mem[0] = hasOwnProperty;
+      mem[1] = r;
+      mem[-1] = 123;
+    }
+  `;
+  const protoComp = compilePlangToHbin(protoProg);
+  const vmP = new PVM32(1);
+  vmP.loadDecoded(decodeHbin(protoComp.bytes), true);
+  vmP.stepFrame();
+  assert.equal(vmP.traps, 0);
+  assert.equal(vmP.ram[0], 10);
+  assert.equal(vmP.ram[1], 0, 'Empty return; must return deterministic 0 in r1');
+  assert.equal(vmP.ram[4095], 123, 'Negative RAM index mem[-1] must wrap to ram[4095] (kills M07)');
+
+  // 5. Negated unsigned overflow literal -4294967295 rejected; unsigned 2654435761 accepted
+  assert.throws(
+    () => compilePlangToHbin('program BAD_NEG; bundle S0_STEM_NUCLEUS { let a = -4294967295; }'),
+    /exceeds signed 32-bit/i
+  );
+  const u32Ok = compilePlangToHbin('program U32_OK; bundle S0_STEM_NUCLEUS { mem[0] = 2654435761; }');
+  assert.equal(u32Ok.bytes.length, TOTAL_HBIN_BYTES);
+
+  // 6. Synthetic 16 KiB back-to-back PLN\xB7 sync-flood bypassed in O(1) without hanging
+  const flood = new Uint8Array(16384);
+  for (let i = 0; i < flood.length; i += 4) flood.set(SYNC_WORD, i);
+  const tFlood = performance.now();
+  const floodDec = decodeHbin(flood);
+  assert.equal(floodDec.bootable, false);
+  assert.ok(performance.now() - tFlood < 250, '16 KiB sync-flood must decode fast');
+
+  // 6b. Iterative backward-flywheel recovers cell 0 even when cell 0's entire 4B sync marker is obliterated (kills M03)
+  const syncWiped = new Uint8Array(aegis.bytes);
+  syncWiped[0] ^= 0xff; syncWiped[1] ^= 0xff; syncWiped[2] ^= 0xff; syncWiped[3] ^= 0xff;
+  const backDec = decodeHbin(syncWiped, { pinnedRootHex: aegis.lineageRootHex });
+  assert.equal(backDec.stats.authenticCells, 192, 'Backward flywheel must recover sync-obliterated cell 0');
+
+  // 7. Rewind skill-point anti-exploit (kills Mutant M09)
+  const w = new ChronoQuantumWorld(2026);
+  w.step(1 / 60, {});
+  w.step(1 / 60, {});
+  const spBefore = w.skillPoints;
+  assert.equal(w.upgradeSkill('sup_clones'), true);
+  assert.equal(w.skills.sup_clones, 1);
+  assert.equal(w.skillPoints, spBefore - 1);
+  w.step(1 / 60, {});
+  w.step(1 / 60, { rewindHeld: true });
+  w.step(1 / 60, { rewindHeld: true });
+  assert.equal(w.skills.sup_clones, 0, 'Rewind must roll back upgraded skills too');
+  assert.equal(w.skillPoints, spBefore);
+
+  // 8. Non-finite stage bounds safety (kills Mutant M10)
+  assert.equal(buildStageSpec(Infinity, 2026).stageNum, 1);
+  assert.equal(buildStageSpec(NaN, 2026).stageNum, 1);
+  assert.equal(forgeWeapon('INF', Infinity, Infinity).stageFound, 1);
+
+  // 9. qengine Werner depolarizing visibility floor approaches 0 (not old 1/16 = 0.0625!) & Node Buffer detachment
+  const qr = new QuantumRegister(4);
+  qr.prepareBellPair(0, 1);
+  qr.applyDecoherence(40);
+  assert.ok(qr.coherence < 1e-10, `Expected visibility -> 0 under heavy decoherence, got ${qr.coherence}`);
+  assert.ok(qr.computeCHSH(0, 1) < 1e-10);
+  const nodeBuf = Buffer.from([1, 2, 3, 4]);
+  const h1 = toHex(sha256(nodeBuf));
+  nodeBuf[0] = 99;
+  assert.equal(h1, toHex(sha256(new Uint8Array([1, 2, 3, 4]))));
+
+  // 10. Linear twin ERR_SECTION_OUT_OF_BOUNDS reachable even with valid SHA-256 footer
+  const crafted = new Uint8Array(encodeLinearBinary(aegis.rawBundles, 'AEGIS_LINEAR').bytes);
+  const dv = new DataView(crafted.buffer, crafted.byteOffset, crafted.byteLength);
+  const activeEnd = dv.getUint32(60, true);
+  dv.setUint32(12, activeEnd + 16, true); // corrupt B0 offset past activeEnd
+  crafted.set(sha256(crafted.subarray(0, activeEnd)), activeEnd);
+  const craftedDec = decodeLinearBinary(crafted);
+  assert.equal(craftedDec.bootable, false);
+  assert.equal(craftedDec.fault, 'ERR_SECTION_OUT_OF_BOUNDS');
+});
+
+// SUITE 27: Metamorphic & Algebraic Invariance Verification (Build Standard B14/B20)
+await suite('Suite 27: Metamorphic Invariants (Cauchy Permutation, Shift Invariance, CHSH Unitary Invariance)', () => {
+  // 1. Cauchy decoding is strictly invariant under all shard order permutations
+  const data = new Uint8Array(64);
+  for (let i = 0; i < 64; i++) data[i] = (i * 37 + 11) & 0xff;
+  const shards = cauchyEncode(data, 4, 12, 16);
+  const baseSet = [shards[1], shards[4], shards[7], shards[11]];
+  const revSet = [...baseSet].reverse();
+  const rotSet = [baseSet[2], baseSet[0], baseSet[3], baseSet[1]];
+  assert.deepEqual(cauchyDecode(baseSet, 4, 16, 64).data, data);
+  assert.deepEqual(cauchyDecode(revSet, 4, 16, 64).data, data);
+  assert.deepEqual(cauchyDecode(rotSet, 4, 16, 64).data, data);
+
+  // 2. .hbin decoding is strictly invariant under arbitrary prefix shifts & cell permutations
+  for (const shift of [1, 7, 137, 511]) {
+    const shifted = shiftAndShuffle(qchron.bytes, shift, 404 + shift, true);
+    const dec = decodeHbin(shifted, { pinnedRootHex: qchron.lineageRootHex });
+    assert.equal(dec.canFullRegenerate, true);
+    assert.equal(regenerateHbin(dec).sha256Hex, qchron.sha256Hex);
+  }
+
+  // 3. Horodecki CHSH M(rho) is strictly invariant under local single-qubit unitaries (X, Y, Z, H, RZ, RY)
+  const qr = new QuantumRegister(4);
+  qr.prepareBellPair(0, 1);
+  const s0 = qr.computeCHSH(0, 1);
+  qr.RY(0, 0.73);
+  qr.RZ(1, 1.41);
+  qr.H(0);
+  qr.X(1);
+  const s1 = qr.computeCHSH(0, 1);
+  assert.ok(Math.abs(s0 - s1) < 1e-9, `CHSH must be local-unitary invariant: ${s0} vs ${s1}`);
+});
+
+// SUITE 28: Runnable Examples & Subpath-Safe Web Asset Verification
+await suite('Suite 28: Runnable Examples (01..03) & GitHub Pages Subpath Asset Safety', () => {
+  for (const ex of [
+    'examples/01-mitosis-roundtrip.mjs',
+    'examples/02-byzantine-quarantine.mjs',
+    'examples/03-xenograft-chimera.mjs',
+  ]) {
+    const r = spawnSync(process.execPath, [path.join(ROOT, ex)], { cwd: ROOT, encoding: 'utf8' });
+    assert.equal(r.status, 0, `${ex} failed: ${r.stderr || r.stdout}`);
+  }
+  const html = fs.readFileSync(path.join(ROOT, 'src/web/index.html'), 'utf8');
+  assert.ok(!html.includes('href="/src/web/'), 'index.html must use subpath-safe relative CSS path');
+  assert.ok(!html.includes('src="/src/web/'), 'index.html must use subpath-safe relative JS path');
+  const appJs = fs.readFileSync(path.join(ROOT, 'src/web/app.js'), 'utf8');
+  assert.ok(!appJs.includes("fetch(`/programs/"), 'app.js must resolve programs via import.meta.url');
+  assert.ok(!appJs.includes("fetch('/results/"), 'app.js must resolve benchmarks via import.meta.url');
 });
 
 console.log('------------------------------------------------------------------------');

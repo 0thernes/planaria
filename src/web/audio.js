@@ -29,7 +29,11 @@ export class PlanariaAudio {
       this._suspendTimer = null;
     }
 
-    if (!this.ctx) {
+    if (!this.ctx || this.ctx.state === 'closed') {
+      this.ctx = null;
+      this.node = null;
+      this.ready = false;
+      this.enabled = false;
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtx) {
         throw new Error('WebAudio AudioContext is not supported in this browser.');
@@ -53,6 +57,10 @@ export class PlanariaAudio {
           numberOfOutputs: 1,
           outputChannelCount: [2],
         });
+        node.onprocessorerror = () => {
+          this.enabled = false;
+          this.ready = false;
+        };
         node.connect(ctx.destination);
         await resumePromise;
         this.ctx = ctx;

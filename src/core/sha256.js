@@ -26,17 +26,32 @@ const W_SCRATCH = new Uint32Array(64);
 const TAIL_SCRATCH = new Uint8Array(128);
 const TAIL_DV = new DataView(TAIL_SCRATCH.buffer);
 
-/** Safely coerce Uint8Array, any ArrayBufferView (DataView, Uint32Array, ...), or ArrayBuffer into a byte view. */
+/**
+ * Safely coerce Uint8Array, Node Buffer, any ArrayBufferView (DataView, Uint32Array, ...),
+ * cross-realm ArrayBuffer, or valid byte Array into a pure Uint8Array view
+ * (wrapping Node Buffers so `.slice()` ALWAYS returns a detached copy).
+ */
 export function toBytes(input) {
-  if (input instanceof Uint8Array) return input;
+  if (input instanceof Uint8Array) {
+    if (input.constructor === Uint8Array) return input;
+    return new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
+  }
   if (ArrayBuffer.isView(input)) {
     return new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
   }
-  if (input instanceof ArrayBuffer) {
+  if (input instanceof ArrayBuffer || Object.prototype.toString.call(input) === '[object ArrayBuffer]') {
     return new Uint8Array(input);
   }
   if (Array.isArray(input)) {
-    return Uint8Array.from(input);
+    const out = new Uint8Array(input.length);
+    for (let i = 0; i < input.length; i++) {
+      const v = input[i];
+      if (!Number.isInteger(v) || v < 0 || v > 255) {
+        throw new RangeError(`Byte array element at index ${i} must be an integer in 0..255, got ${v}`);
+      }
+      out[i] = v;
+    }
+    return out;
   }
   throw new TypeError('Expected Uint8Array, ArrayBufferView, ArrayBuffer, or byte Array');
 }
@@ -188,7 +203,7 @@ export function buildMerkleTree(leafByteArrays) {
   const levels = [];
   const level0 = new Array(MERKLE_LEAVES);
   for (let i = 0; i < MERKLE_LEAVES; i++) {
-    level0[i] = i < leafByteArrays.length ? merkleLeafHash(leafByteArrays[i]) : EMPTY_LEAF_HASH;
+    level0[i] = i < leafByteArrays.length ? merkleLeafHash(leafByteArrays[i]) : EMPTY_LEAF_HASH.slice();
   }
   levels.push(level0);
 

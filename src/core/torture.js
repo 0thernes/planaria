@@ -16,8 +16,20 @@ import {
   PLACEMENT_SCHEDULE,
   HBIN_VERSION,
 } from './hbin.js';
-import { rsArmorInterleaved } from './rs.js';
+import { rsArmorInterleaved, rsUnarmorInterleaved } from './rs.js';
 import { toBytes } from './sha256.js';
+
+function syncHammingDist(buf, off) {
+  let d = 0;
+  for (let i = 0; i < 4; i++) {
+    let x = buf[off + i] ^ SYNC_WORD[i];
+    while (x) {
+      x &= x - 1;
+      d++;
+    }
+  }
+  return d;
+}
 
 /** Deterministic PRNG (Mulberry32) for 100% reproducible falsification benchmarks. */
 export function makeRng(seed = 0x504c4e31) {
@@ -34,9 +46,11 @@ export function makeRng(seed = 0x504c4e31) {
  * Planarian Zero-Overlap Bisection: slices raw binary into two completely disjoint halves
  * at an exact or arbitrary unaligned byte offset.
  */
-export function bisectBinary(rawBytes, cutByteOffset = Math.floor(rawBytes.length / 2)) {
+export function bisectBinary(rawBytes, cutByteOffset = undefined) {
   const bytes = toBytes(rawBytes);
-  const rawCut = Number.isFinite(cutByteOffset) ? Math.floor(cutByteOffset) : Math.floor(bytes.length / 2);
+  const rawCut = (cutByteOffset !== undefined && Number.isFinite(cutByteOffset))
+    ? Math.floor(cutByteOffset)
+    : Math.floor(bytes.length / 2);
   const cut = Math.max(0, Math.min(bytes.length, rawCut));
   return {
     left: new Uint8Array(bytes.subarray(0, cut)),
@@ -157,19 +171,18 @@ export function amputateBundles(rawBytes, targetBundleIds, replaceWithNoise = tr
   let amputated = 0;
 
   for (let off = 0; off <= out.length - CELL_SIZE; off++) {
-    if (
-      out[off] === SYNC_WORD[0] &&
-      out[off + 1] === SYNC_WORD[1] &&
-      out[off + 2] === SYNC_WORD[2] &&
-      out[off + 3] === SYNC_WORD[3] &&
-      targets.has(out[off + 5])
-    ) {
+    if (syncHammingDist(out, off) > 3) continue;
+    // Verify genuine RS-valid cell before excising so 1-bit sync flips are caught and Overlap-Eclipse decoys never skip real cells
+    const rs = rsUnarmorInterleaved(out.subarray(off + 4, off + CELL_SIZE));
+    if (!rs.ok || rs.body[0] !== HBIN_VERSION) continue;
+    const bundleId = rs.body[1];
+    if (targets.has(bundleId)) {
       amputated++;
       for (let b = 0; b < CELL_SIZE; b++) {
         out[off + b] = replaceWithNoise ? Math.floor(rng() * 256) : 0;
       }
-      off += CELL_SIZE - 1;
     }
+    off += CELL_SIZE - 1;
   }
   return { bytes: out, amputatedCells: amputated };
 }
@@ -199,7 +212,7 @@ export function shiftAndShuffle(rawBytes, leadGarbage = 137, seed = 777, shuffle
   }
   const gaps = cells.map(() => (maxGap > 0 ? Math.floor(rng() * (maxGap + 1)) : 0));
   const totalGaps = gaps.reduce((a, g) => a + g, 0);
-  const trailGarbage = 73;
+  const trailGarbage = (lead > 0 || shuffle || maxGap > 0) ? 73 : 0;
   const out = new Uint8Array(lead + cells.length * CELL_SIZE + totalGaps + trailGarbage);
   for (let i = 0; i < lead; i++) out[i] = Math.floor(rng() * 256);
   let cursor = lead;
@@ -284,17 +297,20 @@ export function injectByzantineTrojans(rawBytes, count = 24, seed = 666, prepend
 }
 
 /**
- * Overlap-Eclipse Attack Generator: prepends a truncated 496-byte RS-valid Trojan directly
- * before `bytes` to test whether a decoder naively jumps `offset += 512` and skips intact Cell 0.
+ * Overlap-Eclipse Attack Generator: prepends a truncated RS-valid Trojan prefix (default 496B)
+ * directly before `bytes` to test whether a decoder naively jumps `offset += 512` and eclipses Cell 0.
  */
-export function injectOverlapEclipseTrojan(rawBytes, seed = 911) {
+export function injectOverlapEclipseTrojan(rawBytes, prefixBytes = CELL_SIZE - 16, seed = 911) {
   const bytes = toBytes(rawBytes);
+  const cutLen = Number.isFinite(prefixBytes)
+    ? Math.max(4, Math.min(CELL_SIZE - 1, Math.floor(prefixBytes)))
+    : CELL_SIZE - 16;
   const { bytes: withOne } = injectByzantineTrojans(new Uint8Array(0), 1, seed, true);
-  const truncated496 = withOne.subarray(0, CELL_SIZE - 16);
-  const out = new Uint8Array(truncated496.length + bytes.length);
-  out.set(truncated496, 0);
-  out.set(bytes, truncated496.length);
-  return { bytes: out, truncatedPrefixBytes: truncated496.length };
+  const truncated = withOne.subarray(0, cutLen);
+  const out = new Uint8Array(truncated.length + bytes.length);
+  out.set(truncated, 0);
+  out.set(bytes, truncated.length);
+  return { bytes: out, truncatedPrefixBytes: truncated.length };
 }
 
 /**

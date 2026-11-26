@@ -84,10 +84,11 @@ export function rsEncode(data) {
 
 /** Compute the 16 syndromes S_i = Y(alpha^i) for i = 0..15. */
 export function rsSyndromes(codeword) {
+  const cw = toBytes(codeword);
   const synd = new Uint8Array(RS_PARITY);
   let hasError = false;
   for (let i = 0; i < RS_PARITY; i++) {
-    const s = gfPolyEval(codeword, GF_EXP[i]);
+    const s = gfPolyEval(cw, GF_EXP[i]);
     synd[i] = s;
     if (s !== 0) hasError = true;
   }
@@ -238,20 +239,21 @@ export function rsDecode(codeword) {
  * Result layout: [body 476B][interleaved parity 32B] so contiguous bursts up to 16B span <= 8B per lane!
  */
 export function rsArmorInterleaved(body476) {
-  if (body476.length !== 476) {
-    throw new RangeError(`Expected 476-byte body, got ${body476.length}`);
+  const bytes = toBytes(body476);
+  if (bytes.length !== 476) {
+    throw new RangeError(`Expected 476-byte body, got ${bytes.length}`);
   }
   const lane0 = new Uint8Array(RS_K);
   const lane1 = new Uint8Array(RS_K);
   for (let i = 0; i < RS_K; i++) {
-    lane0[i] = body476[i * 2];
-    lane1[i] = body476[i * 2 + 1];
+    lane0[i] = bytes[i * 2];
+    lane1[i] = bytes[i * 2 + 1];
   }
   const enc0 = rsEncode(lane0);
   const enc1 = rsEncode(lane1);
 
   const out = new Uint8Array(508);
-  out.set(body476, 0);
+  out.set(bytes, 0);
   for (let i = 0; i < RS_PARITY; i++) {
     out[476 + i * 2] = enc0[RS_K + i];
     out[476 + i * 2 + 1] = enc1[RS_K + i];
@@ -263,18 +265,24 @@ export function rsArmorInterleaved(body476) {
  * Decode 2-way interleaved 508-byte armored cell block -> 476-byte verified body.
  */
 export function rsUnarmorInterleaved(block508) {
-  if (block508.length !== 508) {
+  let bytes;
+  try {
+    bytes = toBytes(block508);
+  } catch {
+    return { ok: false, reason: 'invalid_input', errorsCorrected: 0 };
+  }
+  if (bytes.length !== 508) {
     return { ok: false, reason: 'invalid_block_size', errorsCorrected: 0 };
   }
   const cw0 = new Uint8Array(RS_N);
   const cw1 = new Uint8Array(RS_N);
   for (let i = 0; i < RS_K; i++) {
-    cw0[i] = block508[i * 2];
-    cw1[i] = block508[i * 2 + 1];
+    cw0[i] = bytes[i * 2];
+    cw1[i] = bytes[i * 2 + 1];
   }
   for (let i = 0; i < RS_PARITY; i++) {
-    cw0[RS_K + i] = block508[476 + i * 2];
-    cw1[RS_K + i] = block508[476 + i * 2 + 1];
+    cw0[RS_K + i] = bytes[476 + i * 2];
+    cw1[RS_K + i] = bytes[476 + i * 2 + 1];
   }
 
   const r0 = rsDecode(cw0);

@@ -90,6 +90,40 @@ function mat4TRS(tx, ty, tz, rx, ry, rz, sx, sy, sz, out = new Float32Array(16))
   return out;
 }
 
+/**
+ * Compute inverse-transpose of the upper-left 3x3 of column-major 4x4 matrix `m`.
+ * Falls back safely to identity if `m` is degenerate (|det| < 1e-12), avoiding GPU NaN.
+ */
+function mat3NormalFromMat4(m, out = new Float32Array(9)) {
+  const a00 = m[0], a01 = m[1], a02 = m[2];
+  const a10 = m[4], a11 = m[5], a12 = m[6];
+  const a20 = m[8], a21 = m[9], a22 = m[10];
+
+  const b01 = a22 * a11 - a12 * a21;
+  const b11 = -a22 * a10 + a12 * a20;
+  const b21 = a21 * a10 - a11 * a20;
+
+  const det = a00 * b01 + a01 * b11 + a02 * b21;
+  if (!Number.isFinite(det) || Math.abs(det) < 1e-12) {
+    out[0] = 1; out[1] = 0; out[2] = 0;
+    out[3] = 0; out[4] = 1; out[5] = 0;
+    out[6] = 0; out[7] = 0; out[8] = 1;
+    return out;
+  }
+  const invDet = 1.0 / det;
+  // Column-major inverse-transpose = cofactor matrix / det
+  out[0] = b01 * invDet;
+  out[1] = b11 * invDet;
+  out[2] = b21 * invDet;
+  out[3] = (-a22 * a01 + a02 * a21) * invDet;
+  out[4] = (a22 * a00 - a02 * a20) * invDet;
+  out[5] = (-a21 * a00 + a01 * a20) * invDet;
+  out[6] = (a12 * a01 - a02 * a11) * invDet;
+  out[7] = (-a12 * a00 + a02 * a10) * invDet;
+  out[8] = (a11 * a00 - a01 * a10) * invDet;
+  return out;
+}
+
 // ============================================================================
 // PROCEDURAL 3D MESH BUILDERS (OUTWARD CCW WINDING + DEDUP WIREFRAME EDGES)
 // ============================================================================
@@ -198,10 +232,11 @@ function makeCylinder(segs = 8) {
     const c0 = Math.cos(a0), s0 = Math.sin(a0);
     const c1 = Math.cos(a1), s1 = Math.sin(a1);
     const nx = Math.cos((a0 + a1) * 0.5), nz = Math.sin((a0 + a1) * 0.5);
+    // Outward-facing CCW winding for side quad + top cap
     out.push(
-      c0, 0, s0, nx, 0, nz,  c1, 0, s1, nx, 0, nz,  c1, 1, s1, nx, 0, nz,
-      c0, 0, s0, nx, 0, nz,  c1, 1, s1, nx, 0, nz,  c0, 1, s0, nx, 0, nz,
-      0, 1, 0, 0, 1, 0,  c0, 1, s0, 0, 1, 0,  c1, 1, s1, 0, 1, 0
+      c0, 0, s0, nx, 0, nz,  c1, 1, s1, nx, 0, nz,  c1, 0, s1, nx, 0, nz,
+      c0, 0, s0, nx, 0, nz,  c0, 1, s0, nx, 0, nz,  c1, 1, s1, nx, 0, nz,
+      0, 1, 0, 0, 1, 0,  c1, 1, s1, 0, 1, 0,  c0, 1, s0, 0, 1, 0
     );
   }
   return new Float32Array(out);
@@ -222,7 +257,8 @@ function makeTorus(R = 1.0, r = 0.14, uSegs = 28, vSegs = 8) {
       const v0 = (j / vSegs) * Math.PI * 2;
       const v1 = ((j + 1) / vSegs) * Math.PI * 2;
       const p00 = pt(u0, v0), p10 = pt(u1, v0), p11 = pt(u1, v1), p01 = pt(u0, v1);
-      out.push(...p00, ...p10, ...p11, ...p00, ...p11, ...p01);
+      // Outward-facing CCW winding matching analytic outward surface normals
+      out.push(...p00, ...p11, ...p10, ...p00, ...p01, ...p11);
     }
   }
   return new Float32Array(out);
@@ -308,10 +344,9 @@ void main() {
 const FLOOR_VS = `#version 300 es
 layout(location = 0) in vec2 aXZ;
 uniform mat4 uViewProj;
-uniform float uTime;
 uniform vec4 uWaveSrc[5];   // (x, z, k, omega)
 uniform float uWaveAmp[5];
-uniform float uWavePhase[5];
+uniform float uWavePhase[5]; // CPU float64-reduced (phase - omega * t) mod 2pi
 uniform float uStratum;
 out vec3 vWorldPos;
 out float vWaveI;
@@ -323,7 +358,7 @@ void main() {
     vec2 d = aXZ - uWaveSrc[i].xy;
     float r = sqrt(dot(d, d) + 0.35);
     float a = uWaveAmp[i] / (1.0 + 0.08 * r);
-    float ph = uWaveSrc[i].z * r - uWaveSrc[i].w * uTime + uWavePhase[i];
+    float ph = uWaveSrc[i].z * r + uWavePhase[i];
     sr += a * cos(ph);
     si += a * sin(ph);
   }
@@ -392,14 +427,14 @@ layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aNorm;
 uniform mat4 uViewProj;
 uniform mat4 uModel;
+uniform mat3 uNormalMat;
 out vec3 vWorldPos;
 out vec3 vNormal;
 
 void main() {
   vec4 wp = uModel * vec4(aPos, 1.0);
   vWorldPos = wp.xyz;
-  mat3 normalMat = transpose(inverse(mat3(uModel)));
-  vec3 wn = normalMat * aNorm;
+  vec3 wn = uNormalMat * aNorm;
   vNormal = length(wn) > 1e-6 ? normalize(wn) : vec3(0.0, 1.0, 0.0);
   gl_Position = uViewProj * wp;
   gl_PointSize = 3.5;
@@ -509,9 +544,12 @@ export class Renderer3D {
     this._buffers = [];
 
     this._modelMat = new Float32Array(16);
+    this._normalMat = new Float32Array(9);
     this._projMat = new Float32Array(16);
     this._viewMat = new Float32Array(16);
     this._vpMat = new Float32Array(16);
+    this._lastRenderMs = typeof performance !== 'undefined' ? performance.now() : 0;
+    this.onContextStateChange = null;
     this._waveSrcFlat = new Float32Array(20);
     this._waveAmpFlat = new Float32Array(5);
     this._wavePhaseFlat = new Float32Array(5);
@@ -537,6 +575,7 @@ export class Renderer3D {
     this._onContextLost = (e) => {
       e.preventDefault();
       this._contextLost = true;
+      if (typeof this.onContextStateChange === 'function') this.onContextStateChange(true);
     };
     this._onContextRestored = () => {
       if (this._disposed) return;
@@ -546,6 +585,7 @@ export class Renderer3D {
       this._initPrograms();
       this._initMeshes();
       this._contextLost = false;
+      if (typeof this.onContextStateChange === 'function') this.onContextStateChange(false);
     };
     canvas.addEventListener('webglcontextlost', this._onContextLost, false);
     canvas.addEventListener('webglcontextrestored', this._onContextRestored, false);
@@ -629,6 +669,7 @@ export class Renderer3D {
     this.uMesh = {
       vp: gl.getUniformLocation(this.meshProg, 'uViewProj'),
       model: gl.getUniformLocation(this.meshProg, 'uModel'),
+      normalMat: gl.getUniformLocation(this.meshProg, 'uNormalMat'),
       color: gl.getUniformLocation(this.meshProg, 'uColor'),
       emissive: gl.getUniformLocation(this.meshProg, 'uEmissive'),
       camPos: gl.getUniformLocation(this.meshProg, 'uCameraPos'),
@@ -762,7 +803,9 @@ export class Renderer3D {
   _drawMesh(mesh, tx, ty, tz, rx, ry, rz, sx, sy, sz, col, em, alpha = 1.0, fresnel = 2.4, drawMode = null) {
     const gl = this.gl;
     mat4TRS(tx, ty, tz, rx, ry, rz, sx, sy, sz, this._modelMat);
+    mat3NormalFromMat4(this._modelMat, this._normalMat);
     gl.uniformMatrix4fv(this.uMesh.model, false, this._modelMat);
+    gl.uniformMatrix3fv(this.uMesh.normalMat, false, this._normalMat);
     gl.uniform3fv(this.uMesh.color, col);
     gl.uniform3fv(this.uMesh.emissive, em);
     gl.uniform1f(this.uMesh.alpha, alpha);
@@ -834,13 +877,16 @@ export class Renderer3D {
       return;
     }
 
-    // Clamp orbit camera parameters defensively
+    // Clamp orbit camera parameters defensively + frame-rate-independent smoothing
     this.camPitch = Math.max(0.12, Math.min(1.42, this.camPitch));
     this.camDist = Math.max(10, Math.min(85, this.camDist));
 
-    // Smoothly track player position with orbit camera
-    this.targetX += (world.player.x * 0.55 - this.targetX) * 0.08;
-    this.targetZ += (world.player.z * 0.55 - this.targetZ) * 0.08;
+    const nowMs = typeof performance !== 'undefined' ? performance.now() : this._lastRenderMs + 16.67;
+    const rdt = Math.min(0.05, Math.max(0.001, (nowMs - this._lastRenderMs) / 1000));
+    this._lastRenderMs = nowMs;
+    const camAlpha = 1 - Math.exp(-5.0 * rdt);
+    this.targetX += (world.player.x * 0.55 - this.targetX) * camAlpha;
+    this.targetZ += (world.player.z * 0.55 - this.targetZ) * camAlpha;
     const eye = [
       this.targetX + Math.sin(this.camYaw) * Math.cos(this.camPitch) * this.camDist,
       Math.max(2.5, Math.sin(this.camPitch) * this.camDist),
@@ -853,13 +899,17 @@ export class Renderer3D {
     gl.clearColor(0.02, 0.03, 0.05, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+    // Wrap float32 shader time cleanly to prevent trigonometric precision drift over long sessions
+    const TWO_PI = Math.PI * 2;
+    const skyTime = t % (TWO_PI * 1024);
+
     // 1. MULTI-ORDER RELATIVISTIC SKY DOME
     gl.depthMask(false);
     gl.useProgram(this.skyProg);
     gl.uniform3fv(this.uSky.top, realm.skyTop);
     gl.uniform3fv(this.uSky.horizon, realm.skyHorizon);
     gl.uniform3fv(this.uSky.accent, realm.accentColor);
-    gl.uniform1f(this.uSky.time, t);
+    gl.uniform1f(this.uSky.time, skyTime);
     gl.uniform1f(this.uSky.rewind, rewind);
     gl.uniform1f(this.uSky.stratum, stratum);
     gl.uniform1f(this.uSky.xeno, xeno);
@@ -874,7 +924,6 @@ export class Renderer3D {
     // 2. LIVE SCHRÖDINGER MULTI-SLIT WAVE-INTERFERENCE 3D FLOOR
     gl.useProgram(this.floorProg);
     gl.uniformMatrix4fv(this.uFloor.vp, false, vp);
-    gl.uniform1f(this.uFloor.time, t);
     this._waveSrcFlat.fill(0);
     this._waveAmpFlat.fill(0);
     this._wavePhaseFlat.fill(0);
@@ -886,7 +935,8 @@ export class Renderer3D {
         this._waveSrcFlat[i * 4 + 2] = srcs[i].k;
         this._waveSrcFlat[i * 4 + 3] = srcs[i].omega;
         this._waveAmpFlat[i] = srcs[i].amp;
-        this._wavePhaseFlat[i] = Number.isFinite(srcs[i].phase) ? srcs[i].phase : i * 1.1;
+        const basePh = Number.isFinite(srcs[i].phase) ? srcs[i].phase : i * 1.1;
+        this._wavePhaseFlat[i] = (((basePh - srcs[i].omega * t) % TWO_PI) + TWO_PI) % TWO_PI;
       }
     }
     gl.uniform4fv(this.uFloor.waveSrc, this._waveSrcFlat);
@@ -1087,13 +1137,19 @@ export class Renderer3D {
       0.13, 0.83, 0.93, 0.35
     );
 
-    // Player Past-Timeline Trail (visible Chrono-Fork ribbon!)
-    const trail = world.temporal.playerTrail;
-    const trailStart = Math.max(1, trail.length - 90);
-    for (let i = trailStart; i < trail.length; i += 2) {
-      const p0 = trail[i - 1], p1 = trail[i];
-      const frac = (i - Math.max(0, trail.length - 90)) / 90;
-      pushLine(p0.x, p0.y - 0.3, p0.z, p1.x, p1.y - 0.3, p1.z, 0.13, 0.83, 0.93, frac * 0.55);
+    // Player Past-Timeline Trail (zero-allocation circular ring traversal!)
+    if (typeof world.temporal.forEachTrailSegment === 'function') {
+      world.temporal.forEachTrailSegment(90, (p0, p1, frac) => {
+        pushLine(p0.x, p0.y - 0.3, p0.z, p1.x, p1.y - 0.3, p1.z, 0.13, 0.83, 0.93, frac * 0.55);
+      });
+    } else {
+      const trail = world.temporal.playerTrail;
+      const trailStart = Math.max(1, trail.length - 90);
+      for (let i = trailStart; i < trail.length; i += 2) {
+        const p0 = trail[i - 1], p1 = trail[i];
+        const frac = (i - Math.max(0, trail.length - 90)) / 90;
+        pushLine(p0.x, p0.y - 0.3, p0.z, p1.x, p1.y - 0.3, p1.z, 0.13, 0.83, 0.93, frac * 0.55);
+      }
     }
 
     // Active Entangled Bell/GHZ Filaments (O(1) map + Set deduplication) + Retrocausal Future-Cones

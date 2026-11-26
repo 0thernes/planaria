@@ -10,8 +10,26 @@
  * logical && / ||, mem[expr], syscalls, local user functions, and organ_call(ORGAN, maxS).
  */
 
+const MAX_PARSE_DEPTH = 128;
+
 export function parsePlang(tokens) {
+  if (!Array.isArray(tokens) || tokens.length === 0 || tokens[tokens.length - 1]?.type !== 'EOF') {
+    throw new SyntaxError('parsePlang expects a non-empty token array terminated by EOF');
+  }
   let pos = 0;
+  let depth = 0;
+
+  function withDepth(fn) {
+    if (++depth > MAX_PARSE_DEPTH) {
+      const t = peek();
+      throw new SyntaxError(`Parse nesting exceeded limit (${MAX_PARSE_DEPTH}) at ${t.line}:${t.col}`);
+    }
+    try {
+      return fn();
+    } finally {
+      depth--;
+    }
+  }
 
   function peek(offset = 0) {
     return tokens[Math.min(pos + offset, tokens.length - 1)];
@@ -95,12 +113,14 @@ export function parsePlang(tokens) {
   }
 
   function parseBlock() {
-    expect('PUNCT', '{');
-    const stmts = [];
-    while (!match('PUNCT', '}')) {
-      stmts.push(parseStmt());
-    }
-    return { type: 'Block', stmts };
+    return withDepth(() => {
+      expect('PUNCT', '{');
+      const stmts = [];
+      while (!match('PUNCT', '}')) {
+        stmts.push(parseStmt());
+      }
+      return { type: 'Block', stmts };
+    });
   }
 
   function parseStmt() {
@@ -310,20 +330,32 @@ export function parsePlang(tokens) {
   }
 
   function parseUnary() {
-    if (match('PUNCT', '-')) {
-      const operand = parseUnary();
-      if (operand.type === 'Number') return { type: 'Number', value: (-operand.value) | 0 };
-      return { type: 'Binary', op: '-', left: { type: 'Number', value: 0 }, right: operand };
-    }
-    if (match('PUNCT', '!')) {
-      return { type: 'Binary', op: '==', left: parseUnary(), right: { type: 'Number', value: 0 } };
-    }
-    if (match('PUNCT', '~')) {
-      const operand = parseUnary();
-      if (operand.type === 'Number') return { type: 'Number', value: (~operand.value) | 0 };
-      return { type: 'Binary', op: '^', left: operand, right: { type: 'Number', value: -1 } };
-    }
-    return parsePrimary();
+    return withDepth(() => {
+      if (match('PUNCT', '-')) {
+        const nextTok = peek();
+        if (nextTok.type === 'NUMBER' && !nextTok.isHex) {
+          if (nextTok.rawValue > 0x80000000) {
+            throw new SyntaxError(`Negated decimal literal '-${nextTok.rawValue}' exceeds signed 32-bit integer range at ${nextTok.line}:${nextTok.col}`);
+          }
+          if (nextTok.rawValue === 0x80000000) {
+            advance();
+            return { type: 'Number', value: -2147483648 };
+          }
+        }
+        const operand = parseUnary();
+        if (operand.type === 'Number') return { type: 'Number', value: (-operand.value) | 0 };
+        return { type: 'Binary', op: '-', left: { type: 'Number', value: 0 }, right: operand };
+      }
+      if (match('PUNCT', '!')) {
+        return { type: 'Binary', op: '==', left: parseUnary(), right: { type: 'Number', value: 0 } };
+      }
+      if (match('PUNCT', '~')) {
+        const operand = parseUnary();
+        if (operand.type === 'Number') return { type: 'Number', value: (~operand.value) | 0 };
+        return { type: 'Binary', op: '^', left: operand, right: { type: 'Number', value: -1 } };
+      }
+      return parsePrimary();
+    });
   }
 
   function parsePrimary() {

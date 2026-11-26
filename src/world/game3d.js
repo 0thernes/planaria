@@ -127,6 +127,7 @@ export class ChronoQuantumWorld {
     };
 
     this.autopilot = true;
+    this.reducedMotion = false;
     this.chshValue = this.qReg.computeCHSH(0, 1);
     this.merminValue = this.qReg.computeMermin4();
     this.waveIntensityAtPlayer = 1.0;
@@ -261,7 +262,12 @@ export class ChronoQuantumWorld {
       this.armors[this.armorIdx] = a;
     }
     this.player.maxShield = this.equippedArmor.maxShield;
-    this.player.shield = Math.min(this.player.maxShield, this.player.shield + 40);
+    const mitosisBonus = this.skills.hol_mitosis > 0 ? this.skills.hol_mitosis * 12 : 0;
+    this.player.shield = Math.min(this.player.maxShield, this.player.shield + 40 + mitosisBonus);
+    if (mitosisBonus > 0) {
+      this.player.hp = Math.min(this.player.maxHp, this.player.hp + this.skills.hol_mitosis * 6);
+      this.spawnBurst(this.player.x, this.player.y + 0.8, this.player.z, [0.06, 0.96, 0.66], 18);
+    }
     this.recentLoot.unshift(w, a);
     if (this.recentLoot.length > 8) this.recentLoot.length = 8;
     this.pushEvent(`FORGED 1/1 [${w.rarity.name}] ${w.name} (#${w.lineageId})`, 'xeno');
@@ -276,8 +282,11 @@ export class ChronoQuantumWorld {
     this.weapons[idxA].entangledMod = this.weapons[idxB].qMod;
     this.weapons[idxB].entangledPartner = this.weapons[idxA].lineageId;
     this.weapons[idxB].entangledMod = this.weapons[idxA].qMod;
-    this.qReg.prepareBellPair(0, 2);
-    this.pushEvent(`QUANTUM-ENTANGLED Weapons #${idxA + 1} <-> #${idxB + 1} (Symmetric Bell Superposition!)`, 'xeno');
+    // Prepare maximally entangled Bell pair on qubits (0, 1) so CHSH |S| immediately peaks at 2*sqrt(2)!
+    this.qReg.prepareBellPair(0, 1);
+    this.chshValue = this.qReg.computeCHSH(0, 1);
+    this.merminValue = this.qReg.computeMermin4();
+    this.pushEvent(`QUANTUM-ENTANGLED Weapons #${idxA + 1} <-> #${idxB + 1} (Symmetric Bell Superposition, |S|=${Math.abs(this.chshValue).toFixed(2)}!)`, 'xeno');
     return true;
   }
 
@@ -365,6 +374,13 @@ export class ChronoQuantumWorld {
             hitCount++;
           }
         }
+        // Immediately reap dead NPCs on the same tick (eliminates 1-tick corpse lag)
+        for (let ni = this.npcs.length - 1; ni >= 0; ni--) {
+          if (this.npcs[ni].hp <= 0) {
+            this._handleNPCDeath(this.npcs[ni]);
+            this.npcs.splice(ni, 1);
+          }
+        }
         this.qReg.prepareBellPair(0, 1);
         this.qReg.restoreCoherence(0.35);
         this.spawnBurst(this.player.x, this.player.y, this.player.z, [0.98, 0.75, 0.14], 42);
@@ -438,7 +454,8 @@ export class ChronoQuantumWorld {
   }
 
   spawnBurst(x, y, z, color, count = 14) {
-    for (let i = 0; i < count; i++) {
+    const nCount = this.reducedMotion ? Math.max(2, Math.floor(count * 0.35)) : count;
+    for (let i = 0; i < nCount; i++) {
       const th = Math.random() * Math.PI * 2;
       const ph = (Math.random() - 0.3) * Math.PI;
       const spd = 3 + Math.random() * 11;
@@ -459,10 +476,11 @@ export class ChronoQuantumWorld {
   }
 
   _fireWeaponFrom(origin, yaw, weapon, isEcho = false) {
+    const hasQ = (id) => weapon.qMod.id === id || weapon.entangledMod?.id === id;
     const hStance = heisenbergStance(this.player.heisenbergStance);
     const xenoBoost = this.hbinState.xenografts > 0 ? 1 + this.skills.hol_xeno * 0.22 : 1.0;
     const ridgeBoost =
-      weapon.qMod.id === 'INTERFERENCE' && this.waveIntensityAtPlayer > 1.35 ? 2.2 : 1.0;
+      hasQ('INTERFERENCE') && this.waveIntensityAtPlayer > 1.35 ? 2.2 : 1.0;
     const echoScale = isEcho ? (0.55 + this.skills.chr_fork * 0.25) : 1.0;
 
     // Retrocausal target leading if weapon has RETRO temporal mod!
@@ -498,11 +516,12 @@ export class ChronoQuantumWorld {
         const frac = totalBolts === 1 ? 0 : (i / (totalBolts - 1) - 0.5);
         const jitter = (Math.random() - 0.5) * (1 - hStance.aimPrecision) * 0.16;
         const ang = aimYaw + frac * weapon.spread + jitter;
-        const collapseScale = weapon.qMod.id === 'COLLAPSE' ? 1 + this.qReg.basisEntropy() * 0.14 : 1.0;
+        const collapseScale = hasQ('COLLAPSE') ? 1 + this.qReg.basisEntropy() * 0.14 : 1.0;
         const dmg = Math.round(
           weapon.damage * hStance.critMultiplier * xenoBoost * ridgeBoost * echoScale * collapseScale *
           (1 + this.skills.sup_clones * 0.15)
         );
+        const effTunnel = (hasQ('TUNNEL') || hasQ('TUNNEL_CRIT')) ? Math.max(0.92, weapon.tunnelFactor) : weapon.tunnelFactor;
         this.projectiles.push({
           id: this._projId++,
           fromPlayer: true,
@@ -520,7 +539,7 @@ export class ChronoQuantumWorld {
           qModId: weapon.qMod.id,
           tModId: weapon.tMod.id,
           entangledModId: weapon.entangledMod?.id || null,
-          tunnelEnergy: weapon.tunnelFactor + this.skills.sup_tunnel * 0.12,
+          tunnelEnergy: effTunnel + this.skills.sup_tunnel * 0.12,
           tunneled: false,
           splitDone: false,
           pierce: weapon.frame.pattern === 'PIERCE' ? 3 : 0,
@@ -540,6 +559,7 @@ export class ChronoQuantumWorld {
   }
 
   _damageNPC(npc, rawDmg, sourceTag = 'BOLT', allowEcho = true, framePattern = null) {
+    if (!npc || !Number.isFinite(rawDmg) || rawDmg <= 0) return;
     let dmg = rawDmg;
     // Adaptive beam resistance (now properly triggered by BEAM/PIERCE weapon frames!)
     if ((sourceTag === 'BEAM' || framePattern === 'BEAM' || framePattern === 'PIERCE') && npc.adaptation.beamResist > 0) {
@@ -627,6 +647,18 @@ export class ChronoQuantumWorld {
         this.xp = snap.xp;
         this.level = snap.level;
         this.skillPoints = snap.skillPoints;
+        if (snap.skills) this.skills = { ...snap.skills };
+        if (snap.delayedEchoShots) {
+          this._delayedEchoShots = snap.delayedEchoShots.map((s) => ({
+            ...s,
+            origin: { ...s.origin },
+          }));
+        }
+        if (snap.scaleOrderOverride !== undefined) {
+          this.scaleOrderOverride = snap.scaleOrderOverride;
+        }
+        if (Number.isFinite(snap.paradoxCount)) this.temporal.paradoxCount = snap.paradoxCount;
+        if (Number.isFinite(snap.forkCount)) this.temporal.forkCount = snap.forkCount;
         if (snap.stage !== this.stage) {
           this.stage = snap.stage;
           this.stageSpec = buildStageSpec(this.stage, this.seed);
@@ -748,12 +780,15 @@ export class ChronoQuantumWorld {
     this.player.yaw = aimYaw;
 
     // Keep inside arena radius
-    const pR = Math.hypot(this.player.x, this.player.z);
-    const maxR = this.stageSpec.arenaRadius - 2.2;
-    if (pR > maxR) {
-      this.player.x = (this.player.x / pR) * maxR;
-      this.player.z = (this.player.z / pR) * maxR;
-    }
+    const clampPlayerToArena = () => {
+      const pR = Math.hypot(this.player.x, this.player.z);
+      const maxR = this.stageSpec.arenaRadius - 2.2;
+      if (pR > maxR) {
+        this.player.x = (this.player.x / pR) * maxR;
+        this.player.z = (this.player.z / pR) * maxR;
+      }
+    };
+    clampPlayerToArena();
 
     // Evaluate real multi-slit wave interference intensity beneath player!
     this.waveIntensityAtPlayer = evalWaveInterference(
@@ -818,6 +853,11 @@ export class ChronoQuantumWorld {
         this.player.x -= (toNx / dist) * push;
         this.player.z -= (toNz / dist) * push;
       }
+      // DILATED_AURA NPC temporal affix: slows nearby player motion gently
+      if (n.temporalAffix === 'DILATED_AURA' && dist < 6.5) {
+        this.player.x -= this.player.vx * cdt * 0.25;
+        this.player.z -= this.player.vz * cdt * 0.25;
+      }
       if ((n.adaptation.coherenceDrain > 0 || n.mutation === 'BYZANTINE') && !this.hbinState.immuneEnabled) {
         this.qReg.applyDecoherence(cdt * 0.12);
       }
@@ -826,15 +866,69 @@ export class ChronoQuantumWorld {
       n.phase += ndt * 2.6;
       n.superposeAngle += ndt * 3.4;
 
-      // Orbit & pursue tactical AI
+      // REVERSING NPC temporal affix: periodically rewinds 35% of recent HP loss unless Zeno-frozen
+      if (n.temporalAffix === 'REVERSING' && n.zenoFreeze < 0.35) {
+        n._revTimer = (n._revTimer || 0) + ndt;
+        if (n._revTimer >= 4.5) {
+          n._revTimer = 0;
+          if (n.hp > 0 && n.hp < n.maxHp * 0.72) {
+            const heal = Math.round((n.maxHp - n.hp) * 0.35);
+            n.hp = Math.min(n.maxHp, n.hp + heal);
+            this.spawnBurst(n.x, n.y, n.z, [0.13, 0.83, 0.93], 8);
+          }
+        }
+      }
+
+      // ECHOING NPC temporal affix: drops a decaying afterimage mine periodically
+      if (n.temporalAffix === 'ECHOING' && this.projectiles.length < 235) {
+        n._echoMineCd = (n._echoMineCd ?? 2.2) - ndt;
+        if (n._echoMineCd <= 0) {
+          n._echoMineCd = 3.8;
+          this.projectiles.push({
+            id: this._projId++,
+            fromPlayer: false,
+            x: n.x, y: n.y, z: n.z,
+            vx: 0, vy: 0, vz: 0,
+            damage: Math.round(9 * (1 + this.stage * 0.14)),
+            life: 2.8,
+            radius: 0.48,
+            color: [0.91, 0.47, 0.98],
+            tunnelEnergy: 0.1,
+            tunneled: false,
+            sourceNpcId: n.id,
+            passedPillars: new Set(),
+            hitIds: new Set(),
+          });
+        }
+      }
+
+      // Orbit & pursue tactical AI (+ RETROCAUSAL projectile-evasion sidestep!)
       const desiredRange = n.isBoss ? 14 : (n.archetype?.range || 12) * 0.72;
       const radialDir = dist > desiredRange ? -1 : (dist < desiredRange * 0.6 ? 1 : 0);
       const tangX = -toNz / dist;
       const tangZ = toNx / dist;
       const orbitSign = (n.id & 1) ? 1 : -1;
 
-      n.vx = ((toNx / dist) * radialDir * 0.75 + tangX * orbitSign * 0.65) * n.speed;
-      n.vz = ((toNz / dist) * radialDir * 0.75 + tangZ * orbitSign * 0.65) * n.speed;
+      let dodgeX = 0;
+      let dodgeZ = 0;
+      if (n.temporalAffix === 'RETROCAUSAL') {
+        for (const p of this.projectiles) {
+          if (!p.fromPlayer) continue;
+          const pdx = n.x - p.x;
+          const pdz = n.z - p.z;
+          const d2 = pdx * pdx + pdz * pdz;
+          if (d2 < 49 && pdx * p.vx + pdz * p.vz > 0) {
+            const pSpd = Math.hypot(p.vx, p.vz) || 1;
+            const side = (pdx * p.vz - pdz * p.vx) >= 0 ? 1 : -1;
+            dodgeX = (-p.vz / pSpd) * side * 0.9;
+            dodgeZ = (p.vx / pSpd) * side * 0.9;
+            break;
+          }
+        }
+      }
+
+      n.vx = ((toNx / dist) * radialDir * 0.75 + tangX * orbitSign * 0.65 + dodgeX) * n.speed;
+      n.vz = ((toNz / dist) * radialDir * 0.75 + tangZ * orbitSign * 0.65 + dodgeZ) * n.speed;
       n.x += n.vx * ndt;
       n.z += n.vz * ndt;
       n.y = (n.isBoss ? 3.2 : 1.7) + Math.sin(n.phase) * 0.65;
@@ -876,6 +970,9 @@ export class ChronoQuantumWorld {
       }
     }
 
+    // Re-clamp player inside arena bounds after NPC close-repulse & dilation pushes!
+    clampPlayerToArena();
+
     // 4. UPDATE PROJECTILES (WKB PILLAR TUNNELING ONCE/PILLAR, CHRONO-WELLS, SAFE COLLISIONS)
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const p = this.projectiles[i];
@@ -883,18 +980,26 @@ export class ChronoQuantumWorld {
       const zenoAura = (!p.fromPlayer && this.equippedArmor.layer.id === 'ZENO_AURA' && this._dist2(p, this.player) < 81) ? 0.62 : 1.0;
       const pdt = cdt * locF * zenoAura;
 
-      // Berry Phase homing curve for PHASE_SHIFT weapons
+      // Berry Phase homing curve for PHASE_SHIFT weapons (locks nearest living NPC)
       if (p.fromPlayer && (p.qModId === 'PHASE_SHIFT' || p.entangledModId === 'PHASE_SHIFT') && this.npcs.length > 0) {
-        const tgt = this.npcs[0];
-        const desiredAng = Math.atan2(tgt.x - p.x, tgt.z - p.z);
-        const curAng = Math.atan2(p.vx, p.vz);
-        let diff = desiredAng - curAng;
-        while (diff > Math.PI) diff -= Math.PI * 2;
-        while (diff < -Math.PI) diff += Math.PI * 2;
-        const spd = Math.hypot(p.vx, p.vz);
-        const newAng = curAng + Math.max(-2.6 * pdt, Math.min(2.6 * pdt, diff));
-        p.vx = Math.sin(newAng) * spd;
-        p.vz = Math.cos(newAng) * spd;
+        let tgt = null;
+        let bestD2 = Infinity;
+        for (const cand of this.npcs) {
+          if (cand.hp <= 0) continue;
+          const d2 = this._dist2(cand, p);
+          if (d2 < bestD2) { bestD2 = d2; tgt = cand; }
+        }
+        if (tgt) {
+          const desiredAng = Math.atan2(tgt.x - p.x, tgt.z - p.z);
+          const curAng = Math.atan2(p.vx, p.vz);
+          let diff = desiredAng - curAng;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          const spd = Math.hypot(p.vx, p.vz);
+          const newAng = curAng + Math.max(-2.6 * pdt, Math.min(2.6 * pdt, diff));
+          p.vx = Math.sin(newAng) * spd;
+          p.vz = Math.cos(newAng) * spd;
+        }
       }
 
       p.x += p.vx * pdt;
@@ -960,6 +1065,22 @@ export class ChronoQuantumWorld {
       }
 
       if (p.fromPlayer) {
+        // SPIN_FLIP Pauli-X inversion: reflects nearby hostile projectiles back as allied shots!
+        if (p.qModId === 'SPIN_FLIP' || p.entangledModId === 'SPIN_FLIP') {
+          for (const other of this.projectiles) {
+            if (other.fromPlayer) continue;
+            const rdx = p.x - other.x;
+            const rdz = p.z - other.z;
+            if (rdx * rdx + rdz * rdz < 3.24) {
+              other.fromPlayer = true;
+              other.vx = -other.vx * 1.25;
+              other.vz = -other.vz * 1.25;
+              other.color = [0.13, 0.83, 0.93];
+              other.life = Math.max(other.life, 1.4);
+              this.spawnBurst(other.x, other.y, other.z, [0.13, 0.83, 0.93], 5);
+            }
+          }
+        }
         if (!p.hitIds) p.hitIds = new Set();
         let consumed = false;
         // Snapshot NPCs so MITOTIC splits aren't hit on their birth tick!
@@ -1030,6 +1151,14 @@ export class ChronoQuantumWorld {
           this._damagePlayer(p);
           this.projectiles.splice(i, 1);
         }
+      }
+    }
+
+    // Reap NPCs slain during projectile phase immediately on this tick (no 1-tick corpse lag)
+    for (let i = this.npcs.length - 1; i >= 0; i--) {
+      if (this.npcs[i].hp <= 0) {
+        this._handleNPCDeath(this.npcs[i]);
+        this.npcs.splice(i, 1);
       }
     }
 

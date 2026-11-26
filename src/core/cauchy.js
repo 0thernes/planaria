@@ -142,13 +142,16 @@ export function invertMatrixGF256(mat, k) {
  * Returns { ok: true, data: Uint8Array(origLen), rankUsed: k } or { ok: false, reason }
  */
 export function cauchyDecode(cells, k, shardSize, origLen) {
-  if (!Number.isInteger(k) || k < 1 || k >= 256) {
+  if (!Number.isInteger(k) || k < 1 || k > 128) {
     return { ok: false, reason: 'invalid_k', rankFound: 0, rankNeeded: k };
   }
   if (!Number.isInteger(shardSize) || shardSize < 1) {
     return { ok: false, reason: 'invalid_shard_size', rankFound: 0, rankNeeded: k };
   }
   const maxLen = k * shardSize;
+  if (!Number.isSafeInteger(maxLen) || maxLen > 64 * 1024 * 1024) {
+    return { ok: false, reason: 'invalid_shard_size', rankFound: 0, rankNeeded: k };
+  }
   if (!Number.isInteger(origLen) || origLen < 0 || origLen > maxLen) {
     return { ok: false, reason: 'invalid_orig_len', rankFound: 0, rankNeeded: k };
   }

@@ -14,6 +14,8 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DEFAULT_ROOT = fs.realpathSync(__dirname);
+const SERVER_START_MS = Date.now();
+const SERVER_VERSION = JSON.parse(fs.readFileSync(path.join(DEFAULT_ROOT, 'package.json'), 'utf8')).version;
 
 export const MIME = Object.freeze({
   '.html': 'text/html; charset=utf-8',
@@ -29,10 +31,6 @@ export const MIME = Object.freeze({
   '.png': 'image/png',
   '.ico': 'image/x-icon',
   '.wasm': 'application/wasm',
-  '.pdf': 'application/pdf',
-  '.gz': 'application/gzip',
-  '.tex': 'text/plain; charset=utf-8',
-  '.lean': 'text/plain; charset=utf-8',
 });
 
 const PUBLIC_TOP_DIRS = new Set(['src', 'programs', 'artifacts', 'results']);
@@ -53,7 +51,7 @@ function isWithin(baseDir, targetPath) {
   return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
 }
 
-function sendPlain(res, statusCode, message, extraHeaders = {}) {
+function sendPlain(res, statusCode, message, extraHeaders = {}, method = 'GET') {
   const body = Buffer.from(message, 'utf8');
   res.writeHead(statusCode, {
     ...SECURITY_HEADERS,
@@ -61,7 +59,11 @@ function sendPlain(res, statusCode, message, extraHeaders = {}) {
     'Content-Length': String(body.length),
     ...extraHeaders,
   });
-  res.end(body);
+  if (method === 'HEAD') {
+    res.end();
+  } else {
+    res.end(body);
+  }
 }
 
 function hasForbiddenSegment(relPosix) {
@@ -119,47 +121,92 @@ export function createPlanariaServer(rootDir = DEFAULT_ROOT) {
   return http.createServer((req, res) => {
     const method = (req.method || 'GET').toUpperCase();
     if (method !== 'GET' && method !== 'HEAD') {
-      sendPlain(res, 405, 'Method Not Allowed', { Allow: 'GET, HEAD' });
+      sendPlain(res, 405, 'Method Not Allowed', { Allow: 'GET, HEAD' }, method);
       return;
     }
 
-    const rawUrl = (req.url || '/').split('?')[0];
+    let rawTarget = (req.url || '/').split('?')[0];
+    // Accept RFC 9110 absolute-form origin targets (e.g., GET http://127.0.0.1:4174/ HTTP/1.1)
+    if (/^https?:\/\//i.test(rawTarget)) {
+      const slashAfterHost = rawTarget.indexOf('/', rawTarget.indexOf('://') + 3);
+      rawTarget = slashAfterHost === -1 ? '/' : rawTarget.slice(slashAfterHost);
+    }
+
     let decodedPath;
     try {
-      decodedPath = decodeURIComponent(rawUrl);
+      decodedPath = decodeURIComponent(rawTarget);
     } catch {
-      sendPlain(res, 400, 'Bad Request');
+      sendPlain(res, 400, 'Bad Request', {}, method);
+      return;
+    }
+
+    if (decodedPath === '/healthz') {
+      const payload = Buffer.from(JSON.stringify({
+        status: 'ok',
+        service: 'planaria-studio',
+        version: SERVER_VERSION,
+        uptimeSeconds: Math.floor((Date.now() - SERVER_START_MS) / 1000),
+      }), 'utf8');
+      res.writeHead(200, {
+        ...SECURITY_HEADERS,
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Length': String(payload.length),
+      });
+      res.end(method === 'HEAD' ? undefined : payload);
       return;
     }
 
     const relPosix = decodedPath === '/' ? '' : decodedPath.replace(/^\/+/, '');
     if (hasForbiddenSegment(relPosix)) {
-      sendPlain(res, 403, 'Forbidden');
+      sendPlain(res, 403, 'Forbidden', {}, method);
       return;
     }
 
     const resolved = resolvePublicFile(canonicalRoot, canonicalWebRoot, relPosix);
     if (!resolved) {
-      sendPlain(res, 404, 'Not Found');
+      sendPlain(res, 404, 'Not Found', {}, method);
+      return;
+    }
+
+    // Open FD & fstat BEFORE writeHead(200) to close TOCTOU symlink race and ensure reachable 500 error handling
+    let fd;
+    let fstat;
+    try {
+      fd = fs.openSync(resolved.realTarget, 'r');
+      fstat = fs.fstatSync(fd);
+      if (!fstat.isFile()) {
+        fs.closeSync(fd);
+        sendPlain(res, 404, 'Not Found', {}, method);
+        return;
+      }
+    } catch {
+      if (fd !== undefined) {
+        try { fs.closeSync(fd); } catch { /* ignore */ }
+      }
+      sendPlain(res, 500, 'Internal Server Error', {}, method);
       return;
     }
 
     const ext = path.extname(resolved.realTarget).toLowerCase();
+    const contentType = Object.prototype.hasOwnProperty.call(MIME, ext)
+      ? MIME[ext]
+      : 'application/octet-stream';
     res.writeHead(200, {
       ...SECURITY_HEADERS,
-      'Content-Type': MIME[ext] || 'application/octet-stream',
-      'Content-Length': String(resolved.stat.size),
+      'Content-Type': contentType,
+      'Content-Length': String(fstat.size),
     });
 
     if (method === 'HEAD') {
+      try { fs.closeSync(fd); } catch { /* ignore */ }
       res.end();
       return;
     }
 
-    const stream = fs.createReadStream(resolved.realTarget);
+    const stream = fs.createReadStream(null, { fd, autoClose: true });
     stream.on('error', () => {
       if (!res.headersSent) {
-        sendPlain(res, 500, 'Internal Server Error');
+        sendPlain(res, 500, 'Internal Server Error', {}, method);
       } else {
         res.destroy();
       }
@@ -183,7 +230,16 @@ function parsePort(raw) {
   return port;
 }
 
-const isMain = Boolean(process.argv[1]) && path.resolve(process.argv[1]) === __filename;
+function isMainEntry() {
+  if (!process.argv[1]) return false;
+  try {
+    return fs.realpathSync(process.argv[1]) === fs.realpathSync(__filename);
+  } catch {
+    return path.resolve(process.argv[1]) === __filename;
+  }
+}
+
+const isMain = isMainEntry();
 if (isMain) {
   let port;
   try {

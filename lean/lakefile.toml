@@ -1,6 +1,12 @@
 name = "PlanariaProofs"
-version = "2.2.0"
-defaultTargets = ["PlanariaProofs"]
+version = "2.3.0"
+defaultTargets = ["PlanariaProofs", "Solution"]
 
 [[lean_lib]]
 name = "PlanariaProofs"
+
+[[lean_lib]]
+name = "Challenge"
+
+[[lean_lib]]
+name = "Solution"

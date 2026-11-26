@@ -14,6 +14,26 @@ const STRATUM_COLORS = [
   '#a855f7', // S3 Full Organism & Genome (Violet)
 ];
 
+function colorWithAlpha(color, alpha) {
+  const a = Math.max(0, Math.min(1, Number.isFinite(alpha) ? alpha : 1));
+  if (typeof color === 'string' && color.startsWith('#')) {
+    const hex = color.slice(1);
+    if (hex.length === 6) {
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${a.toFixed(3)})`;
+    }
+    if (hex.length === 3) {
+      const r = parseInt(hex[0] + hex[0], 16);
+      const g = parseInt(hex[1] + hex[1], 16);
+      const b = parseInt(hex[2] + hex[2], 16);
+      return `rgba(${r}, ${g}, ${b}, ${a.toFixed(3)})`;
+    }
+  }
+  return color;
+}
+
 function prepareHiDpiCanvas(canvas) {
   if (!canvas || typeof canvas.getContext !== 'function') return null;
   const ctx = canvas.getContext('2d');
@@ -321,13 +341,16 @@ export function drawSurvivalCurve(canvas, curveData, currentDropPct = 0) {
       ctx.lineTo(mL + (clampPct(last.dropPct) / 100) * pW, mT + pH);
       ctx.lineTo(mL + (clampPct(first.dropPct) / 100) * pW, mT + pH);
       ctx.closePath();
-      ctx.fillStyle = color + Math.round(fillAlpha * 255).toString(16).padStart(2, '0');
+      ctx.fillStyle = colorWithAlpha(color, fillAlpha);
       ctx.fill();
     }
   }
 
   plotSeries('planariaSurvivalPct', '#10f5a8', [], 0.14);
   plotSeries('meanCapabilityScore', '#22d3ee', [3, 3], 0);
+  if (curveData.some((pt) => Number.isFinite(pt.rsEqualStorageSurvivalPct))) {
+    plotSeries('rsEqualStorageSurvivalPct', '#a855f7', [2, 3], 0);
+  }
   plotSeries('rsCliffSurvivalPct', '#fbbf24', [6, 4], 0);
   plotSeries('linearSurvivalPct', '#f43f5e', [], 0);
 
@@ -343,7 +366,10 @@ export function drawSurvivalCurve(canvas, curveData, currentDropPct = 0) {
 
   const items = [
     ['PLANARIA Bootable', '#10f5a8'],
-    ['PLANARIA Mean Stratum', '#22d3ee'],
+    ['Mean Stratum', '#22d3ee'],
+    ...(curveData.some((pt) => Number.isFinite(pt.rsEqualStorageSurvivalPct))
+      ? [['RS(192,48) Flat', '#a855f7']]
+      : []),
     ['RS(40,16) Cliff', '#fbbf24'],
     ['Linear Binary', '#f43f5e'],
   ];

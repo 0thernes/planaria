@@ -2,6 +2,9 @@
 node_modules/
 lean/.lake/
 paper/build/
+_site/
+.env
+SHA256SUMS
 .DS_Store
 Thumbs.db
 *.log

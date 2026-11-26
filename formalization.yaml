@@ -1,0 +1,59 @@
+schema_version: 1
+project: PLANARIA
+version: "2.3.0"
+author: "Alexander Stephen Donahue"
+orcid: "0009-0006-8168-9648"
+affiliation: "Independent Researcher (0thernes project), Spokane, WA, USA"
+toolchain: "leanprover/lean4:v4.35.0"
+mathlib_dependency: false
+module_system: true
+lean_root: "lean"
+challenge_module: "lean/Challenge.lean"
+solution_module: "lean/Solution.lean"
+comparator_config: "lean/comparator.json"
+audit_entrypoint: "lean/PlanariaProofs.lean"
+permitted_axioms:
+  - propext
+  - Quot.sound
+  - Classical.choice
+forbidden_axioms:
+  - sorryAx
+  - Lean.ofReduceBool
+  - Lean.trustCompiler
+kernels:
+  - name: "Lean 4.35.0 reference kernel"
+    command: "lake build && lake env leanchecker --fresh PlanariaProofs"
+  - name: "leanchecker-paranoid"
+    command: "lake env leanchecker-paranoid --fresh PlanariaProofs"
+  - name: "lean4lean"
+    command: "lake check --paranoid"
+  - name: "nanoda_bin (Rust)"
+    command: "lake check --paranoid"
+  - name: "con-leche (--verified)"
+    command: "lake check --paranoid"
+  - name: "con-ron (--verified)"
+    command: "lake check --paranoid"
+comparator_command_ci: "cd lean && lake comparator --config comparator.json --paranoid"
+comparator_command_local_windows: "cd lean && lake comparator --config comparator.json --paranoid --inadvisably-no-sandbox"
+theorem_count: 70
+non_vacuity_witness_count: 5
+modules:
+  - name: "PlanariaProofs.GF256"
+    theorems: 16
+    scope: "Complete GF(2^8) mod 0x11D field axioms, universal Cauchy 2x2 non-singularity & lossless decode"
+  - name: "PlanariaProofs.MitosisBounds"
+    theorems: 12
+    scope: "Zero-overlap mitosis sufficiency/impossibility, exact integer PLACEMENT_SCHEDULE Nodup + sorted halves, 512B cell budget"
+  - name: "PlanariaProofs.StratumAnastomosis"
+    theorems: 7
+    scope: "4-stratum viability lattice bit-exact to hbin.js, 6-organ anastomosis zero-crash, super-additive fusion, RS(40,16) & RS(192,48) separation"
+  - name: "PlanariaProofs.ByzantineImmune"
+    theorems: 16
+    scope: "Byte-list Hamming triangle, RS(254,238) radius t=8, tight 16B/17B/18B burst bounds, Merkle commitment, executable unpinned quorum (majority/tie/Sybil)"
+  - name: "PlanariaProofs.XenograftABI"
+    theorems: 7
+    scope: "BitVec 32 RAM sandboxing, bounded fuel termination, B0/B6 host sovereignty, xenograft ABI safety"
+  - name: "PlanariaProofs.QuantumTemporal"
+    theorems: 12
+    scope: "Full 4-qubit 16-amplitude complex unitarity (X/Y/Z/H/CNOT/CZ/SWAP), 360-frame rewind exactness, 6,421,059,993,600 reachable build space"
+statement_fidelity_audit: "docs/reviews/2026-11-25-10-pass-red-team-audit.md"

@@ -1,18 +1,15 @@
 cff-version: 1.2.0
-title: "PLANARIA v2.2 — 3D Temporal-Quantum WebGL2 Progressive Holographic Executable Architecture (.hbin), Plang Compiler, PVM-32 Anastomosis VM, 1/1 Endless Universe Forge & 62 Pure Lean 4 Verified Proofs"
+title: "PLANARIA v2.3 — Progressive Holographic Executable Architecture (.hbin), Plang Compiler, PVM-32 Anastomosis VM, 4-Qubit Temporal-Quantum WebGL2 Studio & 70 Pure Lean 4.35.0 Multi-Kernel Proofs"
 message: "If you reference, verify, or build upon PLANARIA in academic or independent non-commercial research, please cite this software and technical preprint using the metadata below."
 type: software
-version: "2.2.0"
-date-released: "2026-11-21"
+version: "2.3.0"
+date-released: "2026-11-25"
 authors:
   - family-names: "Donahue"
-    given-names: "Alexander S."
-    affiliation: "0thernes LLC"
+    given-names: "Alexander Stephen"
+    affiliation: "Independent Researcher (0thernes project), Spokane, WA, USA"
     email: "0_0@0thernes.art"
     orcid: "https://orcid.org/0009-0006-8168-9648"
-  - name: "0thernes LLC"
-    website: "https://0thernes.art"
-    email: "0_0@0thernes.art"
 repository-code: "https://github.com/0thernes/planaria"
 url: "https://github.com/0thernes/planaria"
 license: "NOASSERTION"

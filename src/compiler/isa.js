@@ -8,6 +8,8 @@
  *   J-type: [op:6][rd:5][imm21_signed:21]
  */
 
+import { toBytes } from '../core/sha256.js';
+
 export const OP = {
   NOP: 0,
   HALT: 1,
@@ -107,8 +109,8 @@ export function pack4(str) {
   let v = 0;
   for (let i = 0; i < str.length; i++) {
     const code = str.charCodeAt(i);
-    if (code > 0x7f) {
-      throw new RangeError(`pack4 character '${str[i]}' (0x${code.toString(16)}) is non-ASCII`);
+    if (code < 0x20 || code > 0x7e) {
+      throw new RangeError(`pack4 character '${str[i]}' (0x${code.toString(16)}) is not printable ASCII (0x20..0x7E)`);
     }
     v |= code << (i * 8);
   }
@@ -218,7 +220,8 @@ export function disassembleWord(word, pc = 0) {
 }
 
 /** Disassemble a byte buffer (little-endian 32-bit words). */
-export function disassembleBytes(bytes, maxWords = 64) {
+export function disassembleBytes(rawBytes, maxWords = 64) {
+  const bytes = toBytes(rawBytes);
   const words = Math.min(Math.floor(bytes.length / 4), maxWords);
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const lines = [];

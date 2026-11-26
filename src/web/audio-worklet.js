@@ -29,11 +29,13 @@ class PlanariaSynthProcessor extends AudioWorkletProcessor {
     this.voices = Array.from({ length: 4 }, () => ({
       wave: 0,
       activeWave: 1,
-      freqHz: 0,
+      freqHz: 220,
       targetVol: 0,
       vol: 0,
       detune: 0,
+      detuneMul: 1.0,
       filter: 2000,
+      lpAlpha: 0.21,
       phase: 0,
       lpState: 0,
     }));
@@ -47,6 +49,8 @@ class PlanariaSynthProcessor extends AudioWorkletProcessor {
     this.port.onmessage = (e) => {
       const msg = e.data;
       if (!msg) return;
+      const sr = Number.isFinite(sampleRate) && sampleRate > 0 ? sampleRate : 48000;
+      const twoPi = Math.PI * 2;
       if (msg.type === 'voices' && Array.isArray(msg.voices)) {
         for (let i = 0; i < 4; i++) {
           const src = msg.voices[i];
@@ -59,11 +63,22 @@ class PlanariaSynthProcessor extends AudioWorkletProcessor {
           const flt = Number(src.filter);
 
           dst.wave = w;
-          if (w > 0) dst.activeWave = w;
-          dst.freqHz = Number.isFinite(f) ? Math.max(0, Math.min(8000, f)) : 0;
+          if (w > 0) {
+            dst.activeWave = w;
+            // Only overwrite pitch while gate is open; retain prior pitch during note-off slew to prevent clicks!
+            if (Number.isFinite(f) && f > 0) {
+              dst.freqHz = Math.max(20, Math.min(8000, f));
+            }
+          }
           dst.targetVol = (w === 0 || !Number.isFinite(vol)) ? 0 : Math.max(0, Math.min(1, vol));
-          dst.detune = Number.isFinite(det) ? Math.max(-2400, Math.min(2400, det)) : 0;
-          dst.filter = Number.isFinite(flt) ? Math.max(120, Math.min(14000, flt)) : 2000;
+          const safeDet = Number.isFinite(det) ? Math.max(-2400, Math.min(2400, det)) : 0;
+          if (safeDet !== dst.detune) {
+            dst.detune = safeDet;
+            dst.detuneMul = Math.pow(2, safeDet / 1200);
+          }
+          const safeFlt = Number.isFinite(flt) ? Math.max(120, Math.min(14000, flt)) : 2000;
+          dst.filter = safeFlt;
+          dst.lpAlpha = Math.min(0.95, (twoPi * safeFlt) / (sr + twoPi * safeFlt));
         }
       } else if (msg.type === 'mute') {
         for (const v of this.voices) v.targetVol = 0;
@@ -89,6 +104,7 @@ class PlanariaSynthProcessor extends AudioWorkletProcessor {
     const twoPi = Math.PI * 2;
     const maxNyquist = Math.min(8000, sr * 0.45);
     const slew = 1 - Math.exp(-1 / (0.0026 * sr)); // ~2.6ms time constant, sample-rate invariant
+    const dcR = Math.exp((-twoPi * 20) / sr);      // ~20 Hz sample-rate-invariant DC blocker
 
     for (let i = 0; i < chL.length; i++) {
       let mixL = 0;
@@ -107,10 +123,11 @@ class PlanariaSynthProcessor extends AudioWorkletProcessor {
         }
         if (v.freqHz <= 0 && v.activeWave !== 5) {
           v.lpState *= 0.98;
+          if (!Number.isFinite(v.lpState) || Math.abs(v.lpState) < 1e-15) v.lpState = 0;
           continue;
         }
 
-        const rawFreq = v.freqHz * Math.pow(2, v.detune / 1200);
+        const rawFreq = v.freqHz * v.detuneMul;
         const freq = Number.isFinite(rawFreq) ? Math.max(20, Math.min(maxNyquist, rawFreq)) : 20;
         const dt = freq / sr;
         v.phase += dt;
@@ -141,9 +158,8 @@ class PlanariaSynthProcessor extends AudioWorkletProcessor {
             s = 0;
         }
 
-        // One-pole lowpass resonant smoothing with NaN & denormal guard
-        const alpha = Math.min(0.95, (twoPi * v.filter) / (sr + twoPi * v.filter));
-        v.lpState += alpha * (s - v.lpState);
+        // One-pole lowpass resonant smoothing with cached coefficient & NaN/denormal guard
+        v.lpState += v.lpAlpha * (s - v.lpState);
         if (!Number.isFinite(v.lpState) || Math.abs(v.lpState) < 1e-15) v.lpState = 0;
 
         const amp = v.lpState * v.vol;
@@ -152,16 +168,18 @@ class PlanariaSynthProcessor extends AudioWorkletProcessor {
         mixR += amp * (0.7 + pan * 0.3);
       }
 
-      // Soft tanh saturation limiter + master DC-blocking highpass (R = 0.995)
-      const satL = Math.tanh(mixL * this.masterGain);
-      const outL = satL - this.dcPrevInL + 0.995 * this.dcPrevOutL;
+      // Soft tanh saturation limiter + sample-rate-invariant DC-blocking highpass with NaN guard
+      const rawSatL = Math.tanh(mixL * this.masterGain);
+      const satL = Number.isFinite(rawSatL) ? rawSatL : 0;
+      const outL = satL - this.dcPrevInL + dcR * this.dcPrevOutL;
       this.dcPrevInL = satL;
       this.dcPrevOutL = Number.isFinite(outL) && Math.abs(outL) >= 1e-15 ? outL : 0;
       chL[i] = this.dcPrevOutL;
 
       if (chR !== chL) {
-        const satR = Math.tanh(mixR * this.masterGain);
-        const outR = satR - this.dcPrevInR + 0.995 * this.dcPrevOutR;
+        const rawSatR = Math.tanh(mixR * this.masterGain);
+        const satR = Number.isFinite(rawSatR) ? rawSatR : 0;
+        const outR = satR - this.dcPrevInR + dcR * this.dcPrevOutR;
         this.dcPrevInR = satR;
         this.dcPrevOutR = Number.isFinite(outR) && Math.abs(outR) >= 1e-15 ? outR : 0;
         chR[i] = this.dcPrevOutR;

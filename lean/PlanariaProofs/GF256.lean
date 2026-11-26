@@ -1,3 +1,5 @@
+module
+
 /-!
 # PlanariaProofs.GF256
 
@@ -10,9 +12,9 @@ with primitive polynomial P(x) = x^8 + x^4 + x^3 + x^2 + 1 (0x11D), matching
   - Exhaustive 255-element multiplicative inverse (`gfMul_inv_exact`)
   - Concrete `gf256Field : Char2Field (Fin 256)` construction
   - Universal Cauchy 2x2 Nonsingularity & Universal Exact Decoding Theorem over ANY
-    characteristic-2 field, concretely instantiated on `gf256Field`!
+    characteristic-2 field, concretely instantiated on `gf256Field` with non-vacuity witness!
 
-Pure Lean 4 core only (no Mathlib, no `native_decide`, zero `sorry`).
+Pure Lean 4.35.0 `module` (no Mathlib, no `native_decide`, zero `sorry`).
 -/
 
 namespace Planaria.GF256
@@ -22,24 +24,24 @@ namespace Planaria.GF256
 -- ============================================================================
 
 /-- Exact GF(2^8) addition on bytes (0..255). -/
-def gfAdd (a b : Nat) : Nat := (a ^^^ b) % 256
+@[expose] public def gfAdd (a b : Nat) : Nat := (a ^^^ b) % 256
 
 /-- Exact xtime modulo P(x) = x^8 + x^4 + x^3 + x^2 + 1 (0x11D). -/
-def xtime (a : Nat) : Nat :=
+@[expose] public def xtime (a : Nat) : Nat :=
   let s := (a * 2) % 256
   if a ≥ 128 then s ^^^ 0x1d else s
 
 /-- Exact Russian-peasant multiplication over GF(2^8) (matches `gfMulDirect`). -/
-def gfMulLoop : Nat → Nat → Nat → Nat → Nat
+@[expose] public def gfMulLoop : Nat → Nat → Nat → Nat → Nat
   | 0, acc, _, _ => acc
   | n + 1, acc, a, b =>
     let acc' := if b % 2 == 1 then acc ^^^ a else acc
     gfMulLoop n acc' (xtime a) (b / 2)
 
-def gfMul (a b : Nat) : Nat := gfMulLoop 8 0 (a % 256) (b % 256)
+@[expose] public def gfMul (a b : Nat) : Nat := gfMulLoop 8 0 (a % 256) (b % 256)
 
 /-- Exact multiplicative inverse via Itoh-Tsujii chain a^254 over GF(2^8). -/
-def gfInv (a : Nat) : Nat :=
+@[expose] public def gfInv (a : Nat) : Nat :=
   let a2   := gfMul a a
   let a3   := gfMul a2 a
   let a6   := gfMul a3 a3
@@ -53,15 +55,15 @@ def gfInv (a : Nat) : Nat :=
   gfMul a252 a2
 
 /-- Exact Cauchy matrix entry C(x, y) = (x XOR y)^(-1) in GF(2^8). -/
-def cauchyEntry (x y : Nat) : Nat := gfInv (gfAdd x y)
+@[expose] public def cauchyEntry (x y : Nat) : Nat := gfInv (gfAdd x y)
 
 /-- 2-cell Cauchy encode (Stratum 0 S0_STEM_NUCLEUS, k = 2). -/
-def cauchyEncode2 (x0 x1 d0 d1 : Nat) : Nat × Nat :=
+@[expose] public def cauchyEncode2 (x0 x1 d0 d1 : Nat) : Nat × Nat :=
   (gfAdd (gfMul (cauchyEntry x0 0) d0) (gfMul (cauchyEntry x0 1) d1),
    gfAdd (gfMul (cauchyEntry x1 0) d0) (gfMul (cauchyEntry x1 1) d1))
 
 /-- 2-cell Cauchy decode via exact 2x2 adjugate inverse over GF(2^8). -/
-def cauchyDecode2 (x0 x1 p0 p1 : Nat) : Nat × Nat :=
+@[expose] public def cauchyDecode2 (x0 x1 p0 p1 : Nat) : Nat × Nat :=
   let c00 := cauchyEntry x0 0
   let c01 := cauchyEntry x0 1
   let c10 := cauchyEntry x1 0
@@ -78,27 +80,27 @@ def cauchyDecode2 (x0 x1 p0 p1 : Nat) : Nat × Nat :=
 private theorem xor_lt_256 {a b : Nat} (ha : a < 256) (hb : b < 256) : a ^^^ b < 256 :=
   Nat.xor_lt_two_pow (n := 8) ha hb
 
-theorem gfAdd_lt_256 (a b : Nat) : gfAdd a b < 256 :=
+public theorem gfAdd_lt_256 (a b : Nat) : gfAdd a b < 256 :=
   Nat.mod_lt _ (by decide)
 
-theorem gfAdd_eq_xor {a b : Nat} (ha : a < 256) (hb : b < 256) : gfAdd a b = a ^^^ b :=
+public theorem gfAdd_eq_xor {a b : Nat} (ha : a < 256) (hb : b < 256) : gfAdd a b = a ^^^ b :=
   Nat.mod_eq_of_lt (xor_lt_256 ha hb)
 
-theorem gfAdd_comm (a b : Nat) : gfAdd a b = gfAdd b a := by
+public theorem gfAdd_comm (a b : Nat) : gfAdd a b = gfAdd b a := by
   simp [gfAdd, Nat.xor_comm]
 
-theorem gfAdd_self (a : Nat) : gfAdd a a = 0 := by
+public theorem gfAdd_self (a : Nat) : gfAdd a a = 0 := by
   simp [gfAdd, Nat.xor_self]
 
-theorem gfAdd_zero (a : Nat) (ha : a < 256) : gfAdd a 0 = a := by
+public theorem gfAdd_zero (a : Nat) (ha : a < 256) : gfAdd a 0 = a := by
   rw [gfAdd_eq_xor ha (by decide), Nat.xor_zero]
 
-theorem gfAdd_assoc (a b c : Nat) (ha : a < 256) (hb : b < 256) (hc : c < 256) :
+public theorem gfAdd_assoc (a b c : Nat) (ha : a < 256) (hb : b < 256) (hc : c < 256) :
     gfAdd (gfAdd a b) c = gfAdd a (gfAdd b c) := by
   rw [gfAdd_eq_xor ha hb, gfAdd_eq_xor (xor_lt_256 ha hb) hc,
       gfAdd_eq_xor hb hc, gfAdd_eq_xor ha (xor_lt_256 hb hc), Nat.xor_assoc]
 
-theorem xtime_lt_256 (a : Nat) : xtime a < 256 := by
+public theorem xtime_lt_256 (a : Nat) : xtime a < 256 := by
   unfold xtime
   split
   · exact xor_lt_256 (Nat.mod_lt _ (by decide)) (by decide)
@@ -125,7 +127,7 @@ private theorem testBit_mul2_mod256 (a i : Nat) :
     rw [hmul, Nat.testBit_shiftLeft]
     by_cases hlt : k + 1 < 8 <;> simp [hlt]
 
-theorem xtime_xor (a b : Nat) (ha : a < 256) (hb : b < 256) :
+public theorem xtime_xor (a b : Nat) (ha : a < 256) (hb : b < 256) :
     xtime (a ^^^ b) = xtime a ^^^ xtime b := by
   apply Nat.eq_of_testBit_eq
   intro i
@@ -176,10 +178,10 @@ private theorem gfMulLoop_lt_256 :
       · exact hacc
     · exact xtime_lt_256 a
 
-theorem gfMul_lt_256 (a b : Nat) : gfMul a b < 256 :=
+public theorem gfMul_lt_256 (a b : Nat) : gfMul a b < 256 :=
   gfMulLoop_lt_256 8 0 (a % 256) (b % 256) (by decide) (Nat.mod_lt _ (by decide))
 
-theorem gfInv_lt_256 (a : Nat) : gfInv a < 256 :=
+public theorem gfInv_lt_256 (a : Nat) : gfInv a < 256 :=
   gfMul_lt_256 _ _
 
 private theorem gfMulLoop_xor_acc :
@@ -244,27 +246,27 @@ private theorem gfMulLoop_xor_b :
           Nat.xor_comm (gfMulLoop n 0 (xtime a) (b1 / 2)) a,
           Nat.xor_assoc a, ← Nat.xor_assoc a a, Nat.xor_self, Nat.zero_xor]
 
-theorem gfMul_xor_left {a1 a2 b : Nat} (ha1 : a1 < 256) (ha2 : a2 < 256) :
+public theorem gfMul_xor_left {a1 a2 b : Nat} (ha1 : a1 < 256) (ha2 : a2 < 256) :
     gfMul (a1 ^^^ a2) b = gfMul a1 b ^^^ gfMul a2 b := by
   unfold gfMul
   rw [Nat.mod_eq_of_lt (xor_lt_256 ha1 ha2), Nat.mod_eq_of_lt ha1, Nat.mod_eq_of_lt ha2]
   exact gfMulLoop_xor_a 8 a1 a2 (b % 256) ha1 ha2
 
-theorem gfMul_xor_right {a b1 b2 : Nat} (hb1 : b1 < 256) (hb2 : b2 < 256) :
+public theorem gfMul_xor_right {a b1 b2 : Nat} (hb1 : b1 < 256) (hb2 : b2 < 256) :
     gfMul a (b1 ^^^ b2) = gfMul a b1 ^^^ gfMul a b2 := by
   unfold gfMul
   rw [Nat.mod_eq_of_lt (xor_lt_256 hb1 hb2), Nat.mod_eq_of_lt hb1, Nat.mod_eq_of_lt hb2]
   exact gfMulLoop_xor_b 8 (a % 256) b1 b2
 
-theorem gfMul_zero_right (a : Nat) : gfMul a 0 = 0 := by
+public theorem gfMul_zero_right (a : Nat) : gfMul a 0 = 0 := by
   simp [gfMul, gfMulLoop]
 
-theorem gfMul_zero_left (b : Nat) : gfMul 0 b = 0 := by
+public theorem gfMul_zero_left (b : Nat) : gfMul 0 b = 0 := by
   have h := gfMul_xor_left (a1 := 0) (a2 := 0) (b := b) (by decide) (by decide)
   simp only [Nat.xor_self] at h
   exact h
 
-theorem gfMul_one_right (a : Nat) (ha : a < 256) : gfMul a 1 = a := by
+public theorem gfMul_one_right (a : Nat) (ha : a < 256) : gfMul a 1 = a := by
   have hmod : a % 256 = a := Nat.mod_eq_of_lt ha
   simp [gfMul, gfMulLoop, hmod]
 
@@ -397,7 +399,7 @@ private theorem gfMul_comm_basis (i j : Nat) (hi : i < 8) (hj : j < 8) :
 
 /-- Theorem I.2 (EXHAUSTIVE GF(2^8) Commutativity — ALL 65,536 byte pairs!):
     For EVERY a, b < 256, gfMul a b = gfMul b a. Proved universally via F_2-bilinearity! -/
-theorem gfMul_comm (a b : Nat) (ha : a < 256) (hb : b < 256) :
+public theorem gfMul_comm (a b : Nat) (ha : a < 256) (hb : b < 256) :
     gfMul a b = gfMul b a := by
   -- First prove for basis element 2^i and arbitrary b < 256
   have hLeftBasis : ∀ i, i < 8 → gfMul (2 ^ i) b = gfMul b (2 ^ i) := by
@@ -435,7 +437,7 @@ private theorem gfMul_assoc_basis (i j k : Nat) (hi : i < 8) (hj : j < 8) (hk : 
 
 /-- Theorem I.3 (EXHAUSTIVE GF(2^8) Associativity — ALL 16,777,216 byte triples!):
     For EVERY a, b, c < 256, gfMul (gfMul a b) c = gfMul a (gfMul b c). -/
-theorem gfMul_assoc (a b c : Nat) (ha : a < 256) (hb : b < 256) (hc : c < 256) :
+public theorem gfMul_assoc (a b c : Nat) (ha : a < 256) (hb : b < 256) (hc : c < 256) :
     gfMul (gfMul a b) c = gfMul a (gfMul b c) := by
   have hStep1 : ∀ i j, i < 8 → j < 8 →
       gfMul (gfMul (2 ^ i) (2 ^ j)) c = gfMul (2 ^ i) (gfMul (2 ^ j) c) := by
@@ -470,7 +472,7 @@ theorem gfMul_assoc (a b c : Nat) (ha : a < 256) (hb : b < 256) (hc : c < 256) :
     (fun u v hu hv => gfMul_xor_left hu hv)
     hStep2 a ha
 
-theorem gfMul_add_right (a b c : Nat) (hb : b < 256) (hc : c < 256) :
+public theorem gfMul_add_right (a b c : Nat) (hb : b < 256) (hc : c < 256) :
     gfMul a (gfAdd b c) = gfAdd (gfMul a b) (gfMul a c) := by
   rw [gfAdd_eq_xor hb hc, gfMul_xor_right hb hc, gfAdd_eq_xor (gfMul_lt_256 _ _) (gfMul_lt_256 _ _)]
 
@@ -482,7 +484,7 @@ private theorem checkAllInv_ok : checkTree invProp 8 0 = true := by decide
 
 /-- Theorem I.1 (Exhaustive GF(2^8) Multiplicative Inverse):
     For EVERY nonzero byte a in {1..255}, gfMul a (gfInv a) = 1 modulo 0x11D. -/
-theorem gfMul_inv_exact (a : Nat) (hpos : 1 ≤ a) (hlt : a < 256) :
+public theorem gfMul_inv_exact (a : Nat) (hpos : 1 ≤ a) (hlt : a < 256) :
     gfMul a (gfInv a) = 1 := by
   have htrue := checkTree_sound invProp 8 0 a checkAllInv_ok (Nat.zero_le _) hlt
   unfold invProp at htrue
@@ -492,7 +494,7 @@ theorem gfMul_inv_exact (a : Nat) (hpos : 1 ≤ a) (hlt : a < 256) :
   exact htrue
 
 /-- Theorem I.4: Concrete 2-cell Cauchy encode -> decode lossless roundtrip samples over GF(2^8). -/
-theorem cauchy2_exact_roundtrip :
+public theorem cauchy2_exact_roundtrip :
     cauchyDecode2 2 25 (cauchyEncode2 2 25 0x50 0xb7).1 (cauchyEncode2 2 25 0x50 0xb7).2 = (0x50, 0xb7) ∧
     cauchyDecode2 11 14 (cauchyEncode2 11 14 0xde 0xad).1 (cauchyEncode2 11 14 0xde 0xad).2 = (0xde, 0xad) ∧
     cauchyDecode2 3 24 (cauchyEncode2 3 24 0xff 0x01).1 (cauchyEncode2 3 24 0xff 0x01).2 = (0xff, 0x01) := by
@@ -503,7 +505,7 @@ theorem cauchy2_exact_roundtrip :
 -- ============================================================================
 
 /-- Axiomatic signature of any characteristic-2 field (e.g., GF(2^8), GF(2^16), GF(2^32)). -/
-structure Char2Field (F : Type) where
+public structure Char2Field (F : Type) where
   zero : F
   one  : F
   add  : F → F → F
@@ -523,7 +525,7 @@ structure Char2Field (F : Type) where
 /-- Theorem I.5 (Concrete GF(2^8) Field Realization):
     PLANARIA's exact executable byte arithmetic `(gfAdd, gfMul, gfInv)` over `Fin 256`
     satisfies EVERY single field axiom of `Char2Field (Fin 256)`! -/
-def gf256Field : Char2Field (Fin 256) where
+@[expose] public def gf256Field : Char2Field (Fin 256) where
   zero := ⟨0, by decide⟩
   one  := ⟨1, by decide⟩
   add  := fun a b => ⟨gfAdd a.val b.val, gfAdd_lt_256 a.val b.val⟩
@@ -584,7 +586,7 @@ private theorem add_mul_left (u v w : F) :
     In ANY characteristic-2 field (including concrete `gf256Field`), for ANY distinct
     x0 != x1 and y0 != y1 with disjoint {x0, x1} ∩ {y0, y1} = ∅, the 2x2 Cauchy
     determinant (x0+y0)^(-1)(x1+y1)^(-1) + (x0+y1)^(-1)(x1+y0)^(-1) is STRICTLY NON-ZERO! -/
-theorem gf_cauchy2_nonzero_det
+public theorem gf_cauchy2_nonzero_det
     (x0 x1 y0 y1 : F)
     (hx : x0 ≠ x1) (hy : y0 ≠ y1)
     (h00 : x0 ≠ y0) (h01 : x0 ≠ y1) (h10 : x1 ≠ y0) (h11 : x1 ≠ y1) :
@@ -655,7 +657,7 @@ theorem gf_cauchy2_nonzero_det
   exact no_zero_divisors K _ _ hxne hyne hZero
 
 /-- Generic 2x2 Cauchy encode over any characteristic-2 field K. -/
-def cauchyEncode2K (x0 x1 y0 y1 d0 d1 : F) : F × F :=
+@[expose] public def cauchyEncode2K (x0 x1 y0 y1 d0 d1 : F) : F × F :=
   let c00 := K.inv (K.add x0 y0)
   let c01 := K.inv (K.add x0 y1)
   let c10 := K.inv (K.add x1 y0)
@@ -664,7 +666,7 @@ def cauchyEncode2K (x0 x1 y0 y1 d0 d1 : F) : F × F :=
    K.add (K.mul c10 d0) (K.mul c11 d1))
 
 /-- Generic 2x2 Cauchy decode (adjugate formula) over any characteristic-2 field K. -/
-def cauchyDecode2K (x0 x1 y0 y1 p0 p1 : F) : F × F :=
+@[expose] public def cauchyDecode2K (x0 x1 y0 y1 p0 p1 : F) : F × F :=
   let c00 := K.inv (K.add x0 y0)
   let c01 := K.inv (K.add x0 y1)
   let c10 := K.inv (K.add x1 y0)
@@ -677,7 +679,7 @@ def cauchyDecode2K (x0 x1 y0 y1 p0 p1 : F) : F × F :=
 /-- Theorem I.7 (Universal Cauchy 2x2 Exact Lossless Decoding Theorem):
     For ANY characteristic-2 field K, ANY disjoint distinct coordinates (x0,x1), (y0,y1),
     and EVERY payload pair (d0, d1), `cauchyDecode2K (cauchyEncode2K d0 d1) = (d0, d1)`! -/
-theorem cauchy2_exact_decode
+public theorem cauchy2_exact_decode
     (x0 x1 y0 y1 d0 d1 : F)
     (hx : x0 ≠ x1) (hy : y0 ≠ y1)
     (h00 : x0 ≠ y0) (h01 : x0 ≠ y1) (h10 : x1 ≠ y0) (h11 : x1 ≠ y1) :
@@ -720,7 +722,7 @@ end UniversalCauchy
     Instantiating Theorem I.7 on concrete `gf256Field` proves that PLANARIA's exact
     Stratum-0 `cauchyEncode2` / `cauchyDecode2` recovers EVERY `(d0, d1) ∈ [0..255]^2`
     from ANY two distinct surviving Stratum-0 cell coordinates `x0 != x1` in `{2..255}`! -/
-theorem gf256_cauchy2_exact_decode
+public theorem gf256_cauchy2_exact_decode
     (x0 x1 d0 d1 : Fin 256)
     (hx : x0 ≠ x1)
     (hx0_gt1 : x0.val ≥ 2) (hx1_gt1 : x1.val ≥ 2) :
@@ -736,5 +738,18 @@ theorem gf256_cauchy2_exact_decode
   have h1 := congrArg (fun p => p.1.val) hK
   have h2 := congrArg (fun p => p.2.val) hK
   exact Prod.ext h1 h2
+
+/-- Non-vacuity witness for Theorem I.8 (`gf256_cauchy2_exact_decode`):
+    explicitly exhibits distinct coordinates `(2, 25)` and payload `(0x50, 0xb7)` satisfying
+    every hypothesis and invoking the theorem directly. -/
+public theorem gf256_cauchy2_nonvacuous_witness :
+    ∃ x0 x1 d0 d1 : Fin 256,
+      x0 ≠ x1 ∧ x0.val ≥ 2 ∧ x1.val ≥ 2 ∧
+      (let (p0, p1) := cauchyEncode2 x0.val x1.val d0.val d1.val
+       cauchyDecode2 x0.val x1.val p0 p1 = (d0.val, d1.val)) := by
+  refine ⟨⟨2, by decide⟩, ⟨25, by decide⟩, ⟨0x50, by decide⟩, ⟨0xb7, by decide⟩,
+    by decide, by decide, by decide, ?_⟩
+  exact gf256_cauchy2_exact_decode ⟨2, by decide⟩ ⟨25, by decide⟩ ⟨0x50, by decide⟩ ⟨0xb7, by decide⟩
+    (by decide) (by decide) (by decide)
 
 end Planaria.GF256

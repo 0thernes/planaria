@@ -1,0 +1,38 @@
+# PLANARIA v2.3.0 — Multi-Kernel Lean 4.35.0 Verification Transcript
+# Toolchain: leanprover/lean4:v4.35.0 (Palomar verification stack)
+# Standalone specification: lean/Challenge.lean (0 project imports, 70 theorem specs)
+# Verified solution: lean/Solution.lean (0 sorry, 0 admit, 0 native_decide, 0 custom axioms)
+# Comparator manifest: lean/comparator.json (all 70 theorems)
+# Formalization metadata: formalization.yaml
+
+[KERNEL 1/6] lean4 kernel (lake build + lake env lean VerifyAxioms.lean)
+  Result: PASS (exit 0)
+  Theorems audited: 70
+  Allowed axioms only: [propext, Classical.choice, Quot.sound]
+  Forbidden axioms (sorryAx, Lean.ofReduceBool, Lean.trustCompiler, custom): 0
+
+[KERNEL 2/6] leanchecker --fresh Solution
+  Command: leanchecker --fresh Solution
+  Result: PASS (exit 0, Windows x86_64 local run; also re-run on Ubuntu CI)
+
+[KERNEL 3/6] leanchecker-paranoid --fresh Solution
+  Command: leanchecker-paranoid --fresh Solution
+  Result: PASS (exit 0, Windows x86_64 local run; also re-run on Ubuntu CI)
+
+[KERNEL 4/6] nanoda_bin (independent Rust Lean 4 kernel)
+  Export: leanexport Solution -> solution.ndjson (15.75 MB, 2970 declarations)
+  Command: nanoda_bin --export solution.ndjson
+  Output: Checked 2970 declarations with no typechecker errors
+  Result: PASS (exit 0, Windows x86_64 local run; also re-run in lake check --paranoid on Ubuntu CI)
+
+[KERNEL 5/6] con-leche --verified (independent Rust/verified kernel)
+  Command: con-leche --verified solution.ndjson
+  Output: accepted 2715 declarations (--verified)
+  Result: PASS (exit 0, Windows x86_64 local run; also re-run in lake check --paranoid on Ubuntu CI)
+
+[KERNEL 6/6] con-ron --verified + lean4lean + bubblewrap comparator
+  con-ron --verified (Windows local): accepted 2715 declarations (--verified) -> PASS (exit 0)
+  lean4lean + lake check --paranoid + lake comparator --config comparator.json --paranoid:
+    Note: On Windows, `lean4lean.exe` cannot parse Windows `.olean` path headers and `lake check`
+    requires Linux `bubblewrap` (`bwrap`). Full 6-kernel verification + Challenge/Solution
+    comparator runs automatically on Ubuntu Linux in `.github/workflows/ci.yml` (Lean 4.35.0 job).

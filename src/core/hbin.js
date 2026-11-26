@@ -315,7 +315,6 @@ export function encodeHbin(programSpec) {
   // Step 2: Assemble 192 unarmored leaf commitments (header 16B || payload 332B = 348B)
   // in exact deterministic physical placement order (leafIdx === physical slot index)
   const leafCommitments = new Array(TOTAL_CELLS);
-  const cellMeta = new Array(TOTAL_CELLS);
 
   for (let slot = 0; slot < TOTAL_CELLS; slot++) {
     const { bundleId, cellInBundle } = PLACEMENT_SCHEDULE[slot];
@@ -338,7 +337,6 @@ export function encodeHbin(programSpec) {
     });
     commit.set(coded.shard, CELL_HEADER_SIZE);
     leafCommitments[slot] = commit;
-    cellMeta[slot] = { slot, bundleId, stratum: spec.stratum, organId: spec.organId, evalX: coded.evalX };
   }
 
   // Step 3: Build Depth-8 SHA-256 Merkle Tree over all 192 cells -> single 128-bit Lineage Root
@@ -401,21 +399,29 @@ export function encodeHbin(programSpec) {
  */
 export function decodeHbin(rawBytes, options = {}) {
   const buf = toBytes(rawBytes);
-  const pinnedRootHex = options.pinnedRootHex ? String(options.pinnedRootHex).trim().toLowerCase() : null;
-  const requestedXenograft = Boolean(options.allowXenograft);
-  const disableImmuneSystem = Boolean(options.disableImmuneSystem);
-  const maxInputBytes = Number.isInteger(options.maxInputBytes) && options.maxInputBytes > 0
-    ? options.maxInputBytes
+  const opts = (options && typeof options === 'object') ? options : {};
+  let pinnedRootHex = null;
+  if (opts.pinnedRootHex !== undefined && opts.pinnedRootHex !== null && opts.pinnedRootHex !== '') {
+    const cleaned = String(opts.pinnedRootHex).trim().toLowerCase();
+    if (!/^[0-9a-f]{32}$/.test(cleaned)) {
+      throw new RangeError(`pinnedRootHex must be a 32-char lowercase hex string (128-bit root), got "${cleaned.slice(0, 40)}"`);
+    }
+    pinnedRootHex = cleaned;
+  }
+  const requestedXenograft = Boolean(opts.allowXenograft);
+  const disableImmuneSystem = Boolean(opts.disableImmuneSystem);
+  const maxInputBytes = opts.maxInputBytes !== undefined
+    ? (Number.isInteger(opts.maxInputBytes) && opts.maxInputBytes >= 0 ? opts.maxInputBytes : 8 * 1024 * 1024)
     : 8 * 1024 * 1024;
-  const maxSyncCandidates = Number.isInteger(options.maxSyncCandidates) && options.maxSyncCandidates > 0
-    ? options.maxSyncCandidates
+  const maxSyncCandidates = opts.maxSyncCandidates !== undefined
+    ? (Number.isInteger(opts.maxSyncCandidates) && opts.maxSyncCandidates >= 0 ? opts.maxSyncCandidates : 32768)
+    : 32768;
+  const maxRsFailures = opts.maxRsFailures !== undefined
+    ? (Number.isInteger(opts.maxRsFailures) && opts.maxRsFailures >= 0 ? opts.maxRsFailures : 16384)
     : 16384;
-  const maxRsFailures = Number.isInteger(options.maxRsFailures) && options.maxRsFailures > 0
-    ? options.maxRsFailures
-    : 4096;
 
   // Enforce host sovereignty on Xenografting: require pinnedRootHex unless explicitly opted into unpinned mode
-  const xenograftBlockedUnpinned = requestedXenograft && !pinnedRootHex && !options.allowUnpinnedXenograft;
+  const xenograftBlockedUnpinned = requestedXenograft && !pinnedRootHex && !opts.allowUnpinnedXenograft;
   const allowXenograft = requestedXenograft && !xenograftBlockedUnpinned;
 
   const harvested = [];
@@ -499,29 +505,44 @@ export function decodeHbin(rawBytes, options = {}) {
     harvested.push(cellObj);
 
     // CCSDS-style cell-cadence flywheel: once an authentic (or pinned) cell locks cadence,
-    // probe immediately adjacent +/- 512B slots even if their 4-byte sync word took a burst!
+    // probe immediately adjacent +/- 512B slots iteratively (zero call-stack recursion!).
     const cadenceTrusted = !pinnedRootHex || impliedRootHex === pinnedRootHex;
     if (cadenceTrusted) {
       if (off + CELL_SIZE <= limit && !harvestedOffsets.has(off + CELL_SIZE)) {
         flywheelOffsets.add(off + CELL_SIZE);
       }
-      if (off - CELL_SIZE >= 0 && !harvestedOffsets.has(off - CELL_SIZE)) {
-        const prevDist = syncBitDistance(buf, off - CELL_SIZE);
-        if (prevDist > SYNC_MAX_BIT_ERRORS) {
-          tryHarvestAt(off - CELL_SIZE, prevDist, true);
+      if (!fromFlywheel && off - CELL_SIZE >= 0 && !harvestedOffsets.has(off - CELL_SIZE)) {
+        let backOff = off - CELL_SIZE;
+        while (backOff >= 0 && !harvestedOffsets.has(backOff) && !truncatedByBudget) {
+          const prevDist = syncBitDistance(buf, backOff);
+          if (prevDist <= SYNC_MAX_BIT_ERRORS) break;
+          const prevCell = tryHarvestAt(backOff, prevDist, true);
+          if (!prevCell) break;
+          if (pinnedRootHex && prevCell.impliedRootHex !== pinnedRootHex) break;
+          backOff -= CELL_SIZE;
         }
       }
     }
     return cellObj;
   }
 
-  // Step 1: Byte-granular sliding-window fuzzy sync correlator + cadence flywheel.
+  // Step 1: Byte-granular sliding-window fuzzy sync correlator + iterative cadence flywheel.
   // Never jumps blindly across unverified/repaired offsets -> eliminates Overlap-Eclipse & Cell-Eating!
+  // Also detects synthetic repeated SYNC_WORD flooding (`PLN\xb7PLN\xb7PLN\xb7`) in O(1) without exhausting RS budget.
   for (let offset = 0; offset <= limit; offset++) {
     if (harvestedOffsets.has(offset)) continue;
     const isFlywheel = flywheelOffsets.has(offset);
     const dist = syncBitDistance(buf, offset);
     if (dist <= SYNC_MAX_BIT_ERRORS || isFlywheel) {
+      if (
+        !isFlywheel &&
+        dist === 0 &&
+        offset + 12 <= buf.length &&
+        syncBitDistance(buf, offset + 4) === 0 &&
+        syncBitDistance(buf, offset + 8) === 0
+      ) {
+        continue;
+      }
       tryHarvestAt(offset, dist, isFlywheel);
       if (truncatedByBudget) break;
     }
@@ -666,13 +687,16 @@ export function decodeHbin(rawBytes, options = {}) {
           speciesTag: headerSpeciesTag,
         };
       } else {
+        const hostAllowsXeno = count > 0
+          ? uniqCells.every((c) => (c.header.flags & 0x01) !== 0)
+          : spec.xenograftable;
         bundles[b] = {
           id: b,
           name: spec.name,
           organId: spec.organId,
           stratum: spec.stratum,
           abiSig: spec.abiSig,
-          xenograftable: spec.xenograftable,
+          xenograftable: spec.xenograftable && hostAllowsXeno,
           k: spec.k,
           n: spec.n,
           cellsFound: count,
@@ -690,17 +714,20 @@ export function decodeHbin(rawBytes, options = {}) {
   const bundles = decodeGroup(authenticPrimary);
 
   // Step 3: Optional ABI-Verified Cross-Species Xenograft Anastomosis
+  // Strictly requires a live, authenticated primary host (primaryRootHex !== null && bundles[0].viable)
+  // so dead/absent/tie-rejected hosts can NEVER be hijacked by foreign donor clusters!
   const xenografts = [];
-  if (allowXenograft && donorGroups.size > 0) {
-    // Sort donors by UNIQUE cell count descending (immune to duplicate-cell flooding)
-    const sortedDonors = Array.from(donorGroups.entries()).sort(
-      (a, b) => (rootUniqueCounts.get(b[0]) || 0) - (rootUniqueCounts.get(a[0]) || 0)
-    );
+  if (allowXenograft && primaryRootHex && bundles[0].viable && donorGroups.size > 0) {
+    // Sort donors by UNIQUE cell count descending, then lexical rootHex for full determinism
+    const sortedDonors = Array.from(donorGroups.entries()).sort((a, b) => {
+      const diff = (rootUniqueCounts.get(b[0]) || 0) - (rootUniqueCounts.get(a[0]) || 0);
+      return diff !== 0 ? diff : a[0].localeCompare(b[0]);
+    });
     for (const [donorRootHex, donorCells] of sortedDonors) {
       const donorBundles = decodeGroup(donorCells);
       for (let b = 0; b < BUNDLE_SPECS.length; b++) {
         const spec = BUNDLE_SPECS[b];
-        if (!spec.xenograftable) continue;
+        if (!spec.xenograftable || !bundles[b].xenograftable) continue;
         if (
           !bundles[b].viable &&
           donorBundles[b].viable &&
@@ -745,7 +772,8 @@ export function decodeHbin(rawBytes, options = {}) {
   let genome = null;
   if (bundles[6].viable && bundles[6].data) {
     try {
-      genome = JSON.parse(new TextDecoder().decode(bundles[6].data));
+      const parsed = JSON.parse(new TextDecoder().decode(bundles[6].data));
+      genome = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
     } catch {
       genome = null;
     }
@@ -850,31 +878,36 @@ export function regenerateHbin(decoded, overrideName = null, options = {}) {
   if (decoded.stats && decoded.stats.immuneSystemEnabled === false) {
     throw new Error('Cannot regenerate from an unauthenticated decode (immuneSystemEnabled === false).');
   }
+  const opts = (options && typeof options === 'object') ? options : {};
   const hasAll = decoded.bundles.every((b) => b.viable);
-  const allowPartial = Boolean(options.allowPartial);
+  const allowPartial = Boolean(opts.allowPartial);
   if (!hasAll && !allowPartial) {
     throw new Error(
       'Cannot perform 100% lossless regeneration: one or more bundles are below Cauchy threshold k.'
     );
   }
   const isChimera = decoded.xenografts.length > 0;
+  const genomeName = typeof decoded.genome?.name === 'string' && decoded.genome.name.trim()
+    ? decoded.genome.name.trim()
+    : null;
   const name =
     overrideName ||
     (isChimera
-      ? `${decoded.genome?.name || 'HOST'}_X_CHIMERA`
-      : decoded.genome?.name || 'REGENERATED');
+      ? `${genomeName || 'HOST'}_X_CHIMERA`
+      : genomeName || 'REGENERATED');
 
   const bundlePayloads = decoded.bundles.map((b) => (b.viable && b.data ? b.data : new Uint8Array(0)));
   // If pure regeneration (not chimera, no name override) preserve exact bundle 6 genome ledger bytes
   // AND original speciesTag so SHA-256 matches the pristine original bit-for-bit even on non-JSON Bundle 6!
   const preservePure = !isChimera && !overrideName && hasAll;
+  const preserveSpeciesTag = !isChimera && !overrideName && Number.isInteger(decoded.bundles[0].speciesTag);
   if (!preservePure) {
     bundlePayloads[6] = new Uint8Array(0); // regenerate fresh chimera/override genome ledger
   }
 
   return encodeHbin({
     name,
-    speciesTag: preservePure ? decoded.bundles[0].speciesTag : undefined,
+    speciesTag: preserveSpeciesTag ? decoded.bundles[0].speciesTag : undefined,
     bundles: bundlePayloads,
     metadata: isChimera
       ? {

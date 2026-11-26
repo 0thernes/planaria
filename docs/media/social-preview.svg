@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="PLANARIA v2.3.0 — Progressive Holographic Executable Architecture">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#050814"/>
+      <stop offset="55%" stop-color="#0a1228"/>
+      <stop offset="100%" stop-color="#091a2e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="50%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <linearGradient id="stratum" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#34d399" stop-opacity="0.06"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <g opacity="0.14" stroke="#38bdf8" stroke-width="1">
+    <line x1="0" y1="120" x2="1280" y2="120"/>
+    <line x1="0" y1="240" x2="1280" y2="240"/>
+    <line x1="0" y1="360" x2="1280" y2="360"/>
+    <line x1="0" y1="480" x2="1280" y2="480"/>
+    <line x1="256" y1="0" x2="256" y2="640"/>
+    <line x1="512" y1="0" x2="512" y2="640"/>
+    <line x1="768" y1="0" x2="768" y2="640"/>
+    <line x1="1024" y1="0" x2="1024" y2="640"/>
+  </g>
+  <rect x="64" y="56" width="1152" height="528" rx="20" fill="#0b132b" fill-opacity="0.72" stroke="url(#accent)" stroke-width="2"/>
+  <rect x="100" y="96" width="204" height="34" rx="17" fill="#0f2942" stroke="#38bdf8" stroke-width="1.2"/>
+  <text x="202" y="118" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="700" fill="#7dd3fc" text-anchor="middle">PLANARIA v2.3.0</text>
+  <text x="100" y="206" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="64" font-weight="800" fill="#f8fafc" letter-spacing="-1">Holographic Executables</text>
+  <text x="100" y="262" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="28" font-weight="500" fill="#cbd5e1">Cut a 98 KB binary in half. Both halves boot &amp; regenerate bit-for-bit.</text>
+  <g transform="translate(100, 312)">
+    <rect x="0" y="0" width="248" height="142" rx="14" fill="url(#stratum)" stroke="#38bdf8" stroke-width="1.5"/>
+    <text x="20" y="38" font-family="ui-monospace, monospace" font-size="14" font-weight="700" fill="#38bdf8">PROGRESSIVE .HBIN</text>
+    <text x="20" y="76" font-family="system-ui, sans-serif" font-size="34" font-weight="800" fill="#f8fafc">192 × 512 B</text>
+    <text x="20" y="106" font-family="system-ui, sans-serif" font-size="15" fill="#94a3b8">4-Stratum Cauchy MDS</text>
+    <text x="20" y="126" font-family="system-ui, sans-serif" font-size="15" fill="#94a3b8">RS(254,238) + Merkle</text>
+
+    <rect x="272" y="0" width="248" height="142" rx="14" fill="url(#stratum)" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="292" y="38" font-family="ui-monospace, monospace" font-size="14" font-weight="700" fill="#c4b5fd">FORMAL VERIFICATION</text>
+    <text x="292" y="76" font-family="system-ui, sans-serif" font-size="34" font-weight="800" fill="#f8fafc">70 Theorems</text>
+    <text x="292" y="106" font-family="system-ui, sans-serif" font-size="15" fill="#94a3b8">Pure Lean 4.35.0 (0 Mathlib)</text>
+    <text x="292" y="126" font-family="system-ui, sans-serif" font-size="15" fill="#94a3b8">6 Independent Kernels</text>
+
+    <rect x="544" y="0" width="248" height="142" rx="14" fill="url(#stratum)" stroke="#34d399" stroke-width="1.5"/>
+    <text x="564" y="38" font-family="ui-monospace, monospace" font-size="14" font-weight="700" fill="#6ee7b7">FALSIFICATION SUITE</text>
+    <text x="564" y="76" font-family="system-ui, sans-serif" font-size="34" font-weight="800" fill="#f8fafc">28 Suites</text>
+    <text x="564" y="106" font-family="system-ui, sans-serif" font-size="15" fill="#94a3b8">10/10 Mutants Killed (100%)</text>
+    <text x="564" y="126" font-family="system-ui, sans-serif" font-size="15" fill="#94a3b8">Equal-Storage RS(192,48)</text>
+
+    <rect x="816" y="0" width="264" height="142" rx="14" fill="url(#stratum)" stroke="#f472b6" stroke-width="1.5"/>
+    <text x="836" y="38" font-family="ui-monospace, monospace" font-size="14" font-weight="700" fill="#f9a8d4">STUDIO &amp; ENGINE</text>
+    <text x="836" y="76" font-family="system-ui, sans-serif" font-size="34" font-weight="800" fill="#f8fafc">0 Deps</text>
+    <text x="836" y="106" font-family="system-ui, sans-serif" font-size="15" fill="#94a3b8">Plang + PVM-32 + 4Q WebGL2</text>
+    <text x="836" y="126" font-family="system-ui, sans-serif" font-size="15" fill="#94a3b8">48 kHz PolyBLEP AudioWorklet</text>
+  </g>
+  <text x="100" y="532" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16" fill="#94a3b8">Alexander Stephen Donahue (0thernes) · ORCID 0009-0006-8168-9648 · github.com/0thernes/planaria</text>
+</svg>

@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PLANARIA v2.2 — 3D Temporal-Quantum Holographic Executable Engine &amp; Surgical Vivisection Studio</title>
+  <title>PLANARIA v2.3 — 3D Temporal-Quantum Holographic Executable Engine &amp; Surgical Vivisection Studio</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2304070c'/%3E%3Cpolygon points='16,3 29,16 16,29 3,16' fill='none' stroke='%2310f5a8' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='%23e879f9'/%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="/src/web/styles.css" />
+  <link rel="stylesheet" href="./src/web/styles.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
       <div class="brand-dot" id="pulseDot" aria-hidden="true"></div>
       <div>
-        <h1>PLANARIA 3D <span style="font-size:10px; color:var(--emerald); font-weight:600;">v2.2</span></h1>
-        <div class="sub">TEMPORAL-QUANTUM WEBGL2 ENGINE · PROGRESSIVE HOLOGRAPHIC .HBIN · 1/1 ENDLESS FORGE · LEAN 4 VERIFIED</div>
+        <h1>PLANARIA 3D <span style="font-size:10px; color:var(--emerald); font-weight:600;">v2.3</span></h1>
+        <div class="sub">TEMPORAL-QUANTUM WEBGL2 ENGINE · PROGRESSIVE HOLOGRAPHIC .HBIN · 1/1 ENDLESS FORGE · 6-KERNEL LEAN 4 VERIFIED</div>
       </div>
     </div>
     <div class="top-controls">
@@ -23,8 +23,9 @@
         <option value="synth_reactor">SYNTH_REACTOR.hbin (4-Voice Lissajous Synth)</option>
         <option value="cipher_vault">CIPHER_VAULT.hbin (ARX Avalanche Vault)</option>
       </select>
-      <button id="btnAudio" type="button" class="btn-cyan">48kHz Audio: OFF</button>
-      <button id="btnAuto" type="button" class="btn-emerald active">Autopilot: ON</button>
+      <button id="btnAudio" type="button" class="btn-cyan" aria-pressed="false">48kHz Audio: OFF</button>
+      <button id="btnAuto" type="button" class="btn-emerald active" aria-pressed="true">Autopilot: ON</button>
+      <button id="btnMotion" type="button" class="btn-cyan" aria-pressed="false" title="Toggle Reduced Motion mode">Motion: FULL</button>
       <button id="btnNextStage" type="button" class="btn-magenta">Next Stage (∞)</button>
       <button id="btnDownload" type="button" class="btn-gold">Export .hbin</button>
       <button id="btnRestore" type="button" class="btn-emerald">Restore 100%</button>
@@ -47,6 +48,9 @@
 
         <div class="viewport3d-wrap" id="viewport3dWrap">
           <canvas id="canvas3d" aria-label="PLANARIA 3D WebGL2 Temporal-Quantum Arena"></canvas>
+          <div id="webglFallback" class="webgl-fallback" hidden role="status">
+            WebGL2 3D viewport unavailable or context lost — PLANARIA continues running live in 2D Dual-Patient PVM-32, Tissue Surgery, and AudioWorklet modes.
+          </div>
 
           <!-- Top-Left Live Combat & Organism Vitality HUD -->
           <div class="hud-overlay-tl">
@@ -56,22 +60,22 @@
             </div>
             <div class="meter-row">
               <span style="width:42px; color:#fda4af;">HP</span>
-              <div class="meter-track"><div id="barHp" class="meter-fill" style="width:100%; background:#f43f5e;"></div></div>
+              <div id="trackHp" class="meter-track" role="progressbar" aria-label="Player HP" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div id="barHp" class="meter-fill" style="width:100%; background:#f43f5e;"></div></div>
               <span id="valHp" style="width:36px; text-align:right;">100</span>
             </div>
             <div class="meter-row">
               <span style="width:42px; color:#22d3ee;">SHIELD</span>
-              <div class="meter-track"><div id="barShield" class="meter-fill" style="width:100%; background:#22d3ee;"></div></div>
+              <div id="trackShield" class="meter-track" role="progressbar" aria-label="Player Shield" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div id="barShield" class="meter-fill" style="width:100%; background:#22d3ee;"></div></div>
               <span id="valShield" style="width:36px; text-align:right;">150</span>
             </div>
             <div class="meter-row">
               <span style="width:42px; color:#fbbf24;">CHRONO</span>
-              <div class="meter-track"><div id="barChrono" class="meter-fill" style="width:100%; background:#fbbf24;"></div></div>
+              <div id="trackChrono" class="meter-track" role="progressbar" aria-label="Chrono Energy" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div id="barChrono" class="meter-fill" style="width:100%; background:#fbbf24;"></div></div>
               <span id="valChrono" style="width:36px; text-align:right;">100</span>
             </div>
             <div class="meter-row">
               <span style="width:42px; color:#e879f9;">COHER</span>
-              <div class="meter-track"><div id="barCoh" class="meter-fill" style="width:100%; background:#e879f9;"></div></div>
+              <div id="trackCoh" class="meter-track" role="progressbar" aria-label="Quantum Coherence" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div id="barCoh" class="meter-fill" style="width:100%; background:#e879f9;"></div></div>
               <span id="valCoh" style="width:36px; text-align:right;">100%</span>
             </div>
           </div>
@@ -153,15 +157,15 @@
       <!-- MULTI-TAB RPG FORGE + PLANARIA FORENSIC LAB -->
       <div class="panel">
         <div class="tabs-bar" role="tablist" aria-label="PLANARIA Workbench Tabs">
-          <button type="button" role="tab" aria-selected="true" class="tab-btn active" data-tab="rpg">1. 1/1 Arsenal, Armor, Adaptive NPCs &amp; Skill Tree</button>
-          <button type="button" role="tab" aria-selected="false" class="tab-btn" data-tab="crt">2. Dual-Patient 2D PVM-32 &amp; Linear Control Twin</button>
-          <button type="button" role="tab" aria-selected="false" class="tab-btn" data-tab="tissue">3. 192-Cell Tissue Surgery Map</button>
-          <button type="button" role="tab" aria-selected="false" class="tab-btn" data-tab="vascular">4. Organ Anastomosis &amp; Disasm</button>
-          <button type="button" role="tab" aria-selected="false" class="tab-btn" data-tab="curve">5. Survival Curve &amp; Plang Compiler</button>
+          <button id="tabbtn-rpg" type="button" role="tab" aria-selected="true" aria-controls="tab-rpg" tabindex="0" class="tab-btn active" data-tab="rpg">1. 1/1 Arsenal, Armor, Adaptive NPCs &amp; Skill Tree</button>
+          <button id="tabbtn-crt" type="button" role="tab" aria-selected="false" aria-controls="tab-crt" tabindex="-1" class="tab-btn" data-tab="crt">2. Dual-Patient 2D PVM-32 &amp; Linear Control Twin</button>
+          <button id="tabbtn-tissue" type="button" role="tab" aria-selected="false" aria-controls="tab-tissue" tabindex="-1" class="tab-btn" data-tab="tissue">3. 192-Cell Tissue Surgery Map</button>
+          <button id="tabbtn-vascular" type="button" role="tab" aria-selected="false" aria-controls="tab-vascular" tabindex="-1" class="tab-btn" data-tab="vascular">4. Organ Anastomosis &amp; Disasm</button>
+          <button id="tabbtn-curve" type="button" role="tab" aria-selected="false" aria-controls="tab-curve" tabindex="-1" class="tab-btn" data-tab="curve">5. Survival Curve &amp; Plang Compiler</button>
         </div>
 
         <!-- TAB 1: ENDLESS 1/1 ARSENAL, ARMORS, ADAPTIVE NPCs & 12-SKILL TREE -->
-        <div class="tab-pane active" id="tab-rpg" role="tabpanel">
+        <div class="tab-pane active" id="tab-rpg" role="tabpanel" aria-labelledby="tabbtn-rpg">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
             <span id="comboSpaceLabel" style="font-size:10px; color:var(--cyan);">1/1 Combinatorial Space: 6.42 Trillion discrete builds × 2^64 SHA-256 lineages across 24 Orders of Magnitude</span>
             <div style="display:flex; gap:6px;">
@@ -188,7 +192,7 @@
         </div>
 
         <!-- TAB 2: DUAL PATIENT 2D PVM-32 MONITOR + LINEAR CONTROL TWIN -->
-        <div class="tab-pane" id="tab-crt" role="tabpanel">
+        <div class="tab-pane" id="tab-crt" role="tabpanel" aria-labelledby="tabbtn-crt">
           <div class="arena-grid">
             <div class="crt-card patient-primary" id="cardPrimary">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
@@ -210,7 +214,7 @@
         </div>
 
         <!-- TAB 3: CELLULAR TISSUE MAP -->
-        <div class="tab-pane" id="tab-tissue" role="tabpanel">
+        <div class="tab-pane" id="tab-tissue" role="tabpanel" aria-labelledby="tabbtn-tissue">
           <div class="tissue-layout">
             <div>
               <canvas id="canvasTissue" class="canvas-responsive" width="660" height="232"
@@ -231,7 +235,7 @@
         </div>
 
         <!-- TAB 4: ORGAN ANASTOMOSIS & DISASSEMBLY -->
-        <div class="tab-pane" id="tab-vascular" role="tabpanel">
+        <div class="tab-pane" id="tab-vascular" role="tabpanel" aria-labelledby="tabbtn-vascular">
           <div class="vascular-grid">
             <div><canvas id="canvasVascular" class="canvas-responsive" width="520" height="240" aria-label="Live Organ Vascular Anastomosis Graph"></canvas></div>
             <div>
@@ -253,7 +257,7 @@
         </div>
 
         <!-- TAB 5: EMPIRICAL SURVIVAL CURVE & LIVE PLANG COMPILER -->
-        <div class="tab-pane" id="tab-curve" role="tabpanel">
+        <div class="tab-pane" id="tab-curve" role="tabpanel" aria-labelledby="tabbtn-curve">
           <canvas id="canvasCurve" class="canvas-responsive" width="880" height="210" aria-label="Empirical Survival Phase-Transition Curve"></canvas>
           <div id="benchSummary" style="margin:6px 0 10px; font-size:10px; color:var(--muted);"></div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; gap:6px; flex-wrap:wrap;">
@@ -309,7 +313,7 @@
             <div class="tool-group-title">4. Byzantine Trojan Immune System</div>
             <div class="btn-grid">
               <button id="btnTrojan" type="button" class="btn-crimson">Inject +36 Trojans</button>
-              <button id="btnToggleImmune" type="button" class="btn-emerald">Immune: ON (Safe)</button>
+              <button id="btnToggleImmune" type="button" class="btn-emerald" aria-pressed="true">Immune: ON (Safe)</button>
             </div>
           </div>
 
@@ -350,6 +354,6 @@
     </aside>
   </main>
 
-  <script type="module" src="/src/web/app.js"></script>
+  <script type="module" src="./src/web/app.js"></script>
 </body>
 </html>

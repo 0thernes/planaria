@@ -1,7 +1,22 @@
 {
-  "schema": "PLANARIA-BENCHMARKS-1.1",
-  "generatedAt": "2026-11-21T13:12:59.163Z",
-  "nodeVersion": "v25.8.2",
+  "schema": "PLANARIA-BENCHMARKS-1.2",
+  "generatedAt": "2026-11-26T00:09:59.532Z",
+  "environment": {
+    "nodeVersion": "v25.8.2",
+    "platform": "win32",
+    "arch": "x64",
+    "cpuModel": "Intel(R) Core(TM) Ultra 9 275HX",
+    "cpuCores": 24,
+    "totalMemGiB": 47.4
+  },
+  "statisticalProtocol": {
+    "preregistration": "docs/preregistration.md",
+    "trialsPerErasurePoint": 40,
+    "confidenceIntervalMethod": "Wilson score 95%",
+    "pairedHypothesisTest": "Exact two-sided McNemar binomial test",
+    "effectSizeMetric": "Risk difference (%) and Cohen's h",
+    "multiplicityCorrection": "Holm-Bonferroni step-down across all 25 erasure thresholds (0%..96%)"
+  },
   "artifacts": [
     {
       "name": "QUANTUM_CHRONICLE",
@@ -37,361 +52,1025 @@
     }
   ],
   "performance": {
-    "compileAll4SpeciesMs": 61.59,
-    "meanFullDecodeMs": 8.96,
-    "meanPvm32FrameMs": 0.082,
-    "effectiveFrameRateHeadroomFps": 12195,
-    "pvm32ThroughputMIPS": 27.02
+    "compileAll4SpeciesMs": 40.3,
+    "meanFullDecodeMs": 5.998,
+    "decodeLatencyDistribution": {
+      "n": 40,
+      "meanMs": 5.998,
+      "medianMs": 5.994,
+      "iqrMs": 0.268,
+      "p95Ms": 6.526
+    },
+    "meanPvm32FrameMs": 0.052,
+    "frameLatencyDistribution": {
+      "n": 400,
+      "meanMs": 0.052,
+      "medianMs": 0.041,
+      "iqrMs": 0.006,
+      "p95Ms": 0.111
+    },
+    "effectiveFrameRateHeadroomFps": 19231,
+    "pvm32ThroughputMIPS": 42.85
   },
   "survivalCurve": [
     {
       "dropPct": 0,
       "survivingPct": 100,
+      "trials": 40,
       "linearSurvivalPct": 100,
+      "linearCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "rsCliffSurvivalPct": 100,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 100,
       "stratumDist": {
         "s3": 40,
         "s2": 0,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
       }
     },
     {
       "dropPct": 4,
       "survivingPct": 96,
+      "trials": 40,
       "linearSurvivalPct": 82.5,
+      "linearCI95": {
+        "loPct": 68.1,
+        "hiPct": 91.3
+      },
       "rsCliffSurvivalPct": 100,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 100,
       "stratumDist": {
         "s3": 40,
         "s2": 0,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 17.5,
+        "cohensH": 0.863,
+        "mcnemarExactP": 0.01563,
+        "mcnemarHolmP": 0.03125
       }
     },
     {
       "dropPct": 8,
       "survivingPct": 92,
+      "trials": 40,
       "linearSurvivalPct": 60,
+      "linearCI95": {
+        "loPct": 44.6,
+        "hiPct": 73.7
+      },
       "rsCliffSurvivalPct": 100,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 100,
       "stratumDist": {
         "s3": 40,
         "s2": 0,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 40,
+        "cohensH": 1.369,
+        "mcnemarExactP": 0.00003052,
+        "mcnemarHolmP": 0.0001221
       }
     },
     {
       "dropPct": 12,
       "survivingPct": 88,
+      "trials": 40,
       "linearSurvivalPct": 32.5,
+      "linearCI95": {
+        "loPct": 20.1,
+        "hiPct": 48
+      },
       "rsCliffSurvivalPct": 100,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 100,
       "stratumDist": {
         "s3": 40,
         "s2": 0,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 67.5,
+        "cohensH": 1.928,
+        "mcnemarExactP": 1.49e-8,
+        "mcnemarHolmP": 8.941e-8
       }
     },
     {
       "dropPct": 16,
       "survivingPct": 84,
+      "trials": 40,
       "linearSurvivalPct": 7.5,
+      "linearCI95": {
+        "loPct": 2.6,
+        "hiPct": 19.9
+      },
       "rsCliffSurvivalPct": 100,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 100,
       "stratumDist": {
         "s3": 40,
         "s2": 0,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 92.5,
+        "cohensH": 2.587,
+        "mcnemarExactP": 1.455e-11,
+        "mcnemarHolmP": 1.746e-10
       }
     },
     {
       "dropPct": 20,
       "survivingPct": 80,
+      "trials": 40,
       "linearSurvivalPct": 20,
+      "linearCI95": {
+        "loPct": 10.5,
+        "hiPct": 34.8
+      },
       "rsCliffSurvivalPct": 100,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 100,
       "stratumDist": {
         "s3": 40,
         "s2": 0,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 80,
+        "cohensH": 2.214,
+        "mcnemarExactP": 4.657e-10,
+        "mcnemarHolmP": 3.26e-9
       }
     },
     {
       "dropPct": 24,
       "survivingPct": 76,
+      "trials": 40,
       "linearSurvivalPct": 10,
+      "linearCI95": {
+        "loPct": 4,
+        "hiPct": 23.1
+      },
       "rsCliffSurvivalPct": 100,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 100,
       "stratumDist": {
         "s3": 40,
         "s2": 0,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 90,
+        "cohensH": 2.498,
+        "mcnemarExactP": 2.91e-11,
+        "mcnemarHolmP": 2.91e-10
       }
     },
     {
       "dropPct": 28,
       "survivingPct": 72,
+      "trials": 40,
       "linearSurvivalPct": 7.5,
+      "linearCI95": {
+        "loPct": 2.6,
+        "hiPct": 19.9
+      },
       "rsCliffSurvivalPct": 100,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 100,
       "stratumDist": {
         "s3": 40,
         "s2": 0,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 92.5,
+        "cohensH": 2.587,
+        "mcnemarExactP": 1.455e-11,
+        "mcnemarHolmP": 1.746e-10
       }
     },
     {
       "dropPct": 32,
       "survivingPct": 68,
+      "trials": 40,
       "linearSurvivalPct": 2.5,
+      "linearCI95": {
+        "loPct": 0.4,
+        "hiPct": 12.9
+      },
       "rsCliffSurvivalPct": 100,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 100,
       "stratumDist": {
         "s3": 40,
         "s2": 0,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 97.5,
+        "cohensH": 2.824,
+        "mcnemarExactP": 3.638e-12,
+        "mcnemarHolmP": 5.821e-11
       }
     },
     {
       "dropPct": 36,
       "survivingPct": 64,
+      "trials": 40,
       "linearSurvivalPct": 5,
+      "linearCI95": {
+        "loPct": 1.4,
+        "hiPct": 16.5
+      },
       "rsCliffSurvivalPct": 100,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 100,
       "stratumDist": {
         "s3": 40,
         "s2": 0,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 95,
+        "cohensH": 2.691,
+        "mcnemarExactP": 7.276e-12,
+        "mcnemarHolmP": 1.019e-10
       }
     },
     {
       "dropPct": 40,
       "survivingPct": 60,
+      "trials": 40,
       "linearSurvivalPct": 2.5,
+      "linearCI95": {
+        "loPct": 0.4,
+        "hiPct": 12.9
+      },
       "rsCliffSurvivalPct": 100,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 100,
       "stratumDist": {
         "s3": 40,
         "s2": 0,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 97.5,
+        "cohensH": 2.824,
+        "mcnemarExactP": 3.638e-12,
+        "mcnemarHolmP": 5.821e-11
       }
     },
     {
       "dropPct": 44,
       "survivingPct": 56,
+      "trials": 40,
       "linearSurvivalPct": 0,
+      "linearCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "rsCliffSurvivalPct": 100,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 100,
       "stratumDist": {
         "s3": 40,
         "s2": 0,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 100,
+        "cohensH": 3.142,
+        "mcnemarExactP": 1.819e-12,
+        "mcnemarHolmP": 4.547e-11
       }
     },
     {
       "dropPct": 48,
       "survivingPct": 52,
+      "trials": 40,
       "linearSurvivalPct": 0,
+      "linearCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "rsCliffSurvivalPct": 97.5,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 99.4,
       "stratumDist": {
         "s3": 39,
         "s2": 1,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 100,
+        "cohensH": 3.142,
+        "mcnemarExactP": 1.819e-12,
+        "mcnemarHolmP": 4.547e-11
       }
     },
     {
       "dropPct": 52,
       "survivingPct": 48,
+      "trials": 40,
       "linearSurvivalPct": 0,
+      "linearCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "rsCliffSurvivalPct": 87.5,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 96.9,
       "stratumDist": {
         "s3": 35,
         "s2": 5,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 100,
+        "cohensH": 3.142,
+        "mcnemarExactP": 1.819e-12,
+        "mcnemarHolmP": 4.547e-11
       }
     },
     {
       "dropPct": 56,
       "survivingPct": 44,
+      "trials": 40,
       "linearSurvivalPct": 0,
+      "linearCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "rsCliffSurvivalPct": 85,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 95.6,
       "stratumDist": {
         "s3": 33,
         "s2": 7,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 100,
+        "cohensH": 3.142,
+        "mcnemarExactP": 1.819e-12,
+        "mcnemarHolmP": 4.547e-11
       }
     },
     {
       "dropPct": 60,
       "survivingPct": 40,
+      "trials": 40,
       "linearSurvivalPct": 0,
+      "linearCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "rsCliffSurvivalPct": 57.5,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 88.8,
       "stratumDist": {
         "s3": 22,
         "s2": 18,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 100,
+        "cohensH": 3.142,
+        "mcnemarExactP": 1.819e-12,
+        "mcnemarHolmP": 4.547e-11
       }
     },
     {
       "dropPct": 64,
       "survivingPct": 36,
+      "trials": 40,
       "linearSurvivalPct": 0,
+      "linearCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "rsCliffSurvivalPct": 27.5,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 80.6,
       "stratumDist": {
         "s3": 9,
         "s2": 31,
         "s1": 0,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 100,
+        "cohensH": 3.142,
+        "mcnemarExactP": 1.819e-12,
+        "mcnemarHolmP": 4.547e-11
       }
     },
     {
       "dropPct": 68,
       "survivingPct": 32,
+      "trials": 40,
       "linearSurvivalPct": 0,
+      "linearCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "rsCliffSurvivalPct": 15,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 76.3,
       "stratumDist": {
         "s3": 3,
         "s2": 36,
         "s1": 1,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 100,
+        "cohensH": 3.142,
+        "mcnemarExactP": 1.819e-12,
+        "mcnemarHolmP": 4.547e-11
       }
     },
     {
       "dropPct": 72,
       "survivingPct": 28,
+      "trials": 40,
       "linearSurvivalPct": 0,
+      "linearCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "rsCliffSurvivalPct": 2.5,
+      "rsEqualStorageSurvivalPct": 100,
+      "rsEqualStorageCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 72.5,
       "stratumDist": {
         "s3": 0,
         "s2": 36,
         "s1": 4,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 0,
+        "cohensH": 0,
+        "mcnemarExactP": 1,
+        "mcnemarHolmP": 1
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 100,
+        "cohensH": 3.142,
+        "mcnemarExactP": 1.819e-12,
+        "mcnemarHolmP": 4.547e-11
       }
     },
     {
       "dropPct": 76,
       "survivingPct": 24,
+      "trials": 40,
       "linearSurvivalPct": 0,
+      "linearCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "rsCliffSurvivalPct": 0,
+      "rsEqualStorageSurvivalPct": 0,
+      "rsEqualStorageCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "planariaSurvivalPct": 100,
+      "planariaCI95": {
+        "loPct": 91.2,
+        "hiPct": 100
+      },
       "meanCapabilityScore": 65.6,
       "stratumDist": {
         "s3": 0,
         "s2": 25,
         "s1": 15,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 100,
+        "cohensH": 3.142,
+        "mcnemarExactP": 1.819e-12,
+        "mcnemarHolmP": 4.547e-11
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 100,
+        "cohensH": 3.142,
+        "mcnemarExactP": 1.819e-12,
+        "mcnemarHolmP": 4.547e-11
       }
     },
     {
       "dropPct": 80,
       "survivingPct": 20,
+      "trials": 40,
       "linearSurvivalPct": 0,
+      "linearCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "rsCliffSurvivalPct": 0,
+      "rsEqualStorageSurvivalPct": 0,
+      "rsEqualStorageCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "planariaSurvivalPct": 95,
+      "planariaCI95": {
+        "loPct": 83.5,
+        "hiPct": 98.6
+      },
       "meanCapabilityScore": 55.6,
       "stratumDist": {
         "s3": 0,
         "s2": 13,
         "s1": 25,
         "s0": 0
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 95,
+        "cohensH": 2.691,
+        "mcnemarExactP": 7.276e-12,
+        "mcnemarHolmP": 1.746e-10
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 95,
+        "cohensH": 2.691,
+        "mcnemarExactP": 7.276e-12,
+        "mcnemarHolmP": 1.019e-10
       }
     },
     {
       "dropPct": 84,
       "survivingPct": 16,
+      "trials": 40,
       "linearSurvivalPct": 0,
+      "linearCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "rsCliffSurvivalPct": 0,
+      "rsEqualStorageSurvivalPct": 0,
+      "rsEqualStorageCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "planariaSurvivalPct": 87.5,
+      "planariaCI95": {
+        "loPct": 73.9,
+        "hiPct": 94.5
+      },
       "meanCapabilityScore": 39.4,
       "stratumDist": {
         "s3": 0,
         "s2": 3,
         "s1": 22,
         "s0": 10
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 87.5,
+        "cohensH": 2.419,
+        "mcnemarExactP": 5.821e-11,
+        "mcnemarHolmP": 1.339e-9
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 87.5,
+        "cohensH": 2.419,
+        "mcnemarExactP": 5.821e-11,
+        "mcnemarHolmP": 5.239e-10
       }
     },
     {
       "dropPct": 88,
       "survivingPct": 12,
+      "trials": 40,
       "linearSurvivalPct": 0,
+      "linearCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "rsCliffSurvivalPct": 0,
+      "rsEqualStorageSurvivalPct": 0,
+      "rsEqualStorageCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "planariaSurvivalPct": 82.5,
+      "planariaCI95": {
+        "loPct": 68.1,
+        "hiPct": 91.3
+      },
       "meanCapabilityScore": 31.3,
       "stratumDist": {
         "s3": 0,
         "s2": 1,
         "s1": 15,
         "s0": 17
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 82.5,
+        "cohensH": 2.278,
+        "mcnemarExactP": 2.328e-10,
+        "mcnemarHolmP": 5.122e-9
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 82.5,
+        "cohensH": 2.278,
+        "mcnemarExactP": 2.328e-10,
+        "mcnemarHolmP": 1.863e-9
       }
     },
     {
       "dropPct": 92,
       "survivingPct": 8,
+      "trials": 40,
       "linearSurvivalPct": 0,
+      "linearCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "rsCliffSurvivalPct": 0,
+      "rsEqualStorageSurvivalPct": 0,
+      "rsEqualStorageCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "planariaSurvivalPct": 65,
+      "planariaCI95": {
+        "loPct": 49.5,
+        "hiPct": 77.9
+      },
       "meanCapabilityScore": 19.4,
       "stratumDist": {
         "s3": 0,
         "s2": 0,
         "s1": 5,
         "s0": 21
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 65,
+        "cohensH": 1.875,
+        "mcnemarExactP": 2.98e-8,
+        "mcnemarHolmP": 6.258e-7
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 65,
+        "cohensH": 1.875,
+        "mcnemarExactP": 2.98e-8,
+        "mcnemarHolmP": 1.49e-7
       }
     },
     {
       "dropPct": 96,
       "survivingPct": 4,
+      "trials": 40,
       "linearSurvivalPct": 0,
+      "linearCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "rsCliffSurvivalPct": 0,
+      "rsEqualStorageSurvivalPct": 0,
+      "rsEqualStorageCI95": {
+        "loPct": 0,
+        "hiPct": 8.8
+      },
       "planariaSurvivalPct": 32.5,
+      "planariaCI95": {
+        "loPct": 20.1,
+        "hiPct": 48
+      },
       "meanCapabilityScore": 8.1,
       "stratumDist": {
         "s3": 0,
         "s2": 0,
         "s1": 0,
         "s0": 13
+      },
+      "statsVsEqualStorageRS192_48": {
+        "riskDiffPct": 32.5,
+        "cohensH": 1.213,
+        "mcnemarExactP": 0.0002441,
+        "mcnemarHolmP": 0.004883
+      },
+      "statsVsLinear": {
+        "riskDiffPct": 32.5,
+        "cohensH": 1.213,
+        "mcnemarExactP": 0.0002441,
+        "mcnemarHolmP": 0.0007324
       }
     }
   ],
@@ -550,7 +1229,7 @@
       "rightBytes": 49152,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 21.07
+      "dualDecodeRegenMs": 13.95
     },
     {
       "cutByteOffset": 49153,
@@ -559,7 +1238,7 @@
       "rightBytes": 49151,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 21.64
+      "dualDecodeRegenMs": 14.21
     },
     {
       "cutByteOffset": 49177,
@@ -568,7 +1247,7 @@
       "rightBytes": 49127,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 24.53
+      "dualDecodeRegenMs": 13.21
     },
     {
       "cutByteOffset": 48701,
@@ -577,7 +1256,7 @@
       "rightBytes": 49603,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 24.43
+      "dualDecodeRegenMs": 13.07
     },
     {
       "cutByteOffset": 49597,
@@ -586,7 +1265,7 @@
       "rightBytes": 48707,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 27.06
+      "dualDecodeRegenMs": 12.57
     },
     {
       "cutByteOffset": 49000,
@@ -595,27 +1274,87 @@
       "rightBytes": 49304,
       "leftExactSha256": true,
       "rightExactSha256": true,
-      "dualDecodeRegenMs": 22.39
+      "dualDecodeRegenMs": 13.3
     }
   ],
   "xenograftMatrix": [
     {
-      "chimera": "AEGIS_DRIFT x SYNTH_REACTOR",
+      "chimera": "AEGIS_DRIFT x SYNTH_REACTOR (S2 Render+Audio)",
+      "amputatedBundles": [
+        3,
+        4
+      ],
       "transplantedBundles": [
         "S2_CORTEX_RENDER",
         "S2_SYNTH_AUDIO"
       ],
+      "hostStemSovereign": true,
       "bootable": true,
-      "maxStratum": 3
+      "maxStratum": 3,
+      "framesExecuted": 60,
+      "vmTraps": 0
     },
     {
-      "chimera": "AEGIS_DRIFT x CIPHER_VAULT",
+      "chimera": "AEGIS_DRIFT x CIPHER_VAULT (S2 Render+Audio)",
+      "amputatedBundles": [
+        3,
+        4
+      ],
       "transplantedBundles": [
         "S2_CORTEX_RENDER",
         "S2_SYNTH_AUDIO"
       ],
+      "hostStemSovereign": true,
       "bootable": true,
-      "maxStratum": 3
+      "maxStratum": 3,
+      "framesExecuted": 60,
+      "vmTraps": 0
+    },
+    {
+      "chimera": "AEGIS_DRIFT x QUANTUM_CHRONICLE (S1 Logic)",
+      "amputatedBundles": [
+        1
+      ],
+      "transplantedBundles": [
+        "S1_CORE_LOGIC"
+      ],
+      "hostStemSovereign": true,
+      "bootable": true,
+      "maxStratum": 3,
+      "framesExecuted": 60,
+      "vmTraps": 0
+    },
+    {
+      "chimera": "QUANTUM_CHRONICLE x SYNTH_REACTOR (S2 Render+Audio)",
+      "amputatedBundles": [
+        3,
+        4
+      ],
+      "transplantedBundles": [
+        "S2_CORTEX_RENDER",
+        "S2_SYNTH_AUDIO"
+      ],
+      "hostStemSovereign": true,
+      "bootable": true,
+      "maxStratum": 3,
+      "framesExecuted": 60,
+      "vmTraps": 0
+    },
+    {
+      "chimera": "SYNTH_REACTOR x CIPHER_VAULT (S2 Render+Audio)",
+      "amputatedBundles": [
+        3,
+        4
+      ],
+      "transplantedBundles": [
+        "S2_CORTEX_RENDER",
+        "S2_SYNTH_AUDIO"
+      ],
+      "hostStemSovereign": true,
+      "bootable": true,
+      "maxStratum": 3,
+      "framesExecuted": 60,
+      "vmTraps": 0
     }
   ]
 }

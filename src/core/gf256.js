@@ -91,10 +91,10 @@ export function gfDiv(a, b) {
   return GF_EXP[GF_LOG[a] + 255 - GF_LOG[b]];
 }
 
-/** Exponentiation a^e in GF(2^8) for integer exponents e (throws on 0^negative). */
+/** Exponentiation a^e in GF(2^8) for safe integer exponents e (throws on 0^negative or unsafe int). */
 export function gfPow(a, e) {
-  if (!Number.isInteger(e)) {
-    throw new RangeError(`GF(2^8) exponent must be an integer, got ${e}`);
+  if (!Number.isSafeInteger(e)) {
+    throw new RangeError(`GF(2^8) exponent must be a safe integer, got ${e}`);
   }
   a &= 0xff;
   if (e === 0) return 1;
@@ -153,16 +153,20 @@ export function gfPolyMulDesc(p, q) {
 }
 
 /** Multiply two ascending polynomials over GF(2^8), optionally truncated to maxLen. */
-export function gfPolyMulAsc(p, q, maxLen = p.length + q.length - 1) {
-  if (!p || !q || p.length === 0 || q.length === 0 || maxLen <= 0) {
+export function gfPolyMulAsc(p, q, maxLen = undefined) {
+  if (!p || !q || p.length === 0 || q.length === 0) {
     return new Uint8Array(0);
   }
-  const out = new Uint8Array(maxLen);
+  const limit = maxLen === undefined ? (p.length + q.length - 1) : maxLen;
+  if (!Number.isSafeInteger(limit) || limit <= 0) {
+    return new Uint8Array(0);
+  }
+  const out = new Uint8Array(limit);
   for (let i = 0; i < p.length; i++) {
     const pi = p[i] & 0xff;
     if (pi === 0) continue;
     const row = pi << 8;
-    for (let j = 0; j < q.length && i + j < maxLen; j++) {
+    for (let j = 0; j < q.length && i + j < limit; j++) {
       const qj = q[j] & 0xff;
       if (qj === 0) continue;
       out[i + j] ^= GF_MUL_TABLE[row | qj];

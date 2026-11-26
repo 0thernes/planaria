@@ -129,7 +129,7 @@ export function decodeLinearBinary(rawBytes) {
       organId: BUNDLE_SPECS[b].organId,
       stratum: BUNDLE_SPECS[b].stratum,
       viable: true,
-      data: buf.slice(off, off + len),
+      data: new Uint8Array(buf.subarray(off, off + len)),
       source: 'LINEAR',
     });
   }

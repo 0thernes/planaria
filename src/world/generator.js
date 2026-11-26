@@ -49,6 +49,12 @@ function pick(rng, arr) {
   return arr[Math.floor(rng() * arr.length)];
 }
 
+function safeStageInt(val, fallback = 1, min = 1, max = 1_000_000) {
+  const n = Number(val);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, Math.floor(n)));
+}
+
 /** Deterministic 64-bit (16 hex char = 2^64 space) 1/1 Cryptographic Lineage Tag. */
 export function computeLineageId(category, seed) {
   const bytes = TEXT_ENCODER.encode(`PLANARIA-1OF1:${category}:${seed}`);
@@ -232,8 +238,8 @@ const TEMPORAL_MODS = [
 ];
 
 export function forgeWeapon(seed, stage = 1, guaranteedMinRarity = 0) {
-  const s = Math.max(1, Math.floor(stage) || 1);
-  const minR = Math.max(0, Math.min(RARITY_TIERS.length - 1, Math.floor(guaranteedMinRarity) || 0));
+  const s = safeStageInt(stage, 1, 1, 1_000_000);
+  const minR = safeStageInt(guaranteedMinRarity, 0, 0, RARITY_TIERS.length - 1);
   const rng = seededRng(`WPN:${seed}:${s}`);
   let rarity = rollRarity(rng, Math.min(2.5, s * 0.25));
   if (rarity.id < minR) rarity = RARITY_TIERS[minR];
@@ -303,8 +309,8 @@ const ARMOR_GRADIENTS = [
 ];
 
 export function forgeArmor(seed, stage = 1, guaranteedMinRarity = 0) {
-  const s = Math.max(1, Math.floor(stage) || 1);
-  const minR = Math.max(0, Math.min(RARITY_TIERS.length - 1, Math.floor(guaranteedMinRarity) || 0));
+  const s = safeStageInt(stage, 1, 1, 1_000_000);
+  const minR = safeStageInt(guaranteedMinRarity, 0, 0, RARITY_TIERS.length - 1);
   const rng = seededRng(`ARM:${seed}:${s}`);
   let rarity = rollRarity(rng, Math.min(2.5, s * 0.25));
   if (rarity.id < minR) rarity = RARITY_TIERS[minR];
@@ -375,8 +381,8 @@ const NPC_TITLES = [
  * playerProfile: { beamRatio, closeRatio, entangleCount, rewindCount }
  */
 export function forgeNPC(seed, stage = 1, wave = 1, isBoss = false, playerProfile = null, forcedId = null) {
-  const s = Math.max(1, Math.floor(stage) || 1);
-  const w = Math.max(1, Math.floor(wave) || 1);
+  const s = safeStageInt(stage, 1, 1, 1_000_000);
+  const w = safeStageInt(wave, 1, 1, 1_000_000);
   const rng = seededRng(`NPC:${seed}:${s}:${w}:${isBoss ? 'B' : 'N'}`);
   const rarity = isBoss
     ? RARITY_TIERS[Math.min(5, 3 + Math.floor(s / 2))]
@@ -489,9 +495,9 @@ export const ABILITIES = [
   { key: 'C', name: 'FORGE 1/1 LOOT',    cd: 2.0,  cost: 0,  desc: 'Synthesize a brand-new 1/1 Quantum Weapon & Armor from current SHA-256 entropy!' },
 ];
 
-/** Compute deterministic stage specification for ANY stage number 1..infinity (clamped >= 1). */
+/** Compute deterministic stage specification for ANY finite stage number 1..1e6 (clamped >= 1). */
 export function buildStageSpec(stageNum, seed = 2026) {
-  const s = Math.max(1, Math.floor(stageNum) || 1);
+  const s = safeStageInt(stageNum, 1, 1, 1_000_000);
   const realm = SCALE_REALMS[(s - 1) % SCALE_REALMS.length];
   const cycle = Math.floor((s - 1) / SCALE_REALMS.length) + 1;
   const rng = seededRng(`STAGE:${seed}:${s}`);

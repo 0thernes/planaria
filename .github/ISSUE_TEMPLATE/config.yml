@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Commercial Licensing & Inquiries (0thernes LLC)
+  - name: Commercial Licensing & Inquiries (0thernes)
     url: mailto:0_0@0thernes.art
-    about: Contact 0thernes LLC for commercial licensing inquiries outside the Non-Commercial license.
-  - name: Verification & Falsification Guide
-    url: https://github.com/0thernes/planaria/blob/main/VERIFICATION.md
-    about: Reproduce all 12 test suites, Monte Carlo benchmarks, CLI workflows, and 31 Lean 4 proofs.
+    about: Contact Alexander Stephen Donahue (0thernes) for commercial licensing inquiries outside the Non-Commercial license.
+  - name: Verification & Replication Guide
+    url: https://github.com/0thernes/planaria/blob/main/REPLICATION.md
+    about: Reproduce all 28 test suites, 10 mutation tests, statistical benchmarks, CLI workflows, and 70 6-kernel Lean 4.35.0 proofs.

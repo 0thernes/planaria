@@ -7,6 +7,9 @@ const KEYWORDS = new Set([
 ]);
 
 export function tokenize(source) {
+  if (typeof source !== 'string') {
+    throw new TypeError(`tokenize expects a string, got ${typeof source}`);
+  }
   const tokens = [];
   let i = 0;
   let line = 1;
@@ -94,7 +97,7 @@ export function tokenize(source) {
         if (!Number.isSafeInteger(parsed) || parsed > 0xffffffff) {
           throw new SyntaxError(`Hex literal '${numStr}' exceeds 32-bit integer range at ${startLine}:${startCol}`);
         }
-        tokens.push({ type: 'NUMBER', value: parsed | 0, line: startLine, col: startCol });
+        tokens.push({ type: 'NUMBER', value: parsed | 0, isHex: true, rawValue: parsed, line: startLine, col: startCol });
       } else {
         while (i < len && peek() >= '0' && peek() <= '9') numStr += advance();
         if (i < len && /[a-zA-Z_]/.test(peek())) {
@@ -102,9 +105,9 @@ export function tokenize(source) {
         }
         const parsed = parseInt(numStr, 10);
         if (!Number.isSafeInteger(parsed) || parsed > 0xffffffff) {
-          throw new SyntaxError(`Numeric literal '${numStr}' exceeds 32-bit integer range at ${startLine}:${startCol}`);
+          throw new SyntaxError(`Decimal literal '${numStr}' exceeds 32-bit integer range at ${startLine}:${startCol}`);
         }
-        tokens.push({ type: 'NUMBER', value: parsed | 0, line: startLine, col: startCol });
+        tokens.push({ type: 'NUMBER', value: parsed | 0, isHex: false, rawValue: parsed, line: startLine, col: startCol });
       }
       continue;
     }

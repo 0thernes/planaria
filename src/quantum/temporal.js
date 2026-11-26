@@ -3,7 +3,7 @@
  *
  * Implements:
  *   1. True O(1) Fixed-Capacity Circular Snapshot Ring Buffer (360 frames = 6s lossless deep-cloned rewind)
- *   2. Exact reversible Chrono-Step Clock (matches Lean 4 Theorems VI.5-VI.7!)
+ *   2. Exact reversible Chrono-Step Clock (matches Lean 4 Theorems VI.8-VI.10!)
  *   3. Local Spherical Time-Dilation Wells (0.12x bullet-time, 2.5x hyper-haste, validated bounds)
  *   4. Chrono-Forking: spawns autonomous Past-Timeline Echo Clones replaying recorded player
  *      trajectories, weapon snapshots, and firing pulses at frame-rate-independent local time
@@ -47,6 +47,14 @@ function cloneProjSnap(p) {
   };
 }
 
+function cloneWeaponSnap(w) {
+  if (!w) return null;
+  return {
+    ...w,
+    color: Array.isArray(w.color) ? [...w.color] : [0.13, 0.83, 0.93],
+  };
+}
+
 function cloneFullSnap(s) {
   return {
     worldTime: s.worldTime,
@@ -62,6 +70,13 @@ function cloneFullSnap(s) {
     xp: s.xp,
     level: s.level,
     skillPoints: s.skillPoints,
+    skills: s.skills ? { ...s.skills } : null,
+    delayedEchoShots: Array.isArray(s.delayedEchoShots)
+      ? s.delayedEchoShots.map((d) => ({ ...d, weapon: cloneWeaponSnap(d.weapon) }))
+      : [],
+    scaleOrderOverride: s.scaleOrderOverride ?? -1,
+    paradoxCount: s.paradoxCount ?? 0,
+    forkCount: s.forkCount ?? 0,
     stage: s.stage,
     wave: s.wave,
     abilityCooldowns: { ...s.abilityCooldowns },
@@ -69,7 +84,8 @@ function cloneFullSnap(s) {
     echoClones: s.echoClones.map((e) => ({
       ...e,
       color: [...e.color],
-      frames: e.frames.map((f) => ({ ...f })),
+      weaponRef: cloneWeaponSnap(e.weaponRef),
+      frames: e.frames.map((f) => ({ ...f, weaponRef: cloneWeaponSnap(f.weaponRef) })),
     })),
   };
 }
@@ -157,6 +173,20 @@ export class TemporalEngine {
   /** Compatibility ordered array view of player trail. */
   get playerTrail() { return this._trailRing.toArray(); }
 
+  /** Zero-allocation iteration over the newest `limit` consecutive trail pairs `(p0, p1, frac)`. */
+  forEachTrailSegment(limit, cb) {
+    const ring = this._trailRing;
+    const total = ring.length;
+    if (total < 2) return;
+    const n = Math.min(total, Math.max(2, limit | 0));
+    const startOffset = total - n;
+    for (let i = 1; i < n; i += 2) {
+      const p0 = ring._buf[(ring._head + startOffset + i - 1) % ring.capacity];
+      const p1 = ring._buf[(ring._head + startOffset + i) % ring.capacity];
+      cb(p0, p1, i / n);
+    }
+  }
+
   reset() {
     this._snapRing.clear();
     this._trailRing.clear();
@@ -187,6 +217,13 @@ export class TemporalEngine {
       xp: worldState.xp ?? 0,
       level: worldState.level ?? 1,
       skillPoints: worldState.skillPoints ?? 0,
+      skills: worldState.skills ? { ...worldState.skills } : null,
+      delayedEchoShots: Array.isArray(worldState._delayedEchoShots)
+        ? worldState._delayedEchoShots.map((d) => ({ ...d, weapon: cloneWeaponSnap(d.weapon) }))
+        : [],
+      scaleOrderOverride: worldState.scaleOrderOverride ?? -1,
+      paradoxCount: this.paradoxCount,
+      forkCount: this.forkCount,
       stage: worldState.stage,
       wave: worldState.wave,
       abilityCooldowns: worldState.abilityCooldowns ? { ...worldState.abilityCooldowns } : {},
@@ -194,13 +231,14 @@ export class TemporalEngine {
       echoClones: this.echoClones.map((e) => ({
         ...e,
         color: [...e.color],
-        frames: e.frames.map((f) => ({ ...f })),
+        weaponRef: cloneWeaponSnap(e.weaponRef),
+        frames: e.frames.map((f) => ({ ...f, weaponRef: cloneWeaponSnap(f.weaponRef) })),
       })),
     };
 
     this._snapRing.push(snap);
 
-    // Record player trail frame (including weapon reference) for Chrono-Forking
+    // Record player trail frame (including detached weapon snapshot) for Chrono-Forking
     this._trailRing.push({
       x: worldState.player.x,
       y: worldState.player.y,
@@ -208,7 +246,7 @@ export class TemporalEngine {
       yaw: worldState.player.yaw,
       firing: Boolean(worldState.player.firing),
       weaponSeed: worldState.equippedWeapon?.seed || 1,
-      weaponRef: worldState.equippedWeapon || null,
+      weaponRef: cloneWeaponSnap(worldState.equippedWeapon),
     });
   }
 
@@ -221,6 +259,8 @@ export class TemporalEngine {
     if (!prev) return null;
     this.worldTime = prev.worldTime;
     this.chronoStep = prev.chronoStep;
+    this.paradoxCount = prev.paradoxCount ?? this.paradoxCount;
+    this.forkCount = prev.forkCount ?? this.forkCount;
     return cloneFullSnap(prev);
   }
 
@@ -245,9 +285,11 @@ export class TemporalEngine {
     return well;
   }
 
-  /** Compute local effective time-dilation multiplier at any 3D point (x, y, z). */
+  /** Compute order-independent local effective time-dilation multiplier at any 3D point (x, y, z). */
   localTimeFactor(x, y, z) {
-    let f = this.globalTimeScale;
+    let wSum = 0;
+    let factorSum = 0;
+    let maxEdge = 0;
     for (let i = 0; i < this.chronoWells.length; i++) {
       const w = this.chronoWells[i];
       if (w.radius <= 0) continue;
@@ -258,10 +300,14 @@ export class TemporalEngine {
       const r2 = w.radius * w.radius;
       if (d2 < r2) {
         const edge = Math.max(0, Math.min(1, 1 - Math.sqrt(d2) / w.radius));
-        f = f * (1 - edge) + w.factor * edge;
+        wSum += edge;
+        factorSum += w.factor * edge;
+        if (edge > maxEdge) maxEdge = edge;
       }
     }
-    return f;
+    if (wSum <= 0) return this.globalTimeScale;
+    const wellAvg = factorSum / wSum;
+    return this.globalTimeScale * (1 - maxEdge) + wellAvg * maxEdge;
   }
 
   /**
@@ -298,16 +344,21 @@ export class TemporalEngine {
     return echo;
   }
 
-  /** Advance active Chrono-Wells and Past-Timeline Echo Clones by real dt. */
+  /** Advance active Chrono-Wells and Past-Timeline Echo Clones by real dt (strictly finite & >= 0). */
   step(dt, energyRegenMult = 1.0) {
-    const effDt = dt * this.globalTimeScale;
+    if (!Number.isFinite(dt) || dt < 0) return;
+    const safeRegen = Number.isFinite(energyRegenMult) ? Math.max(0, energyRegenMult) : 1.0;
+    const safeScale = Number.isFinite(this.globalTimeScale)
+      ? Math.max(0, Math.min(3.0, this.globalTimeScale))
+      : 1.0;
+    this.globalTimeScale = safeScale;
+    const effDt = dt * safeScale;
     this.worldTime += effDt;
-    if (this.globalTimeScale > 0) this.chronoStep += 1;
-    else if (this.globalTimeScale < 0) this.chronoStep -= 1;
+    if (safeScale > 0) this.chronoStep += 1;
 
     // Regenerate chrono energy when not rewinding or heavy bullet-time
-    if (!this.rewinding && Math.abs(this.globalTimeScale - 1.0) < 0.15) {
-      this.chronoEnergy = Math.min(100, this.chronoEnergy + dt * 11 * energyRegenMult);
+    if (!this.rewinding && Math.abs(safeScale - 1.0) < 0.15) {
+      this.chronoEnergy = Math.min(100, this.chronoEnergy + dt * 11 * safeRegen);
     }
 
     for (let i = this.chronoWells.length - 1; i >= 0; i--) {
@@ -321,14 +372,17 @@ export class TemporalEngine {
         this.echoClones.splice(i, 1);
         continue;
       }
-      // Frame-rate-independent playback scaled by local time dilation (60 fps reference)
+      // True frame-rate-independent playback honoring Chrono-Well slow-motion & high-Hz monitors
       const locF = Math.max(0.15, Math.abs(this.localTimeFactor(e.x, e.y, e.z)));
       e.accum = (e.accum || 0) + dt * 60 * locF;
-      let firedThisStep = false;
-      let steps = Math.floor(e.accum);
-      if (steps < 1) steps = 1; // always advance at least 1 recorded tick at <=60 Hz
-      e.accum = Math.max(0, e.accum - steps);
+      const steps = Math.floor(e.accum);
+      if (steps < 1) {
+        e.firing = false;
+        continue;
+      }
+      e.accum -= steps;
 
+      let firedThisStep = false;
       let lastFrame = e.frames[Math.min(e.cursor, e.frames.length - 1)];
       for (let s = 0; s < steps && e.cursor < e.frames.length; s++) {
         lastFrame = e.frames[e.cursor++];

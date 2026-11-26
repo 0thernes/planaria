@@ -1,10 +1,10 @@
 # PLANARIA — Comprehensive Technical, Scientific, Computational, Functional & Operational Master Report
 
 **Document Type:** Master Engineering, Adversarial Audit & Research Analysis Report  
-**System:** PLANARIA v2.2.0 — 3D Temporal-Quantum WebGL2 Engine & Progressive Holographic Executable Architecture (`.hbin`)  
-**Author:** Alexander Stephen Donahue ([0thernes LLC](https://0thernes.art) · `0_0@0thernes.art` · ORCID [0009-0006-8168-9648](https://orcid.org/0009-0006-8168-9648))  
-**Date:** November 21, 2026  
-**Verification Status:** 24/24 Falsification & Security Suites Passed · 62/62 Pure Lean 4 (`v4.35.0`) Kernel Theorems Audited (0 `sorryAx`, 0 `native_decide`) · Frozen 8-Page Tectonic PDF ([`dist/Donahue_2026_planaria.pdf`](../dist/Donahue_2026_planaria.pdf)) · Ephemeral Ed25519 Self-Consistency Attested Benchmarks
+**System:** PLANARIA v2.3.0 — 3D Temporal-Quantum WebGL2 Engine & Progressive Holographic Executable Architecture (`.hbin`)  
+**Author:** Alexander Stephen Donahue — Independent Researcher ([0thernes project](https://0thernes.art), Spokane, WA, USA · `0_0@0thernes.art` · ORCID [0009-0006-8168-9648](https://orcid.org/0009-0006-8168-9648))  
+**Date:** November 25, 2026  
+**Verification Status:** 28/28 Verification & Security Suites Passed · 10/10 (100.0%) Surgical Mutants Killed · 70/70 Pure Lean 4.35.0 Proofs Audited Across 6 Kernels (0 `sorryAx`, 0 `native_decide`) · Build Standard v1.2.0 100% · Frozen Tectonic PDF ([`dist/Donahue_2026_planaria.pdf`](../dist/Donahue_2026_planaria.pdf)) · Mega-Atlas Audit: `0 / 1,900` Open Problems Solved (See [`docs/reviews/2026-11-25-10-pass-red-team-audit.md`](reviews/2026-11-25-10-pass-red-team-audit.md))
 
 ---
 

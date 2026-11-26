@@ -268,15 +268,22 @@ export class PVM32 {
     this.lastFrameRoutes = [];
     this.lastFrameInsns = 0;
 
+    const safeBudget = Number.isInteger(maxInsnBudget) && maxInsnBudget > 0
+      ? maxInsnBudget
+      : (maxInsnBudget === undefined ? 16000 : 0);
+
     if (!this.alive || !this.bundleCode[0]) {
       this.silenceVoices();
       this.renderFlatline();
       return { alive: false, insns: 0, maxStratum: -1, routes: [] };
     }
+    if (safeBudget <= 0) {
+      return { alive: true, insns: 0, maxStratum: this.decoded?.maxViableStratum ?? 0, routes: [], traps: this.traps };
+    }
 
     // Track whether any voice was written this frame; mute stale voices if audio organ dies
     const voiceTouched = [false, false, false, false];
-    const budget = { remaining: maxInsnBudget, voiceTouched, childInsns: 0 };
+    const budget = { remaining: safeBudget, voiceTouched, childInsns: 0 };
 
     this.lastFrameRoutes.push({
       organId: 0,
@@ -449,9 +456,10 @@ export class PVM32 {
           let executedOk = false;
 
           for (const resolvedId of candidates) {
+            if (budget.remaining <= 0) break;
             // Reserve headroom for Kernel fallback & sibling organs so a runaway organ cannot starve B0
             const reserve = depth === 0 ? Math.min(2000, Math.floor(budget.remaining / 5)) : 0;
-            const childCap = Math.max(1, budget.remaining - reserve);
+            const childCap = Math.min(budget.remaining, Math.max(1, budget.remaining - reserve));
             const childBudget = {
               remaining: childCap,
               voiceTouched: budget.voiceTouched,
@@ -605,8 +613,24 @@ export class PVM32 {
         }
         return 0;
       }
-      case SYSCALL.DIST:
-        return Math.min(2147483647, Math.round(Math.hypot(a1, a2))) | 0;
+      case SYSCALL.DIST: {
+        // Exact integer rounded Euclidean norm (zero libm/platform float rounding drift!)
+        const bx = BigInt(a1 | 0);
+        const by = BigInt(a2 | 0);
+        const n = bx * bx + by * by;
+        if (n === 0n) return 0;
+        let x = BigInt(Math.floor(Math.sqrt(Number(n)))) || 1n;
+        while (true) {
+          const next = (x + n / x) >> 1n;
+          if (next >= x) break;
+          x = next;
+        }
+        while ((x + 1n) * (x + 1n) <= n) x++;
+        while (x * x > n) x--;
+        // Round to nearest integer: (x + 0.5)^2 < n <=> x*x + x < n
+        const rounded = (x * x + x < n) ? x + 1n : x;
+        return rounded > 2147483647n ? 2147483647 : Number(rounded) | 0;
+      }
       case SYSCALL.ABS:
         return a1 === -2147483648 ? 2147483647 : Math.abs(a1) | 0;
       case SYSCALL.BUNDLE_OK:

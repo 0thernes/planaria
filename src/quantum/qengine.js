@@ -8,7 +8,7 @@
  *   3. Exact rotation-invariant Horodecki CHSH Bell correlator S_max = 2*sqrt(lambda_1 + lambda_2)
  *      achieving Tsirelson bound |S| = 2*sqrt(2) ~= 2.8284 on ALL 4 Bell states & local unitaries,
  *      plus exact 4-qubit Mermin correlator M_4 (reaching 4.0 on 4-qubit GHZ vs classical limit 2.0)
- *   4. Lindblad-style dephasing visibility tracker V in [0, 1] & purity Tr(rho^2) = (1 + (d-1)V^2)/d
+ *   4. Werner isotropic depolarizing visibility tracker V in [0, 1] & purity Tr(rho^2) = (1 + (d-1)V^2)/d
  *   5. WKB Quantum Tunneling transmission probability T = exp(-2 * kappa * d)
  *   6. Heisenberg Uncertainty Stance tradeoff (Delta_x * Delta_p = 0.5 exact saturation)
  *   7. Quantum Zeno Observer Effect (frequent observation suppresses unitary transition)
@@ -17,6 +17,11 @@
 
 /** Exact 3x3 real symmetric matrix eigenvalues via cyclic Jacobi iterations (returns descending [l0, l1, l2]). */
 function sym3Eigenvalues(m) {
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      if (!Number.isFinite(m[i][j])) return [0, 0, 0];
+    }
+  }
   const a = [
     [m[0][0], m[0][1], m[0][2]],
     [m[1][0], m[1][1], m[1][2]],
@@ -27,7 +32,7 @@ function sym3Eigenvalues(m) {
     let maxOff = Math.abs(a[0][1]);
     if (Math.abs(a[0][2]) > maxOff) { maxOff = Math.abs(a[0][2]); p = 0; q = 2; }
     if (Math.abs(a[1][2]) > maxOff) { maxOff = Math.abs(a[1][2]); p = 1; q = 2; }
-    if (maxOff < 1e-14) break;
+    if (!Number.isFinite(maxOff) || maxOff < 1e-14) break;
     const app = a[p][p], aqq = a[q][q], apq = a[p][q];
     const tau = (aqq - app) / (2 * apq);
     const t = tau >= 0 ? 1 / (tau + Math.sqrt(1 + tau * tau)) : -1 / (-tau + Math.sqrt(1 + tau * tau));
@@ -53,7 +58,7 @@ export class QuantumRegister {
     this.dim = 1 << numQubits;
     this.re = new Float64Array(this.dim);
     this.im = new Float64Array(this.dim);
-    this.coherence = 1.0; // Visibility V in [1/dim .. 1.0] driven by environmental dephasing
+    this.coherence = 1.0; // Werner depolarizing visibility V in [0.0 .. 1.0]
     this._gateCounter = 0;
     this.reset();
   }
@@ -347,6 +352,9 @@ export class QuantumRegister {
    */
   computeCHSH(qA = 0, qB = 1) {
     this._assertDistinct(qA, qB);
+    const n2 = this.normSq();
+    if (!Number.isFinite(n2) || n2 <= 0) return 0;
+    const invNorm = 1 / n2;
     const T = [
       [0, 0, 0],
       [0, 0, 0],
@@ -354,7 +362,7 @@ export class QuantumRegister {
     ];
     for (let a = 0; a < 3; a++) {
       for (let b = 0; b < 3; b++) {
-        T[a][b] = this._pauliCorr(qA, qB, a, b);
+        T[a][b] = this._pauliCorr(qA, qB, a, b) * invNorm;
       }
     }
     // M = T^T * T (symmetric 3x3 positive semidefinite)
@@ -370,7 +378,7 @@ export class QuantumRegister {
     }
     const [l0, l1] = sym3Eigenvalues(M);
     const maxRaw = 2 * Math.sqrt(Math.max(0, l0 + l1));
-    return maxRaw * this.coherence;
+    return Number.isFinite(maxRaw) ? maxRaw * this.coherence : 0;
   }
 
   /**
@@ -381,6 +389,9 @@ export class QuantumRegister {
    */
   computeMermin4() {
     if (this.n < 4) return 0;
+    const n2 = this.normSq();
+    if (!Number.isFinite(n2) || n2 <= 0) return 0;
+    const invNorm = 1 / n2;
     const terms = [
       [0, 0, 0, 0, +1],
       [0, 0, 1, 1, -1],
@@ -411,7 +422,8 @@ export class QuantumRegister {
       }
       sum += sign * exp;
     }
-    return 0.5 * sum * this.coherence;
+    const val = 0.5 * sum * invNorm * this.coherence;
+    return Number.isFinite(val) ? val : 0;
   }
 
   /** Computational-basis Shannon entropy H = -sum p_i log2(p_i) in [0, n]. */
@@ -431,16 +443,16 @@ export class QuantumRegister {
     return (1 + (this.dim - 1) * this.coherence * this.coherence) / this.dim;
   }
 
-  /** Apply environmental Lindblad phase-damping decay (strictly non-negative gammaDt). */
+  /** Apply environmental Werner isotropic depolarizing decay on visibility V in [0, 1] (gammaDt >= 0). */
   applyDecoherence(gammaDt) {
     if (!Number.isFinite(gammaDt) || gammaDt <= 0) return;
-    this.coherence = Math.max(1 / this.dim, Math.min(1.0, this.coherence * Math.exp(-gammaDt)));
+    this.coherence = Math.max(0.0, Math.min(1.0, this.coherence * Math.exp(-gammaDt)));
   }
 
-  /** Stabilize / re-purify coherence visibility via quantum error-correction skills. */
+  /** Stabilize / re-purify Werner coherence visibility V in [0, 1] via quantum error-correction skills. */
   restoreCoherence(amount) {
     if (!Number.isFinite(amount)) return;
-    this.coherence = Math.max(1 / this.dim, Math.min(1.0, this.coherence + amount));
+    this.coherence = Math.max(0.0, Math.min(1.0, this.coherence + amount));
   }
 }
 
@@ -453,14 +465,15 @@ export function wkbTunnelingProbability(energy, barrierHeight, barrierWidth, mas
     !Number.isFinite(energy) ||
     !Number.isFinite(barrierHeight) ||
     !Number.isFinite(mass) ||
-    Number.isNaN(barrierWidth)
+    mass <= 0 ||
+    Number.isNaN(barrierWidth) ||
+    barrierWidth < 0
   ) {
     return 0.0;
   }
-  if (barrierWidth <= 0 || energy >= barrierHeight) return 1.0;
-  const m = Math.max(1e-6, mass);
+  if (barrierWidth === 0 || energy >= barrierHeight) return 1.0;
   if (!Number.isFinite(barrierWidth)) return 0.0;
-  const kappa = Math.sqrt(Math.max(0, 2 * m * (barrierHeight - energy)));
+  const kappa = Math.sqrt(Math.max(0, 2 * mass * (barrierHeight - energy)));
   return Math.exp(-2 * kappa * barrierWidth);
 }
 
@@ -512,11 +525,22 @@ export function evalWaveInterference(x, z, time, sources) {
   let sumIm = 0;
   for (let i = 0; i < sources.length; i++) {
     const s = sources[i];
+    if (
+      !s ||
+      !Number.isFinite(s.x) ||
+      !Number.isFinite(s.z) ||
+      !Number.isFinite(s.amp) ||
+      !Number.isFinite(s.k) ||
+      !Number.isFinite(s.omega)
+    ) {
+      continue;
+    }
     const dx = x - s.x;
     const dz = z - s.z;
     const r = Math.sqrt(dx * dx + dz * dz + 0.35);
     const amp = s.amp / (1 + 0.08 * r);
-    const phase = s.k * r - s.omega * time + s.phase;
+    const ph = Number.isFinite(s.phase) ? s.phase : 0;
+    const phase = s.k * r - s.omega * time + ph;
     sumRe += amp * Math.cos(phase);
     sumIm += amp * Math.sin(phase);
   }

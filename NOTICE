@@ -1,5 +1,5 @@
-PLANARIA
-Copyright (c) 2026 0thernes (0thernes LLC) <0_0@0thernes.art>.
+PLANARIA v2.3.0
+Copyright (c) 2026 Alexander Stephen Donahue (0thernes) <0_0@0thernes.art>.
 All commercial rights reserved. Licensed under the COSMOGONIC LICENSE — NON-COMMERCIAL RESEARCH & PLAY (see LICENSE).
 
 Third-Party Runtime Dependencies:
@@ -11,12 +11,13 @@ Third-Party Runtime Dependencies:
   third-party npm packages or vendored libraries.
 
 External Toolchains Used for Execution, Formal Proof Checking & Typesetting (not vendored):
-  - Node.js >= 20 (MIT License) — executes the CLI, local HTTP server, build scripts, 24-suite
-    falsification & security harness, and Monte Carlo benchmarks (plus Node built-in `node:crypto`
-    for SHA-256 cross-checking and Ed25519 attestation signing).
-  - Lean 4 v4.35.0 & Lake (Apache License 2.0) — machine-checks all 62 formal proofs in lean/
-    using core Lean 4 only (no Mathlib dependency).
+  - Node.js >= 20 (MIT License) — executes the CLI, local HTTP server, build scripts, 28-suite
+    falsification & security harness, 10-mutant mutation suite, and Monte Carlo benchmarks
+    (plus Node built-in `node:crypto` for SHA-256 cross-checking and Ed25519 attestation signing).
+  - Lean 4 v4.35.0 & Lake (Apache License 2.0) + Palomar multi-kernel verifiers — machine-checks
+    all 70 formal proofs in lean/ using core Lean 4 only (no Mathlib dependency).
   - Tectonic >= 0.15 (MIT License) — compiles paper/main.tex into dist/Donahue_2026_planaria.pdf.
 
-Mention of Node.js, Lean, Tectonic, WebAudio, WebGL2, or any cited academic authors does not
-imply institutional sponsorship, endorsement, or relicensing of this work.
+See THIRD_PARTY_NOTICES.md for the full license attribution table. Mention of Node.js, Lean,
+Tectonic, WebAudio, WebGL2, or any cited academic authors does not imply institutional
+sponsorship, endorsement, or relicensing of this work.

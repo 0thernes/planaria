@@ -20,11 +20,12 @@ const ART_DIR = path.join(ROOT, 'artifacts');
 fs.mkdirSync(ART_DIR, { recursive: true });
 
 const programs = ['quantum_chronicle', 'aegis_drift', 'synth_reactor', 'cipher_vault'];
+const compiledBatch = [];
 const manifest = [];
 
+// Phase 1: Compile & round-trip verify ALL 4 programs in memory before touching disk
 for (const name of programs) {
   const srcPath = path.join(PROG_DIR, `${name}.plang`);
-  const outPath = path.join(ART_DIR, `${name}.hbin`);
   const src = fs.readFileSync(srcPath, 'utf8');
   const compiled = compilePlangToHbin(src);
 
@@ -40,8 +41,7 @@ for (const name of programs) {
     throw new Error(`Artifact ${name} failed deterministic regeneration bit-exact SHA-256 check`);
   }
 
-  fs.writeFileSync(outPath, compiled.bytes);
-
+  compiledBatch.push({ name, compiled });
   manifest.push({
     file: `artifacts/${name}.hbin`,
     source: `programs/${name}.plang`,
@@ -53,14 +53,24 @@ for (const name of programs) {
     totalCodeBytes: compiled.codegen.totalCodeBytes,
     bundles: compiled.codegen.report,
   });
+}
 
+// Phase 2: Atomic temp-file write + rename so partial failures never desync .hbin & manifest.json
+function writeAtomic(targetPath, data) {
+  const tmpPath = `${targetPath}.${process.pid}.tmp`;
+  fs.writeFileSync(tmpPath, data);
+  fs.renameSync(tmpPath, targetPath);
+}
+
+for (const { name, compiled } of compiledBatch) {
+  writeAtomic(path.join(ART_DIR, `${name}.hbin`), compiled.bytes);
   console.log(
     `[BUILD] ${compiled.name.padEnd(18)} -> artifacts/${name}.hbin (${compiled.bytes.length}B) | ` +
     `Root=${compiled.lineageRootHex} | SHA256=${compiled.sha256Hex.slice(0, 16)}... | ${compiled.codegen.totalInstructions} insns`
   );
 }
 
-fs.writeFileSync(
+writeAtomic(
   path.join(ART_DIR, 'manifest.json'),
   JSON.stringify({ format: 'PLANARIA-HBIN-1', artifacts: manifest }, null, 2) + '\n'
 );

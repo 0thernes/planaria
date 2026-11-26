@@ -68,8 +68,10 @@ const state = {
   lastMouseY: 0,
   customTimeScale: false,
   rewindBurstFrames: 0,
-  lastRpgSignature: '',
+  lastGearSignature: '',
+  lastNpcSignature: '',
   loopErrorLogged: false,
+  reducedMotion: false,
 };
 
 const vmPrimary = new PVM32(0x1337c0de);
@@ -132,6 +134,10 @@ function buildAbilityBar() {
     );
     btn.addEventListener('click', () => {
       if (ab.key === 'R') {
+        if (!world.hbinState.bootable || world.temporal.snapshotCount <= 2) {
+          logEvent('R · CHRONO REWIND unavailable (organism dead or insufficient timeline history).', 'log-warn');
+          return;
+        }
         state.rewindBurstFrames = 45;
         logEvent('R · CHRONO REWIND: Scrubbing 3D timeline backwards!', 'log-cyan');
       } else {
@@ -143,149 +149,159 @@ function buildAbilityBar() {
   }
 }
 
-function computeRpgSignature() {
+function computeGearSignature() {
   const wSig = world.weapons.map((w, i) => `${i === world.weaponIdx ? '*' : ''}${w.lineageId}:${w.entangledPartner || ''}`).join(',');
   const aSig = world.armors.map((a, i) => `${i === world.armorIdx ? '*' : ''}${a.lineageId}`).join(',');
   const sSig = `${world.skillPoints}|${SKILL_TREE.map((s) => world.skills[s.id] || 0).join(',')}`;
-  const nSig = world.npcs
+  return `${wSig}||${aSig}||${sSig}`;
+}
+
+function computeNpcSignature() {
+  return world.npcs
     .slice(0, 12)
     .map((n) => `${n.id}:${Math.max(0, n.hp)}:${n.entangledWith ?? ''}:${n.zenoFreeze > 0.3 ? 1 : 0}:${n.adaptation?.counterTag || ''}`)
     .join(',');
-  return `${wSig}||${aSig}||${sSig}||${nSig}`;
 }
 
 function renderRpgPanels(force = false) {
-  const sig = computeRpgSignature();
-  if (!force && sig === state.lastRpgSignature) return;
-  state.lastRpgSignature = sig;
+  const gearSig = computeGearSignature();
+  const npcSig = computeNpcSignature();
 
-  // 1. Weapons (event-delegated click handler attached once in wireEvents)
-  const wBox = el('weaponList');
-  const wFrag = document.createDocumentFragment();
-  world.weapons.forEach((w, idx) => {
-    const subParts = [
-      `DMG ${w.damage} · ${w.fireRate}/s · ×${w.projectileCount} · Tunnel ${Math.round(w.tunnelFactor * 100)}% · #${w.lineageId}`,
-      node('br'),
-      node('span', { text: w.tMod.tag, style: { color: '#22d3ee' } }),
-      ` · ${w.qMod.desc}`,
-    ];
-    if (w.entangledPartner) {
-      subParts.push(
+  // Split gear/skill DOM updates from high-frequency NPC HP updates so keyboard focus is preserved!
+  if (force || gearSig !== state.lastGearSignature) {
+    state.lastGearSignature = gearSig;
+
+    // 1. Weapons (event-delegated click + keyboard handler attached once in wireEvents)
+    const wBox = el('weaponList');
+    const wFrag = document.createDocumentFragment();
+    world.weapons.forEach((w, idx) => {
+      const subParts = [
+        `DMG ${w.damage} · ${w.fireRate}/s · ×${w.projectileCount} · Tunnel ${Math.round(w.tunnelFactor * 100)}% · #${w.lineageId}`,
         node('br'),
-        node('span', { text: `BELL-ENTANGLED ↔ #${w.entangledPartner}`, style: { color: '#e879f9' } })
-      );
-    }
-    const card = node(
-      'div',
-      {
-        cls: `item-card ${idx === world.weaponIdx ? 'equipped' : ''}`,
-        attrs: { 'data-weapon-idx': idx, role: 'button', tabindex: '0' },
-      },
-      [
-        node('div', {
-          cls: 'item-title',
-          text: `[${idx + 1}] ${w.rarity.name} · ${w.name}`,
-          style: { color: w.rarity.color },
-        }),
-        node('div', { cls: 'item-sub' }, subParts),
-      ]
-    );
-    wFrag.appendChild(card);
-  });
-  wBox.replaceChildren(wFrag);
-
-  // 2. Armors (event-delegated)
-  const aBox = el('armorList');
-  const aFrag = document.createDocumentFragment();
-  world.armors.forEach((a, idx) => {
-    const card = node(
-      'div',
-      {
-        cls: `item-card ${idx === world.armorIdx ? 'equipped' : ''}`,
-        attrs: { 'data-armor-idx': idx, role: 'button', tabindex: '0' },
-      },
-      [
-        node('div', {
-          cls: 'item-title',
-          text: `${a.rarity.name} · ${a.name}`,
-          style: { color: a.rarity.color },
-        }),
-        node('div', { cls: 'item-sub' }, [
-          `SHIELD ${a.maxShield} · Regen +${a.regenRate}/s · Dodge ${Math.round(a.phaseDodge * 100)}% · #${a.lineageId}`,
+        node('span', { text: w.tMod.tag, style: { color: '#22d3ee' } }),
+        ` · ${w.qMod.desc}`,
+      ];
+      if (w.entangledPartner) {
+        subParts.push(
           node('br'),
-          a.layer.desc,
-        ]),
-      ]
-    );
-    aFrag.appendChild(card);
-  });
-  aBox.replaceChildren(aFrag);
+          node('span', { text: `BELL-ENTANGLED ↔ #${w.entangledPartner}`, style: { color: '#e879f9' } })
+        );
+      }
+      const card = node(
+        'div',
+        {
+          cls: `item-card ${idx === world.weaponIdx ? 'equipped' : ''}`,
+          attrs: { 'data-weapon-idx': idx, role: 'button', tabindex: '0', 'aria-pressed': idx === world.weaponIdx ? 'true' : 'false' },
+        },
+        [
+          node('div', {
+            cls: 'item-title',
+            text: `[${idx + 1}] ${w.rarity.name} · ${w.name}`,
+            style: { color: w.rarity.color },
+          }),
+          node('div', { cls: 'item-sub' }, subParts),
+        ]
+      );
+      wFrag.appendChild(card);
+    });
+    wBox.replaceChildren(wFrag);
 
-  // 3. Adaptive 4-Branch Skill Tree (event-delegated)
-  el('spBadge').textContent = `${world.skillPoints} SP`;
-  const sBox = el('skillList');
-  const sFrag = document.createDocumentFragment();
-  for (const sk of SKILL_TREE) {
-    const lvl = world.skills[sk.id] || 0;
-    const card = node(
-      'div',
-      {
-        cls: `item-card ${lvl > 0 ? 'equipped' : ''}`,
-        attrs: { 'data-skill-id': sk.id, role: 'button', tabindex: '0' },
-      },
-      [
-        node(
-          'div',
-          { cls: 'item-title', style: { display: 'flex', justifyContent: 'space-between' } },
-          [
-            node('span', {}, [
-              node('span', { text: `[${sk.branch.slice(0, 4)}]`, style: { color: 'var(--cyan)', fontSize: '9px' } }),
-              ` ${sk.name}`,
-            ]),
-            node('span', { text: `Lv.${lvl}/${sk.maxLvl}`, style: { color: 'var(--gold)' } }),
-          ]
-        ),
-        node('div', { cls: 'item-sub', text: sk.desc }),
-      ]
-    );
-    sFrag.appendChild(card);
-  }
-  sBox.replaceChildren(sFrag);
+    // 2. Armors (event-delegated)
+    const aBox = el('armorList');
+    const aFrag = document.createDocumentFragment();
+    world.armors.forEach((a, idx) => {
+      const card = node(
+        'div',
+        {
+          cls: `item-card ${idx === world.armorIdx ? 'equipped' : ''}`,
+          attrs: { 'data-armor-idx': idx, role: 'button', tabindex: '0', 'aria-pressed': idx === world.armorIdx ? 'true' : 'false' },
+        },
+        [
+          node('div', {
+            cls: 'item-title',
+            text: `${a.rarity.name} · ${a.name}`,
+            style: { color: a.rarity.color },
+          }),
+          node('div', { cls: 'item-sub' }, [
+            `SHIELD ${a.maxShield} · Regen +${a.regenRate}/s · Dodge ${Math.round(a.phaseDodge * 100)}% · #${a.lineageId}`,
+            node('br'),
+            a.layer.desc,
+          ]),
+        ]
+      );
+      aFrag.appendChild(card);
+    });
+    aBox.replaceChildren(aFrag);
 
-  // 4. Live Adaptive 1/1 NPC Roster
-  const nBox = el('npcList');
-  const nFrag = document.createDocumentFragment();
-  for (const n of world.npcs.slice(0, 12)) {
-    const pct = Math.max(0, Math.round((n.hp / Math.max(1, n.maxHp)) * 100));
-    const subParts = [
-      `HP ${Math.max(0, n.hp)}/${n.maxHp} (${pct}%) · #${n.lineageId}`,
-      node('br'),
-      'Temporal: ',
-      node('span', { text: n.temporalAffix, style: { color: '#fbbf24' } }),
-      ' · Adapt: ',
-      node('span', { text: n.adaptation?.counterTag || 'BASE', style: { color: '#10f5a8' } }),
-    ];
-    if (n.entangledWith !== null) {
-      subParts.push(' · ', node('span', { text: 'BELL-LINKED', style: { color: '#e879f9' } }));
+    // 3. Adaptive 4-Branch Skill Tree (event-delegated)
+    el('spBadge').textContent = `${world.skillPoints} SP`;
+    const sBox = el('skillList');
+    const sFrag = document.createDocumentFragment();
+    for (const sk of SKILL_TREE) {
+      const lvl = world.skills[sk.id] || 0;
+      const card = node(
+        'div',
+        {
+          cls: `item-card ${lvl > 0 ? 'equipped' : ''}`,
+          attrs: { 'data-skill-id': sk.id, role: 'button', tabindex: '0' },
+        },
+        [
+          node(
+            'div',
+            { cls: 'item-title', style: { display: 'flex', justifyContent: 'space-between' } },
+            [
+              node('span', {}, [
+                node('span', { text: `[${sk.branch.slice(0, 4)}]`, style: { color: 'var(--cyan)', fontSize: '10px' } }),
+                ` ${sk.name}`,
+              ]),
+              node('span', { text: `Lv.${lvl}/${sk.maxLvl}`, style: { color: 'var(--gold)' } }),
+            ]
+          ),
+          node('div', { cls: 'item-sub', text: sk.desc }),
+        ]
+      );
+      sFrag.appendChild(card);
     }
-    if (n.zenoFreeze > 0.3) {
-      subParts.push(' · ', node('span', { text: 'ZENO-FROZEN', style: { color: '#22d3ee' } }));
-    }
-    const card = node(
-      'div',
-      { cls: 'item-card', style: { borderColor: n.isBoss ? '#f43f5e' : '#1b2c40' } },
-      [
-        node('div', {
-          cls: 'item-title',
-          text: `${n.isBoss ? '★ BOSS · ' : ''}${n.name}`,
-          style: { color: n.isBoss ? '#fda4af' : (n.rarity?.color || '#e2e8f0') },
-        }),
-        node('div', { cls: 'item-sub' }, subParts),
-      ]
-    );
-    nFrag.appendChild(card);
+    sBox.replaceChildren(sFrag);
   }
-  nBox.replaceChildren(nFrag);
+
+  if (force || npcSig !== state.lastNpcSignature) {
+    state.lastNpcSignature = npcSig;
+    // 4. Live Adaptive 1/1 NPC Roster
+    const nBox = el('npcList');
+    const nFrag = document.createDocumentFragment();
+    for (const n of world.npcs.slice(0, 12)) {
+      const pct = Math.max(0, Math.round((n.hp / Math.max(1, n.maxHp)) * 100));
+      const subParts = [
+        `HP ${Math.max(0, n.hp)}/${n.maxHp} (${pct}%) · #${n.lineageId}`,
+        node('br'),
+        'Temporal: ',
+        node('span', { text: n.temporalAffix, style: { color: '#fbbf24' } }),
+        ' · Adapt: ',
+        node('span', { text: n.adaptation?.counterTag || 'BASE', style: { color: '#10f5a8' } }),
+      ];
+      if (n.entangledWith !== null) {
+        subParts.push(' · ', node('span', { text: 'BELL-LINKED', style: { color: '#e879f9' } }));
+      }
+      if (n.zenoFreeze > 0.3) {
+        subParts.push(' · ', node('span', { text: 'ZENO-FROZEN', style: { color: '#22d3ee' } }));
+      }
+      const card = node(
+        'div',
+        { cls: 'item-card', style: { borderColor: n.isBoss ? '#f43f5e' : '#1b2c40' } },
+        [
+          node('div', {
+            cls: 'item-title',
+            text: `${n.isBoss ? '★ BOSS · ' : ''}${n.name}`,
+            style: { color: n.isBoss ? '#fda4af' : (n.rarity?.color || '#e2e8f0') },
+          }),
+          node('div', { cls: 'item-sub' }, subParts),
+        ]
+      );
+      nFrag.appendChild(card);
+    }
+    nBox.replaceChildren(nFrag);
+  }
 }
 
 function updateDisassembly() {
@@ -476,17 +492,30 @@ function updateLive3DHud() {
   el('hudStageScale').textContent = `ORDER ${r.scaleLabel} · ${r.name.split(' ')[0]}`;
   el('hudWave').textContent = `WAVE ${world.wave}/${world.stageSpec.wavesPerStage} · Lv.${world.level}`;
 
-  el('barHp').style.width = `${Math.max(0, Math.min(100, (pl.hp / Math.max(1, pl.maxHp)) * 100))}%`;
+  const hpPct = Math.round(Math.max(0, Math.min(100, (pl.hp / Math.max(1, pl.maxHp)) * 100)));
+  const shPct = Math.round(Math.max(0, Math.min(100, (pl.shield / Math.max(1, pl.maxShield)) * 100)));
+  const chPct = Math.round(Math.max(0, Math.min(100, world.temporal.chronoEnergy)));
+  const coPct = Math.round(Math.max(0, Math.min(100, world.qReg.coherence * 100)));
+  el('barHp').style.width = `${hpPct}%`;
+  el('trackHp')?.setAttribute('aria-valuenow', String(hpPct));
   el('valHp').textContent = String(Math.round(pl.hp));
-  el('barShield').style.width = `${Math.max(0, Math.min(100, (pl.shield / Math.max(1, pl.maxShield)) * 100))}%`;
+  el('barShield').style.width = `${shPct}%`;
+  el('trackShield')?.setAttribute('aria-valuenow', String(shPct));
   el('valShield').textContent = String(Math.round(pl.shield));
-  el('barChrono').style.width = `${Math.max(0, Math.min(100, world.temporal.chronoEnergy))}%`;
+  el('barChrono').style.width = `${chPct}%`;
+  el('trackChrono')?.setAttribute('aria-valuenow', String(chPct));
   el('valChrono').textContent = String(Math.round(world.temporal.chronoEnergy));
-  el('barCoh').style.width = `${Math.max(0, Math.min(100, world.qReg.coherence * 100))}%`;
-  el('valCoh').textContent = `${Math.round(world.qReg.coherence * 100)}%`;
+  el('barCoh').style.width = `${coPct}%`;
+  el('trackCoh')?.setAttribute('aria-valuenow', String(coPct));
+  el('valCoh').textContent = `${coPct}%`;
 
   const absS = Math.abs(world.chshValue);
-  el('hudChsh').textContent = `CHSH |S| = ${absS.toFixed(2)} ${absS > 2.005 ? '(BELL VIOLATION!)' : '(CLASSICAL)'}`;
+  const absM = Math.abs(world.merminValue || 0);
+  if (absM > 2.005) {
+    el('hudChsh').textContent = `CHSH |S|=${absS.toFixed(2)} · GHZ |M₄|=${absM.toFixed(2)} (NON-LOCAL!)`;
+  } else {
+    el('hudChsh').textContent = `CHSH |S| = ${absS.toFixed(2)} ${absS > 2.005 ? '(BELL VIOLATION!)' : '(CLASSICAL)'}`;
+  }
   el('hudWaveRidge').textContent = `WAVE |ψ|² = ${world.waveIntensityAtPlayer.toFixed(2)} ${world.waveIntensityAtPlayer > 1.35 ? '· CONSTRUCTIVE 2.2x!' : '· FIELD'}`;
   el('hudScore').textContent = `SCORE ${world.score} · KILLS ${world.kills} · SP ${world.skillPoints}`;
   el('hudEchoes').textContent = `ECHOES ${world.temporal.echoClones.length} · WELLS ${world.temporal.chronoWells.length} · PARADOX ${world.temporal.paradoxCount}`;
@@ -654,16 +683,58 @@ function isEditableTarget(target) {
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || Boolean(target.isContentEditable);
 }
 
+function isInteractiveActivationTarget(target) {
+  if (!target || typeof target.closest !== 'function') return false;
+  return Boolean(target.closest('button, a, [role="button"], [role="tab"]'));
+}
+
+function activateTab(btn, moveFocus = false) {
+  const tabs = Array.from(document.querySelectorAll('.tab-btn'));
+  tabs.forEach((b) => {
+    const active = b === btn;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-selected', active ? 'true' : 'false');
+    b.setAttribute('tabindex', active ? '0' : '-1');
+  });
+  document.querySelectorAll('.tab-pane').forEach((p) => p.classList.remove('active'));
+  el(`tab-${btn.dataset.tab}`)?.classList.add('active');
+  if (moveFocus) btn.focus();
+}
+
+function applyReducedMotion(enabled, quiet = false) {
+  state.reducedMotion = Boolean(enabled);
+  world.reducedMotion = state.reducedMotion;
+  const btn = el('btnMotion');
+  if (btn) {
+    btn.textContent = state.reducedMotion ? 'Motion: REDUCED' : 'Motion: FULL';
+    btn.classList.toggle('active', state.reducedMotion);
+    btn.setAttribute('aria-pressed', state.reducedMotion ? 'true' : 'false');
+  }
+  if (state.reducedMotion && world.autopilot) {
+    world.autopilot = false;
+    const autoBtn = el('btnAuto');
+    if (autoBtn) {
+      autoBtn.textContent = 'Autopilot: OFF';
+      autoBtn.classList.remove('active');
+      autoBtn.setAttribute('aria-pressed', 'false');
+    }
+  }
+  if (!quiet) {
+    logEvent(state.reducedMotion ? 'Reduced Motion mode enabled (autopilot paused, particle bursts dampened).' : 'Full Motion mode restored.', 'log-cyan');
+  }
+}
+
 function wireEvents() {
-  // 3D Orbit & Zoom controls on WebGL2 viewport
+  // 3D Orbit & Zoom controls on WebGL2 viewport (Pointer Events: mouse + touch + pen!)
   const wrap3d = el('viewport3dWrap');
-  wrap3d.addEventListener('mousedown', (e) => {
-    if (!renderer3d) return;
+  wrap3d.addEventListener('pointerdown', (e) => {
+    if (!renderer3d || e.button > 0) return;
     state.isDragging3D = true;
     state.lastMouseX = e.clientX;
     state.lastMouseY = e.clientY;
+    try { wrap3d.setPointerCapture(e.pointerId); } catch { /* ignore */ }
   });
-  window.addEventListener('mousemove', (e) => {
+  wrap3d.addEventListener('pointermove', (e) => {
     if (state.isDragging3D && renderer3d) {
       const dx = e.clientX - state.lastMouseX;
       const dy = e.clientY - state.lastMouseY;
@@ -673,20 +744,24 @@ function wireEvents() {
       renderer3d.camPitch = Math.max(0.14, Math.min(1.42, renderer3d.camPitch + dy * 0.006));
     }
   });
-  const clearPointerAndKeys = () => {
+  const endPointerDrag = () => {
     state.isDragging3D = false;
     state.isDraggingTissue = false;
     state.lastExcisedSlot = -1;
+  };
+  const clearPointerAndKeys = () => {
+    endPointerDrag();
     state.keys.clear();
   };
-  window.addEventListener('mouseup', () => {
-    state.isDragging3D = false;
-    state.isDraggingTissue = false;
-    state.lastExcisedSlot = -1;
-  });
+  wrap3d.addEventListener('pointerup', endPointerDrag);
+  wrap3d.addEventListener('pointercancel', endPointerDrag);
+  window.addEventListener('pointerup', endPointerDrag);
   window.addEventListener('blur', clearPointerAndKeys);
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) clearPointerAndKeys();
+  });
+  window.addEventListener('beforeunload', () => {
+    renderer3d?.dispose();
   });
   wrap3d.addEventListener('wheel', (e) => {
     if (!renderer3d) return;
@@ -694,29 +769,39 @@ function wireEvents() {
     renderer3d.camDist = Math.max(11, Math.min(64, renderer3d.camDist + e.deltaY * 0.025));
   }, { passive: false });
 
-  // Event-delegated RPG panel interactions (weapons, armors, skills)
-  el('weaponList').addEventListener('click', (e) => {
-    const card = e.target.closest('[data-weapon-idx]');
+  // Event-delegated RPG panel interactions (click + Enter/Space keyboard activation!)
+  const activateWeaponCard = (target) => {
+    const card = target.closest('[data-weapon-idx]');
     if (!card) return;
     world.selectWeapon(parseInt(card.dataset.weaponIdx, 10));
     renderRpgPanels(true);
-  });
-  el('armorList').addEventListener('click', (e) => {
-    const card = e.target.closest('[data-armor-idx]');
+  };
+  const activateArmorCard = (target) => {
+    const card = target.closest('[data-armor-idx]');
     if (!card) return;
     world.selectArmor(parseInt(card.dataset.armorIdx, 10));
     renderRpgPanels(true);
-  });
-  el('skillList').addEventListener('click', (e) => {
-    const card = e.target.closest('[data-skill-id]');
+  };
+  const activateSkillCard = (target) => {
+    const card = target.closest('[data-skill-id]');
     if (!card) return;
-    const id = card.dataset.skillId;
-    if (world.upgradeSkill(id)) {
-      const sk = SKILL_TREE.find((s) => s.id === id);
-      logEvent(`Upgraded ${sk?.name || id} -> Lv.${world.skills[id]}`, 'log-good');
+    if (world.upgradeSkill(card.dataset.skillId)) {
       renderRpgPanels(true);
     }
-  });
+  };
+  const bindCardEvents = (boxId, activateFn) => {
+    const box = el(boxId);
+    box.addEventListener('click', (e) => activateFn(e.target));
+    box.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        activateFn(e.target);
+      }
+    });
+  };
+  bindCardEvents('weaponList', activateWeaponCard);
+  bindCardEvents('armorList', activateArmorCard);
+  bindCardEvents('skillList', activateSkillCard);
 
   // Heisenberg Uncertainty Slider
   el('sliderHeisen').addEventListener('input', (e) => {
@@ -724,7 +809,9 @@ function wireEvents() {
     world.player.heisenbergStance = s;
     const h = heisenbergStance(s);
     const mode = s < 0.35 ? 'POSITION-LOCK' : s > 0.65 ? 'MOMENTUM-BLUR' : 'BALANCED';
-    el('heisenLabel').textContent = `${mode} · ${h.critMultiplier.toFixed(2)}x Crit · ${Math.round(h.evasionChance * 100)}% Dodge`;
+    const label = `${mode} · ${h.critMultiplier.toFixed(2)}x Crit · ${Math.round(h.evasionChance * 100)}% Dodge`;
+    el('heisenLabel').textContent = label;
+    e.target.setAttribute('aria-valuetext', label);
   });
 
   // Temporal Clock Slider
@@ -732,10 +819,16 @@ function wireEvents() {
     const v = parseInt(e.target.value, 10) / 100;
     state.customTimeScale = Math.abs(v - 1.0) > 0.03;
     world.temporal.globalTimeScale = v;
-    el('timeLabel').textContent = `${v.toFixed(2)}x · ${v < 0.6 ? 'Time Dilation' : v > 1.3 ? 'Hyper-Chronon' : 'Real-Time'}`;
+    const label = `${v.toFixed(2)}x · ${v < 0.6 ? 'Time Dilation' : v > 1.3 ? 'Hyper-Chronon' : 'Real-Time'}`;
+    el('timeLabel').textContent = label;
+    e.target.setAttribute('aria-valuetext', label);
   });
 
   el('btnRewindHold').addEventListener('click', () => {
+    if (!world.hbinState.bootable || world.temporal.snapshotCount <= 2) {
+      logEvent('REWIND PULSE unavailable (organism dead or insufficient recorded frames).', 'log-warn');
+      return;
+    }
     state.rewindBurstFrames = 55;
     logEvent('REWIND PULSE: Scrubbing 3D world 1s backwards in time!', 'log-cyan');
   });
@@ -753,10 +846,12 @@ function wireEvents() {
       const on = await audio.toggle();
       btn.textContent = `48kHz Audio: ${on ? 'ON' : 'OFF'}`;
       btn.classList.toggle('active', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
       logEvent(on ? '48 kHz Lock-Free AudioWorklet Synth ONLINE.' : '48 kHz AudioWorklet Synth muted.', 'log-cyan');
     } catch (err) {
       btn.textContent = '48kHz Audio: OFF';
       btn.classList.remove('active');
+      btn.setAttribute('aria-pressed', 'false');
       logEvent(`AudioWorklet error: ${err.message}`, 'log-bad');
     } finally {
       btn.disabled = false;
@@ -764,9 +859,12 @@ function wireEvents() {
   });
   el('btnAuto').addEventListener('click', () => {
     world.autopilot = !world.autopilot;
-    el('btnAuto').textContent = `Autopilot: ${world.autopilot ? 'ON' : 'OFF'}`;
-    el('btnAuto').classList.toggle('active', world.autopilot);
+    const btn = el('btnAuto');
+    btn.textContent = `Autopilot: ${world.autopilot ? 'ON' : 'OFF'}`;
+    btn.classList.toggle('active', world.autopilot);
+    btn.setAttribute('aria-pressed', world.autopilot ? 'true' : 'false');
   });
+  el('btnMotion')?.addEventListener('click', () => applyReducedMotion(!state.reducedMotion, false));
   el('btnRestore').addEventListener('click', () => selectSpecies(state.species));
   el('btnDownload').addEventListener('click', () => {
     if (!state.currentBytes) return;
@@ -904,8 +1002,10 @@ function wireEvents() {
 
   el('btnToggleImmune').addEventListener('click', () => {
     state.immuneEnabled = !state.immuneEnabled;
-    el('btnToggleImmune').textContent = state.immuneEnabled ? 'Immune: ON (Safe)' : 'Immune: OFF (Unsafe!)';
-    el('btnToggleImmune').className = state.immuneEnabled ? 'btn-emerald' : 'btn-crimson';
+    const btn = el('btnToggleImmune');
+    btn.textContent = state.immuneEnabled ? 'Immune: ON (Safe)' : 'Immune: OFF (Unsafe!)';
+    btn.className = state.immuneEnabled ? 'btn-emerald' : 'btn-crimson';
+    btn.setAttribute('aria-pressed', state.immuneEnabled ? 'true' : 'false');
     refreshDecodedState(false);
   });
 
@@ -939,17 +1039,15 @@ function wireEvents() {
     logEvent(`3D XENOGRAFT CHIMERA FORGED! ${hostPristine.name} × ${donorPristine.name} (${state.decoded.xenografts.length} organs transplanted live!)`, 'log-xeno');
   });
 
-  // Tabs (with ARIA state sync)
-  document.querySelectorAll('.tab-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach((b) => {
-        b.classList.remove('active');
-        b.setAttribute('aria-selected', 'false');
-      });
-      document.querySelectorAll('.tab-pane').forEach((p) => p.classList.remove('active'));
-      btn.classList.add('active');
-      btn.setAttribute('aria-selected', 'true');
-      el(`tab-${btn.dataset.tab}`).classList.add('active');
+  // Full WAI-ARIA Tabs with roving tabindex & Arrow/Home/End keyboard navigation
+  const tabBtns = Array.from(document.querySelectorAll('.tab-btn'));
+  tabBtns.forEach((btn, idx) => {
+    btn.addEventListener('click', () => activateTab(btn, false));
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); activateTab(tabBtns[(idx + 1) % tabBtns.length], true); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); activateTab(tabBtns[(idx - 1 + tabBtns.length) % tabBtns.length], true); }
+      else if (e.key === 'Home') { e.preventDefault(); activateTab(tabBtns[0], true); }
+      else if (e.key === 'End') { e.preventDefault(); activateTab(tabBtns[tabBtns.length - 1], true); }
     });
   });
   el('disasmBundle').addEventListener('change', updateDisassembly);
@@ -979,21 +1077,22 @@ function wireEvents() {
     }
   });
 
-  // Tissue Canvas click/drag surgery (deduplicated per-slot on drag)
+  // Tissue Canvas click/drag surgery (Pointer Events + deduplicated per-slot on drag)
   const tissueCanvas = el('canvasTissue');
-  tissueCanvas.addEventListener('mousedown', (e) => {
+  tissueCanvas.addEventListener('pointerdown', (e) => {
     const slot = slotFromCanvasEvent(e);
     if (slot < 0) return;
     if (e.shiftKey) {
       state.isDraggingTissue = true;
       state.lastExcisedSlot = slot;
+      try { tissueCanvas.setPointerCapture(e.pointerId); } catch { /* ignore */ }
       exciseSlot(slot);
     } else {
       updateCellInspector(slot);
       drawTissueMap(tissueCanvas, state.decoded, slot, state.mitosisMode ? 96 : -1);
     }
   });
-  tissueCanvas.addEventListener('mousemove', (e) => {
+  tissueCanvas.addEventListener('pointermove', (e) => {
     if (!state.isDraggingTissue) return;
     const slot = slotFromCanvasEvent(e);
     if (slot >= 0 && slot !== state.lastExcisedSlot) {
@@ -1001,19 +1100,27 @@ function wireEvents() {
       exciseSlot(slot);
     }
   });
+  tissueCanvas.addEventListener('pointerup', endPointerDrag);
+  tissueCanvas.addEventListener('pointercancel', endPointerDrag);
 
-  // Keyboard shortcuts (skip form inputs & OS/browser modifier combos)
+  // Physical-code keyboard shortcuts (works under Shift bullet-time & non-Latin layouts; never hijacks focused buttons!)
+  const ABILITY_BY_CODE = {
+    KeyQ: 'Q', KeyE: 'E', KeyT: 'T', KeyF: 'F', KeyV: 'V', KeyX: 'X', KeyC: 'C',
+  };
+  const WEAPON_BY_CODE = {
+    Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3,
+  };
   window.addEventListener('keydown', (e) => {
     if (isEditableTarget(e.target) || isEditableTarget(document.activeElement)) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.code === 'Space' && isInteractiveActivationTarget(document.activeElement)) return;
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
     state.keys.add(e.code);
     if (!e.repeat) {
-      const k = e.key.toUpperCase();
-      if (['Q', 'E', 'T', 'F', 'V', 'X', 'C'].includes(k)) {
-        if (world.triggerAbility(k)) renderRpgPanels(true);
-      } else if (k >= '1' && k <= '4') {
-        world.selectWeapon(parseInt(k, 10) - 1);
+      if (ABILITY_BY_CODE[e.code]) {
+        if (world.triggerAbility(ABILITY_BY_CODE[e.code])) renderRpgPanels(true);
+      } else if (WEAPON_BY_CODE[e.code] !== undefined) {
+        world.selectWeapon(WEAPON_BY_CODE[e.code]);
         renderRpgPanels(true);
       }
     }
@@ -1024,21 +1131,33 @@ function wireEvents() {
 async function boot() {
   buildAbilityBar();
 
+  const fallbackEl = el('webglFallback');
   try {
     renderer3d = new Renderer3D(el('canvas3d'));
+    renderer3d.onContextStateChange = (lost) => {
+      if (fallbackEl) fallbackEl.hidden = !lost;
+      logEvent(lost ? 'WebGL2 context lost — displaying 2D fallback notice.' : 'WebGL2 context restored!', lost ? 'log-warn' : 'log-good');
+    };
   } catch (err) {
     renderer3d = null;
+    if (fallbackEl) fallbackEl.hidden = false;
     logEvent(`WebGL2 unavailable (${err.message}); continuing in 2D Dual-Patient PVM-32 mode.`, 'log-warn');
+  }
+
+  if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    applyReducedMotion(true, true);
   }
 
   const cm = combinatorialSpaceMetrics();
   el('comboSpaceLabel').textContent =
     `1/1 Combinatorial Space: ${(cm.jointLoadoutCrossProduct / 1e12).toFixed(2)} Trillion discrete builds × 2^64 SHA-256 lineages · ${cm.scaleOrdersOfMagnitude} Orders of Magnitude (${cm.realmBiomes} Realms)`;
 
+  // Resolve asset URLs relative to import.meta.url so Studio works identically on localhost AND GitHub Pages subpaths!
   for (const name of SPECIES_LIST) {
-    const resp = await fetch(`/programs/${name}.plang`);
+    const progUrl = new URL(`../../programs/${name}.plang`, import.meta.url);
+    const resp = await fetch(progUrl);
     if (!resp.ok) {
-      throw new Error(`Failed to load /programs/${name}.plang (HTTP ${resp.status})`);
+      throw new Error(`Failed to load ${progUrl.pathname} (HTTP ${resp.status})`);
     }
     const src = await resp.text();
     state.sources[name] = src;
@@ -1048,13 +1167,15 @@ async function boot() {
   }
 
   try {
-    const bResp = await fetch('/results/benchmarks.json');
+    const benchUrl = new URL('../../results/benchmarks.json', import.meta.url);
+    const bResp = await fetch(benchUrl);
     if (bResp.ok) {
       state.benchmarks = await bResp.json();
       const p80 = state.benchmarks.survivalCurve?.find((x) => x.dropPct === 80);
       if (p80) {
+        const flatPart = Number.isFinite(p80.rsEqualStorageSurvivalPct) ? `, RS(192,48)-Flat=${p80.rsEqualStorageSurvivalPct}%` : '';
         el('benchSummary').textContent =
-          `Verified Monte Carlo Benchmark: @ 80% erasure -> Linear=${p80.linearSurvivalPct}%, RS-Cliff=${p80.rsCliffSurvivalPct}%, PLANARIA=${p80.planariaSurvivalPct}%`;
+          `Verified Monte Carlo Benchmark: @ 80% erasure -> Linear=${p80.linearSurvivalPct}%, RS(40,16)=${p80.rsCliffSurvivalPct}%${flatPart}, PLANARIA=${p80.planariaSurvivalPct}%`;
       }
     }
   } catch { /* optional */ }
@@ -1062,7 +1183,7 @@ async function boot() {
   wireEvents();
   selectSpecies('quantum_chronicle');
   renderRpgPanels(true);
-  logEvent('PLANARIA v2.2 3D Temporal-Quantum Holographic Engine ONLINE!', 'log-xeno');
+  logEvent('PLANARIA v2.3 3D Temporal-Quantum Holographic Engine ONLINE!', 'log-xeno');
   requestAnimationFrame(frameLoop);
 }
 

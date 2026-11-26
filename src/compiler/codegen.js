@@ -19,31 +19,42 @@ import {
 } from './isa.js';
 import { BUNDLE_SPECS, ORGAN_IDS, CELL_PAYLOAD_SIZE } from '../core/hbin.js';
 
-const BUNDLE_ID_BY_NAME = Object.fromEntries(BUNDLE_SPECS.map((b) => [b.name, b.id]));
+const BUNDLE_ID_MAP = new Map(BUNDLE_SPECS.map((b) => [b.name, b.id]));
+const ORGAN_ID_MAP = new Map(Object.entries(ORGAN_IDS));
+const SYSCALL_MAP = new Map(Object.entries(SYSCALL_BY_NAME));
+const BINARY_OP_MAP = new Map([
+  ['+', OP.ADD], ['-', OP.SUB], ['*', OP.MUL], ['/', OP.DIV], ['%', OP.MOD],
+  ['&', OP.AND], ['|', OP.OR], ['^', OP.XOR], ['<<', OP.SHL], ['>>', OP.SHR],
+  ['<', OP.SLT], ['==', OP.SEQ], ['!=', OP.SNE], ['>', OP.SGT], ['<=', OP.SLE], ['>=', OP.SGE],
+]);
+const MAX_CONST_DEPTH = 128;
 
-/** Evaluate compile-time constant expression (strict division/modulo by zero check). */
-function evalConstExpr(node, constEnv) {
+/** Evaluate compile-time constant expression (strict division/modulo by zero & depth check). */
+function evalConstExpr(node, constEnv, depth = 0) {
+  if (depth > MAX_CONST_DEPTH) {
+    throw new RangeError('Constant expression nesting too deep');
+  }
   if (node.type === 'Number') return node.value | 0;
   if (node.type === 'String') return pack4(node.value);
   if (node.type === 'Ident') {
     if (constEnv.has(node.name)) return constEnv.get(node.name);
-    if (ORGAN_IDS[node.name] !== undefined) return ORGAN_IDS[node.name];
+    if (ORGAN_ID_MAP.has(node.name)) return ORGAN_ID_MAP.get(node.name);
     throw new Error(`Unknown constant '${node.name}'`);
   }
   if (node.type === 'Ternary') {
-    return evalConstExpr(node.cond, constEnv) !== 0
-      ? evalConstExpr(node.thenExpr, constEnv)
-      : evalConstExpr(node.elseExpr, constEnv);
+    return evalConstExpr(node.cond, constEnv, depth + 1) !== 0
+      ? evalConstExpr(node.thenExpr, constEnv, depth + 1)
+      : evalConstExpr(node.elseExpr, constEnv, depth + 1);
   }
   if (node.type === 'Binary') {
     if (node.op === '&&') {
-      return evalConstExpr(node.left, constEnv) !== 0 && evalConstExpr(node.right, constEnv) !== 0 ? 1 : 0;
+      return evalConstExpr(node.left, constEnv, depth + 1) !== 0 && evalConstExpr(node.right, constEnv, depth + 1) !== 0 ? 1 : 0;
     }
     if (node.op === '||') {
-      return evalConstExpr(node.left, constEnv) !== 0 || evalConstExpr(node.right, constEnv) !== 0 ? 1 : 0;
+      return evalConstExpr(node.left, constEnv, depth + 1) !== 0 || evalConstExpr(node.right, constEnv, depth + 1) !== 0 ? 1 : 0;
     }
-    const l = evalConstExpr(node.left, constEnv);
-    const r = evalConstExpr(node.right, constEnv);
+    const l = evalConstExpr(node.left, constEnv, depth + 1);
+    const r = evalConstExpr(node.right, constEnv, depth + 1);
     switch (node.op) {
       case '+': return (l + r) | 0;
       case '-': return (l - r) | 0;
@@ -74,7 +85,6 @@ function evalConstExpr(node, constEnv) {
 /** Compile a single bundle AST node into PVM-32 machine code Uint8Array. */
 function compileBundle(bundleNode, constEnv) {
   const words = [];
-  const fnAddrs = new Map();
   const fnArities = new Map();
   const fixups = []; // { wordIdx, kind: 'JMP'|'CALL'|'B', op, rs1, rs2, targetLabel }
   const labels = new Map();
@@ -82,7 +92,7 @@ function compileBundle(bundleNode, constEnv) {
 
   // Pre-validate all local fn declarations (no duplicates, no syscall shadowing, <= 7 unique params)
   for (const fn of bundleNode.funcs) {
-    if (SYSCALL_BY_NAME[fn.name]) {
+    if (SYSCALL_MAP.has(fn.name)) {
       throw new Error(`Function '${fn.name}' in bundle ${bundleNode.name} collides with built-in syscall`);
     }
     if (fnArities.has(fn.name)) {
@@ -147,19 +157,6 @@ function compileBundle(bundleNode, constEnv) {
       emit(encodeR(OP.ADD, reg, i + 1, 0));
     }
 
-    function allocNewLocal(name) {
-      if (blockDeclared.has(name)) {
-        throw new Error(`Variable '${name}' already declared in this block of bundle ${bundleNode.name}`);
-      }
-      if (nextLocalReg > 31) {
-        throw new Error(`Exceeded 14 local variable registers in bundle ${bundleNode.name} (var '${name}')`);
-      }
-      const reg = nextLocalReg++;
-      locals.set(name, reg);
-      blockDeclared.add(name);
-      return reg;
-    }
-
     function resolveConstImm(node) {
       if (node.type === 'Number') return node.value | 0;
       if (node.type === 'Ident' && !locals.has(node.name) && constEnv.has(node.name)) {
@@ -198,8 +195,8 @@ function compileBundle(bundleNode, constEnv) {
           emitLoadImm(targetReg, constEnv.get(node.name));
           return;
         }
-        if (ORGAN_IDS[node.name] !== undefined) {
-          emitLoadImm(targetReg, ORGAN_IDS[node.name]);
+        if (ORGAN_ID_MAP.has(node.name)) {
+          emitLoadImm(targetReg, ORGAN_ID_MAP.get(node.name));
           return;
         }
         throw new Error(`Undefined identifier '${node.name}' in bundle ${bundleNode.name}`);
@@ -236,10 +233,10 @@ function compileBundle(bundleNode, constEnv) {
       }
 
       if (node.type === 'OrganCall') {
-        const organId = ORGAN_IDS[node.organName];
-        if (organId === undefined) {
+        if (!ORGAN_ID_MAP.has(node.organName)) {
           throw new Error(`Unknown organ '${node.organName}' in organ_call`);
         }
+        const organId = ORGAN_ID_MAP.get(node.organName);
         const maxS = evalConstExpr(node.maxStratum, constEnv);
         if (!Number.isInteger(maxS) || maxS < 0 || maxS > 3) {
           throw new RangeError(`organ_call maxStratum must be in 0..3, got ${maxS}`);
@@ -249,7 +246,7 @@ function compileBundle(bundleNode, constEnv) {
       }
 
       if (node.type === 'Call') {
-        const sc = SYSCALL_BY_NAME[node.name];
+        const sc = SYSCALL_MAP.get(node.name);
         const anyNestedCall = node.args.some(containsCall);
         if (sc) {
           if (node.args.length !== sc.args) {
@@ -382,15 +379,13 @@ function compileBundle(bundleNode, constEnv) {
         }
         if (rR < 0) {
           rR = (rL === tempBase) ? tempBase + 1 : tempBase;
+          if (rR > 17) {
+            throw new Error(`Expression nesting too deep in bundle ${bundleNode.name} (scratch register overflow)`);
+          }
           compileExpr(node.right, rR, rR + 1);
         }
-        const opMap = {
-          '+': OP.ADD, '-': OP.SUB, '*': OP.MUL, '/': OP.DIV, '%': OP.MOD,
-          '&': OP.AND, '|': OP.OR, '^': OP.XOR, '<<': OP.SHL, '>>': OP.SHR,
-          '<': OP.SLT, '==': OP.SEQ, '!=': OP.SNE, '>': OP.SGT, '<=': OP.SLE, '>=': OP.SGE,
-        };
-        const opc = opMap[node.op];
-        if (!opc) throw new Error(`Unknown binary op '${node.op}'`);
+        const opc = BINARY_OP_MAP.get(node.op);
+        if (opc === undefined) throw new Error(`Unknown binary op '${node.op}'`);
         emit(encodeR(opc, targetReg, rL, rR));
         return;
       }
@@ -480,27 +475,29 @@ function compileBundle(bundleNode, constEnv) {
           break;
         }
         case 'MemCompoundAssign': {
-          // Single-evaluation of stmt.index (fixes side-effect double-evaluation bug!)
+          // Single-evaluation of stmt.index AND evaluate rhs BEFORE LDW so rhs side-effects on mem[index] aren't lost!
           const opc = stmt.op === '+' ? OP.ADD : OP.SUB;
           const immIdx = resolveConstImm(stmt.index);
           const rhsImm = resolveConstImm(stmt.rhs);
           const signedDelta = rhsImm !== null ? (stmt.op === '+' ? rhsImm : -rhsImm) : null;
           if (immIdx !== null && immIdx >= 0 && immIdx < 4096) {
-            emit(encodeI(OP.LDW, 8, 0, immIdx));
             if (signedDelta !== null && signedDelta >= -32768 && signedDelta <= 32767) {
+              emit(encodeI(OP.LDW, 8, 0, immIdx));
               emit(encodeI(OP.ADDI, 8, 8, signedDelta));
             } else {
               compileExpr(stmt.rhs, 9, 10);
+              emit(encodeI(OP.LDW, 8, 0, immIdx));
               emit(encodeR(opc, 8, 8, 9));
             }
             emit(encodeI(OP.STW, 8, 0, immIdx));
           } else {
             compileExpr(stmt.index, 8, 9);
-            emit(encodeI(OP.LDW, 9, 8, 0));
             if (signedDelta !== null && signedDelta >= -32768 && signedDelta <= 32767) {
+              emit(encodeI(OP.LDW, 9, 8, 0));
               emit(encodeI(OP.ADDI, 9, 9, signedDelta));
             } else {
               compileExpr(stmt.rhs, 10, 11);
+              emit(encodeI(OP.LDW, 9, 8, 0));
               emit(encodeR(opc, 9, 9, 10));
             }
             emit(encodeI(OP.STW, 9, 8, 0));
@@ -538,6 +535,8 @@ function compileBundle(bundleNode, constEnv) {
         case 'ReturnStmt': {
           if (stmt.value) {
             compileExpr(stmt.value, 1, 8);
+          } else if (isFunction) {
+            emit(encodeI(OP.LI, 1, 0, 0));
           }
           emit(encodeR(isFunction ? OP.RET : OP.HALT, 0, 0, 0));
           break;
@@ -550,6 +549,7 @@ function compileBundle(bundleNode, constEnv) {
     for (const s of stmts) compileStmt(s);
     const lastStmt = stmts.length > 0 ? stmts[stmts.length - 1] : null;
     if (!lastStmt || lastStmt.type !== 'ReturnStmt') {
+      if (isFunction) emit(encodeI(OP.LI, 1, 0, 0));
       emit(encodeR(isFunction ? OP.RET : OP.HALT, 0, 0, 0));
     }
   }
@@ -560,7 +560,6 @@ function compileBundle(bundleNode, constEnv) {
   // Compile bundle-local helper functions after main HALT
   for (const fn of bundleNode.funcs) {
     markLabel(`FN_${fn.name}`);
-    fnAddrs.set(fn.name, words.length);
     compileScope(fn.body.stmts, fn.params, true);
   }
 
@@ -598,7 +597,12 @@ export function generateCode(ast) {
   for (const [k, v] of Object.entries(ORGAN_IDS)) constEnv.set(k, v);
   for (const b of BUNDLE_SPECS) constEnv.set(`BUNDLE_${b.name}`, b.id);
 
+  const userConsts = new Set();
   for (const c of ast.consts) {
+    if (userConsts.has(c.name)) {
+      throw new Error(`Duplicate const declaration '${c.name}' in program '${ast.name}'`);
+    }
+    userConsts.add(c.name);
     constEnv.set(c.name, evalConstExpr(c.expr, constEnv));
   }
 
@@ -606,7 +610,7 @@ export function generateCode(ast) {
   const report = [];
 
   for (const bNode of ast.bundles) {
-    const bid = BUNDLE_ID_BY_NAME[bNode.name];
+    const bid = BUNDLE_ID_MAP.get(bNode.name);
     if (bid === undefined) {
       throw new Error(`Unknown bundle name '${bNode.name}'. Valid: ${BUNDLE_SPECS.slice(0, 6).map((b) => b.name).join(', ')}`);
     }
