@@ -20,7 +20,7 @@ lake check --paranoid
 lake comparator --config comparator.json --paranoid
 ```
 
-- **Audit logs:** [`results/lean4-audit.txt`](results/lean4-audit.txt) (85 lines, pure Unix LF, 15 zero-axiom pure-kernel proofs + 70 standard `[propext, Classical.choice, Quot.sound]` proofs, **0 forbidden axioms**) and [`results/lean4-multi-kernel.txt`](results/lean4-multi-kernel.txt) (6 independent kernels: `lean4`, `leanchecker`, `leanchecker-paranoid`, `nanoda_bin`, `con-leche --verified`, `con-ron --verified`, plus `lean4lean` & `lake comparator --paranoid` + negative tampering check in Ubuntu Linux CI).
+- **Audit logs:** [`results/lean4-audit.txt`](results/lean4-audit.txt) (85 lines, pure Unix LF, 15 axiom-free, 12 `[propext]` only, 40 `[propext, Quot.sound]`, 18 `[propext, Classical.choice, Quot.sound]`, **0 forbidden axioms**) and [`results/lean4-multi-kernel.txt`](results/lean4-multi-kernel.txt) (six kernel checks: `lean4`, `leanchecker`, `leanchecker-paranoid`, `nanoda_bin`, `con-leche --verified`, `con-ron --verified`, `lean4lean`; Lean default and paranoid share the Lean C++ kernel; plus `lake comparator --paranoid` and a negative tampering check in Ubuntu Linux CI).
 
 ---
 

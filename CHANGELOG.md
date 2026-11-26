@@ -10,6 +10,7 @@ All notable changes to **PLANARIA** are documented in this file.
 - `LIMITATIONS.md` §2.7, `formalization.yaml` module scopes, `CITATION.cff` abstract and `docs/` (ADR-0001, ADR-0003, `faq.md`, `glossary.md`, `MASTER_REPORT.md`) aligned with the audit.
 - `ERRATA.md`: recorded the paper, transcript and Lean statement issues that are not fixed in place. Audit log: <https://github.com/0thernes/0thernes-research-archive/blob/main/docs/reviews/2026-11-26-statement-audit.md>.
 - No Lean, source, data or paper files changed; `MANIFEST.sha256` lines for the edited files were updated.
+- Follow-up: removed the remaining "six independent kernels" and "70 standard axioms" wording from `docs/architecture.md`, `VERIFICATION.md`, `SUMMARY.md`, `GLOSSARY.md`, `LEGAL.md`, `ROADMAP.md`, `lean/README.md`, `paper/WHITE_PAPER.md`, `docs/MASTER_REPORT.md` and the social preview image; regenerated `llms-full.txt`; added dated correction notes to `docs/run-log.md` and the 2026-11-25 review. The 2.4.0 entry below is kept as written.
 
 ## [2.4.0] - 2026-11-25
 

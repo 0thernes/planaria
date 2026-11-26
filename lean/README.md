@@ -2,7 +2,7 @@
 
 **Toolchain:** `leanprover/lean4:v4.35.0` (`module` system across ALL 12 `.lean` files, **`autoImplicit = false`**, **`relaxedAutoImplicit = false`**, core Lean 4 only — **zero Mathlib**, **zero errors/warnings**, **zero `sorryAx`**, **zero `native_decide` / `Lean.ofReduceBool` / `Lean.trustCompiler` / `_native`**, **zero custom axioms**).  
 **Standalone Palomar Spec & Solution:** [`PlanariaProofs/Spec.lean`](PlanariaProofs/Spec.lean) (pure shared definitions, 0 proofs, 0 `sorry`) · [`Challenge.lean`](Challenge.lean) (0 proof imports, 85 theorem specs) · [`Solution.lean`](Solution.lean) (0 `sorry`) · [`VerifyAxioms.lean`](VerifyAxioms.lean) (`module` header) · [`comparator.json`](comparator.json) · [`../formalization.yaml`](../formalization.yaml).  
-**Interactive Blueprint & Audit Logs:** [`../blueprint/index.html`](../blueprint/index.html) (`../blueprint/blueprint.json`) · [`../results/lean4-audit.txt`](../results/lean4-audit.txt) (85 lines, pure Unix LF, 15 zero-axiom pure-kernel proofs) · [`../results/lean4-multi-kernel.txt`](../results/lean4-multi-kernel.txt) (6 independent kernels).
+**Interactive Blueprint & Audit Logs:** [`../blueprint/index.html`](../blueprint/index.html) (`../blueprint/blueprint.json`) · [`../results/lean4-audit.txt`](../results/lean4-audit.txt) (85 lines, pure Unix LF, 15 zero-axiom pure-kernel proofs) · [`../results/lean4-multi-kernel.txt`](../results/lean4-multi-kernel.txt) (six kernel checks; Lean default and paranoid share the Lean C++ kernel).
 
 ## Quick Verification
 

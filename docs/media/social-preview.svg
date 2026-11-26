@@ -42,7 +42,7 @@
     <text x="292" y="38" font-family="ui-monospace, monospace" font-size="14" font-weight="700" fill="#c4b5fd">FORMAL VERIFICATION</text>
     <text x="292" y="76" font-family="system-ui, sans-serif" font-size="34" font-weight="800" fill="#f8fafc">70 Theorems</text>
     <text x="292" y="106" font-family="system-ui, sans-serif" font-size="15" fill="#94a3b8">Pure Lean 4.35.0 (0 Mathlib)</text>
-    <text x="292" y="126" font-family="system-ui, sans-serif" font-size="15" fill="#94a3b8">6 Independent Kernels</text>
+    <text x="292" y="126" font-family="system-ui, sans-serif" font-size="15" fill="#94a3b8">6 Kernel Checks</text>
 
     <rect x="544" y="0" width="248" height="142" rx="14" fill="url(#stratum)" stroke="#34d399" stroke-width="1.5"/>
     <text x="564" y="38" font-family="ui-monospace, monospace" font-size="14" font-weight="700" fill="#6ee7b7">FALSIFICATION SUITE</text>

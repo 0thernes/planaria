@@ -6,7 +6,7 @@
 - **`v2.0.0` – `v2.1.0`** — 3D WebGL2 Temporal-Quantum Engine (`ChronoQuantumWorld`, `Renderer3D`), 4-qubit `QuantumRegister` (Horodecki CHSH, Mermin GHZ), `TemporalEngine` 360-frame rewind, 6.42T combinatorial generator, 4th species `QUANTUM_CHRONICLE`, 48 kHz lock-free AudioWorklet synth, AMS-LaTeX White Paper.
 - **`v2.2.0`** — Deep 5-layer security/hardening pass (O(1) `RingBuffer`, 62 pure Lean 4 theorems, CLI & HTTP server hardening, 24 test suites, CI + Software Heritage archival).
 - **`v2.3.0` (Current)** — 3-cycle exhaustive hardening pass:
-  - 70 pure Lean 4.35.0 `module` theorems + standalone Palomar `Challenge.lean`/`Solution.lean`/`comparator.json` verified across **all 6 independent kernels** (`leanchecker`, `leanchecker-paranoid`, `lean4lean`, `nanoda_bin`, `con-leche --verified`, `con-ron --verified`)
+  - 70 pure Lean 4.35.0 `module` theorems + standalone Palomar `Challenge.lean`/`Solution.lean`/`comparator.json` checked by six kernel checks (`leanchecker`, `leanchecker-paranoid`, `lean4lean`, `nanoda_bin`, `con-leche --verified`, `con-ron --verified`; the first two share the Lean C++ kernel)
   - Closed all 3 formal statement-fidelity gaps (`viabilityLevel`, `electUnpinnedQuorum`, `all192LexKeys.Nodup` + sorted-halves bridge) and added 5 non-vacuity witness lemmas
   - 28 verification suites (property-based, metamorphic, regression lock, examples), 10/10 (100%) surgical mutation testing, static & citation verifiers
   - Equal-storage flat `RS(192,48)` empirical baseline + Wilson 95% CIs + exact McNemar p-values + Cohen's $h$ + Holm–Bonferroni multiplicity correction

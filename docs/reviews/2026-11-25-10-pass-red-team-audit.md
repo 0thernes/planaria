@@ -5,6 +5,8 @@
 1. *Build Standard for LLMs v1.2.0* (90 items `A01..A45` & `B01..B45`, Hard Rules `R1..R8`, 10 Finding Classes)
 2. *Defensible Independent AI Research Playbook v1.3* & *Gemini Independent Scientist Verification Playbook (2026 Edition)* (10-pass review protocol, Scott Aaronson's rigor checklist, 6-kernel Lean 4.35.0 Palomar comparator + negative tamper check, `autoImplicit = false`, non-vacuity & adversarial refutations, statement-fidelity checks, live Crossref DOI verification, epistemic hygiene)
 
+> **Correction (2026-11-26):** this review records what was claimed on 2026-11-25. Where it says "6 independent kernels", read "six kernel checks": Lean default and paranoid share the Lean C++ kernel. The axiom breakdown is 15 axiom-free, 12 `[propext]` only, 40 `[propext, Quot.sound]`, 18 `[propext, Classical.choice, Quot.sound]`. See [`CLAIMS.md`](../../CLAIMS.md) C10 and [`ERRATA.md`](../../ERRATA.md).
+
 ---
 
 ## 1. Unsolved Problems Mega-Atlas Audit (`0thernes/unsolved-problems-mega-atlas`)

@@ -4,6 +4,8 @@ Append-only engineering trail documenting major verification cycles, formal proo
 
 ---
 
+> **Correction (2026-11-26):** entries below record what was claimed at the time. The kernel checks are six checks, not six independent kernels: Lean default and paranoid share the Lean C++ kernel. The axiom breakdown is 15 axiom-free, 12 `[propext]` only, 40 `[propext, Quot.sound]`, 18 `[propext, Classical.choice, Quot.sound]`. See [`CLAIMS.md`](../CLAIMS.md) C10 and [`ERRATA.md`](../ERRATA.md).
+
 ## 2026-11-26 — `v2.4.0` Exhaustive 3-Cycle Hardening, 85 Lean 4.35.0 Proofs, Python 3 Oracle, Proof Blueprint, Fuzzer & Playbook v1.3 Closure
 
 ### Cycle 1 — 4-Agent Full-Stack Adversarial Audit (128 Findings Resolved)
