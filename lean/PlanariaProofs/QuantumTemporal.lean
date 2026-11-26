@@ -1,5 +1,7 @@
 module
 
+public import PlanariaProofs.Spec
+
 /-!
 # PlanariaProofs.QuantumTemporal
 
@@ -13,24 +15,10 @@ Pure Lean 4.35.0 `module` (no Mathlib, no `native_decide`, zero `sorry`).
 
 namespace Planaria.QuantumTemporal
 
--- ============================================================================
--- PART 1: FULL 4-QUBIT (16-AMPLITUDE COMPLEX) QUANTUM STATEVECTOR UNITARITY
--- ============================================================================
-
-/-- Exact integer-scaled complex amplitude (Gaussian integer `re + i * im`). -/
-public structure ComplexInt where
-  re : Int
-  im : Int
-  deriving Repr, DecidableEq
-
-/-- Squared modulus |z|^2 = re^2 + im^2. -/
-@[expose] public def absSq (z : ComplexInt) : Int := z.re * z.re + z.im * z.im
-
-@[expose] public def cNeg (z : ComplexInt) : ComplexInt := ⟨-z.re, -z.im⟩
-@[expose] public def cMulI (z : ComplexInt) : ComplexInt := ⟨-z.im, z.re⟩
-@[expose] public def cMulNegI (z : ComplexInt) : ComplexInt := ⟨z.im, -z.re⟩
-@[expose] public def cAdd (u v : ComplexInt) : ComplexInt := ⟨u.re + v.re, u.im + v.im⟩
-@[expose] public def cSub (u v : ComplexInt) : ComplexInt := ⟨u.re - v.re, u.im - v.im⟩
+-- Shared definitions (`ComplexInt`, `absSq`, `cNeg`, `cMulI`, `cMulNegI`, `cAdd`, `cSub`,
+-- `QState4`, `fin16`, `normSq4`, `flipBit4`, `hasBit4`, `pauliX4Q`, `pauliY4Q`, `pauliZ4Q`,
+-- `hadamardScaled4Q`, `cnot4Q`, `cz4Q`, `swap4Q`, `ChronoState`, `chronoAdvance`, `chronoRewind`,
+-- `pushSnapshot`, `popSnapshot`) are imported canonically from `PlanariaProofs.Spec`.
 
 private theorem absSq_cNeg (z : ComplexInt) : absSq (cNeg z) = absSq z := by
   cases z with | mk r i =>
@@ -65,69 +53,6 @@ private theorem absSq_parallelogram (u v : ComplexInt) :
       have hc1 : ur * vr = vr * ur := Int.mul_comm ur vr
       have hc2 : ui * vi = vi * ui := Int.mul_comm ui vi
       omega
-
-/-- Full 4-qubit complex statevector (16 computational basis states |0000> .. |1111>). -/
-public abbrev QState4 := Fin 16 → ComplexInt
-
-/-- Transparent `Fin 16` constructor with zero private auxiliary proof terms (`module`-safe). -/
-@[expose] public def fin16 (n : Nat) : Fin 16 :=
-  ⟨n % 16, Nat.mod_lt n (Nat.zero_lt_succ 15)⟩
-
-/-- Exact total squared norm ∑_{k=0}^{15} |ψ_k|^2 of a 4-qubit complex statevector. -/
-@[expose] public def normSq4 (ψ : QState4) : Int :=
-  absSq (ψ (fin16 0))  + absSq (ψ (fin16 1))  +
-  absSq (ψ (fin16 2))  + absSq (ψ (fin16 3))  +
-  absSq (ψ (fin16 4))  + absSq (ψ (fin16 5))  +
-  absSq (ψ (fin16 6))  + absSq (ψ (fin16 7))  +
-  absSq (ψ (fin16 8))  + absSq (ψ (fin16 9))  +
-  absSq (ψ (fin16 10)) + absSq (ψ (fin16 11)) +
-  absSq (ψ (fin16 12)) + absSq (ψ (fin16 13)) +
-  absSq (ψ (fin16 14)) + absSq (ψ (fin16 15))
-
-@[expose] public def flipBit4 (k : Fin 16) (q : Fin 4) : Fin 16 :=
-  fin16 (k.val ^^^ (1 <<< q.val))
-
-@[expose] public def hasBit4 (k : Fin 16) (q : Fin 4) : Bool :=
-  ((k.val >>> q.val) &&& 1) == 1
-
-/-- 4-qubit Pauli-X gate on qubit `q ∈ {0, 1, 2, 3}` (matching `qengine.js`). -/
-@[expose] public def pauliX4Q (q : Fin 4) (ψ : QState4) : QState4 :=
-  fun k => ψ (flipBit4 k q)
-
-/-- 4-qubit Pauli-Y gate on qubit `q`: |0⟩ -> i|1⟩, |1⟩ -> -i|0⟩. -/
-@[expose] public def pauliY4Q (q : Fin 4) (ψ : QState4) : QState4 :=
-  fun k =>
-    let partner := ψ (flipBit4 k q)
-    match hasBit4 k q with
-    | true => cMulI partner
-    | false => cMulNegI partner
-
-/-- 4-qubit Pauli-Z gate on qubit `q`: flips phase of every basis state with bit `q = 1`. -/
-@[expose] public def pauliZ4Q (q : Fin 4) (ψ : QState4) : QState4 :=
-  fun k => match hasBit4 k q with | true => cNeg (ψ k) | false => ψ k
-
-/-- 4-qubit scaled Hadamard `sqrt(2) * H_q` on qubit `q`. -/
-@[expose] public def hadamardScaled4Q (q : Fin 4) (ψ : QState4) : QState4 :=
-  fun k =>
-    let kFlip := flipBit4 k q
-    match hasBit4 k q with
-    | true => cSub (ψ kFlip) (ψ k)
-    | false => cAdd (ψ k) (ψ kFlip)
-
-/-- 4-qubit CNOT gate (`ctrl` controls `targ`). -/
-@[expose] public def cnot4Q (ctrl targ : Fin 4) (ψ : QState4) : QState4 :=
-  fun k => match hasBit4 k ctrl with | true => ψ (flipBit4 k targ) | false => ψ k
-
-/-- 4-qubit CZ gate (flips phase iff both `ctrl` and `targ` bits are 1). -/
-@[expose] public def cz4Q (ctrl targ : Fin 4) (ψ : QState4) : QState4 :=
-  fun k => match hasBit4 k ctrl && hasBit4 k targ with | true => cNeg (ψ k) | false => ψ k
-
-/-- 4-qubit SWAP gate exchanging qubits `q1` and `q2`. -/
-@[expose] public def swap4Q (q1 q2 : Fin 4) (ψ : QState4) : QState4 :=
-  fun k =>
-    match hasBit4 k q1 != hasBit4 k q2 with
-    | true => ψ (fin16 ((k.val ^^^ (1 <<< q1.val)) ^^^ (1 <<< q2.val)))
-    | false => ψ k
 
 /-- Theorem VI.1 (4-Qubit Complex Pauli-X Unitarity — all 4 qubits, all 16 amplitudes). -/
 public theorem pauliX4Q_preserves_normSq4 (q : Fin 4) (ψ : QState4) :
@@ -239,7 +164,7 @@ public theorem cnot4Q_preserves_normSq4 (ctrl targ : Fin 4) (hne : ctrl ≠ targ
 /-- Non-vacuity witness for Theorem VI.5: Bell-pair preparation `CNOT(0, 1)` on `H_0 |0000⟩`. -/
 public theorem cnot4Q_nonvacuous_witness :
     let ψ : QState4 := fun k => if k.val = 0 ∨ k.val = 1 then ⟨1, 0⟩ else ⟨0, 0⟩
-    normSq4 (cnot4Q ⟨0, by decide⟩ ⟨1, by decide⟩ ψ) = 2 := by
+    normSq4 (cnot4Q ⟨0, Nat.zero_lt_succ 3⟩ ⟨1, Nat.succ_lt_succ (Nat.zero_lt_succ 2)⟩ ψ) = 2 := by
   decide
 
 /-- Theorem VI.6 (4-Qubit Complex CZ Unitarity — all 16 (ctrl, targ) pairs!). -/
@@ -273,18 +198,6 @@ public theorem swap4Q_preserves_normSq4 (q1 q2 : Fin 4) (ψ : QState4) :
 -- PART 2: BIJECTIVE TEMPORAL CLOCK & 360-FRAME SNAPSHOT BUFFER REVERSIBILITY
 -- ============================================================================
 
-/-- Discrete reversible temporal clock & phase state. -/
-public structure ChronoState where
-  step  : Int
-  phase : Int
-  deriving Repr, DecidableEq
-
-@[expose] public def chronoAdvance (delta : Int) (s : ChronoState) : ChronoState :=
-  { step := s.step + 1, phase := s.phase + delta }
-
-@[expose] public def chronoRewind (delta : Int) (s : ChronoState) : ChronoState :=
-  { step := s.step - 1, phase := s.phase - delta }
-
 /-- Theorem VI.8: Rewinding after advancing restores the EXACT prior ChronoState (zero drift!). -/
 public theorem temporal_rewind_exact_left_inv (delta : Int) (s : ChronoState) :
     chronoRewind delta (chronoAdvance delta s) = s := by
@@ -300,14 +213,6 @@ public theorem temporal_rewind_exact_right_inv (delta : Int) (s : ChronoState) :
   | mk st ph =>
     simp only [chronoAdvance, chronoRewind]
     congr 1 <;> omega
-
-/-- Bounded LIFO snapshot history buffer (maxFrames = 360 in `TemporalEngine`, head = newest). -/
-@[expose] public def pushSnapshot {α : Type} (cap : Nat) (buf : List α) (snap : α) : List α :=
-  (snap :: buf).take cap
-
-@[expose] public def popSnapshot {α : Type} : List α → Option (α × List α)
-  | [] => none
-  | x :: xs => some (x, xs)
 
 /-- Theorem VI.10 (Bounded 360-Frame Rewind Buffer Exactness & Memory Cap):
     1. Pushing any snapshot onto a 360-frame buffer preserves `length <= 360`.

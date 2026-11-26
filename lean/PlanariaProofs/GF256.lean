@@ -1,5 +1,7 @@
 module
 
+public import PlanariaProofs.Spec
+
 /-!
 # PlanariaProofs.GF256
 
@@ -19,59 +21,9 @@ Pure Lean 4.35.0 `module` (no Mathlib, no `native_decide`, zero `sorry`).
 
 namespace Planaria.GF256
 
--- ============================================================================
--- PART 1: EXACT EXECUTABLE GF(2^8) MODULO 0x11D (MATCHING src/core/gf256.js)
--- ============================================================================
-
-/-- Exact GF(2^8) addition on bytes (0..255). -/
-@[expose] public def gfAdd (a b : Nat) : Nat := (a ^^^ b) % 256
-
-/-- Exact xtime modulo P(x) = x^8 + x^4 + x^3 + x^2 + 1 (0x11D). -/
-@[expose] public def xtime (a : Nat) : Nat :=
-  let s := (a * 2) % 256
-  if a ≥ 128 then s ^^^ 0x1d else s
-
-/-- Exact Russian-peasant multiplication over GF(2^8) (matches `gfMulDirect`). -/
-@[expose] public def gfMulLoop : Nat → Nat → Nat → Nat → Nat
-  | 0, acc, _, _ => acc
-  | n + 1, acc, a, b =>
-    let acc' := if b % 2 == 1 then acc ^^^ a else acc
-    gfMulLoop n acc' (xtime a) (b / 2)
-
-@[expose] public def gfMul (a b : Nat) : Nat := gfMulLoop 8 0 (a % 256) (b % 256)
-
-/-- Exact multiplicative inverse via Itoh-Tsujii chain a^254 over GF(2^8). -/
-@[expose] public def gfInv (a : Nat) : Nat :=
-  let a2   := gfMul a a
-  let a3   := gfMul a2 a
-  let a6   := gfMul a3 a3
-  let a12  := gfMul a6 a6
-  let a15  := gfMul a12 a3
-  let a30  := gfMul a15 a15
-  let a60  := gfMul a30 a30
-  let a120 := gfMul a60 a60
-  let a240 := gfMul a120 a120
-  let a252 := gfMul a240 a12
-  gfMul a252 a2
-
-/-- Exact Cauchy matrix entry C(x, y) = (x XOR y)^(-1) in GF(2^8). -/
-@[expose] public def cauchyEntry (x y : Nat) : Nat := gfInv (gfAdd x y)
-
-/-- 2-cell Cauchy encode (Stratum 0 S0_STEM_NUCLEUS, k = 2). -/
-@[expose] public def cauchyEncode2 (x0 x1 d0 d1 : Nat) : Nat × Nat :=
-  (gfAdd (gfMul (cauchyEntry x0 0) d0) (gfMul (cauchyEntry x0 1) d1),
-   gfAdd (gfMul (cauchyEntry x1 0) d0) (gfMul (cauchyEntry x1 1) d1))
-
-/-- 2-cell Cauchy decode via exact 2x2 adjugate inverse over GF(2^8). -/
-@[expose] public def cauchyDecode2 (x0 x1 p0 p1 : Nat) : Nat × Nat :=
-  let c00 := cauchyEntry x0 0
-  let c01 := cauchyEntry x0 1
-  let c10 := cauchyEntry x1 0
-  let c11 := cauchyEntry x1 1
-  let det := gfAdd (gfMul c00 c11) (gfMul c01 c10)
-  let dInv := gfInv det
-  (gfMul dInv (gfAdd (gfMul c11 p0) (gfMul c01 p1)),
-   gfMul dInv (gfAdd (gfMul c10 p0) (gfMul c00 p1)))
+-- Definitions (`gfAdd`, `xtime`, `gfMulLoop`, `gfMul`, `gfInv`, `cauchyEntry`,
+-- `cauchyEncode2`, `cauchyDecode2`, `Char2Field`, `cauchyEncode2K`, `cauchyDecode2K`)
+-- are imported canonically from `PlanariaProofs.Spec`.
 
 -- ============================================================================
 -- PART 2: BITWISE CLOSURE & F_2-BILINEARITY OF GF(2^8) MULTIPLICATION
@@ -504,24 +456,6 @@ public theorem cauchy2_exact_roundtrip :
 -- PART 3: CONCRETE GF(2^8) FIELD INSTANCE + UNIVERSAL CAUCHY 2x2 DECODING
 -- ============================================================================
 
-/-- Axiomatic signature of any characteristic-2 field (e.g., GF(2^8), GF(2^16), GF(2^32)). -/
-public structure Char2Field (F : Type) where
-  zero : F
-  one  : F
-  add  : F → F → F
-  mul  : F → F → F
-  inv  : F → F
-  one_ne_zero : one ≠ zero
-  add_comm    : ∀ a b, add a b = add b a
-  add_assoc   : ∀ a b c, add (add a b) c = add a (add b c)
-  add_zero    : ∀ a, add a zero = a
-  add_self    : ∀ a, add a a = zero
-  mul_comm    : ∀ a b, mul a b = mul b a
-  mul_assoc   : ∀ a b c, mul (mul a b) c = mul a (mul b c)
-  mul_one     : ∀ a, mul a one = a
-  mul_add     : ∀ a b c, mul a (add b c) = add (mul a b) (mul a c)
-  mul_inv     : ∀ a, a ≠ zero → mul a (inv a) = one
-
 /-- Theorem I.5 (Concrete GF(2^8) Field Realization):
     PLANARIA's exact executable byte arithmetic `(gfAdd, gfMul, gfInv)` over `Fin 256`
     satisfies EVERY single field axiom of `Char2Field (Fin 256)`! -/
@@ -655,26 +589,6 @@ public theorem gf_cauchy2_nonzero_det
   have hxne : K.add x0 x1 ≠ K.zero := fun h => hx ((add_eq_zero_iff K x0 x1).mp h)
   have hyne : K.add y0 y1 ≠ K.zero := fun h => hy ((add_eq_zero_iff K y0 y1).mp h)
   exact no_zero_divisors K _ _ hxne hyne hZero
-
-/-- Generic 2x2 Cauchy encode over any characteristic-2 field K. -/
-@[expose] public def cauchyEncode2K (x0 x1 y0 y1 d0 d1 : F) : F × F :=
-  let c00 := K.inv (K.add x0 y0)
-  let c01 := K.inv (K.add x0 y1)
-  let c10 := K.inv (K.add x1 y0)
-  let c11 := K.inv (K.add x1 y1)
-  (K.add (K.mul c00 d0) (K.mul c01 d1),
-   K.add (K.mul c10 d0) (K.mul c11 d1))
-
-/-- Generic 2x2 Cauchy decode (adjugate formula) over any characteristic-2 field K. -/
-@[expose] public def cauchyDecode2K (x0 x1 y0 y1 p0 p1 : F) : F × F :=
-  let c00 := K.inv (K.add x0 y0)
-  let c01 := K.inv (K.add x0 y1)
-  let c10 := K.inv (K.add x1 y0)
-  let c11 := K.inv (K.add x1 y1)
-  let det := K.add (K.mul c00 c11) (K.mul c01 c10)
-  let dInv := K.inv det
-  (K.mul dInv (K.add (K.mul c11 p0) (K.mul c01 p1)),
-   K.mul dInv (K.add (K.mul c10 p0) (K.mul c00 p1)))
 
 /-- Theorem I.7 (Universal Cauchy 2x2 Exact Lossless Decoding Theorem):
     For ANY characteristic-2 field K, ANY disjoint distinct coordinates (x0,x1), (y0,y1),

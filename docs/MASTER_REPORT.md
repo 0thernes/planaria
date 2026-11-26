@@ -162,21 +162,21 @@ packs `AEGIS_DRIFT`'s `S1_CORE_LOGIC` (including its `v2.2.0` `SPECIES_MAGIC` se
 
 ## 7. Computational Performance, Latency & Memory Profiling
 
-Measured on Node.js `v25.8.2` (`results/benchmarks.json`, warm-JIT steady state):
-- **Full 96 KiB Decode Latency**: **`8.96 ms`** mean (25-iteration steady state, accelerated by precomputed `GF_MUL_TABLE`) — fast enough to re-decode a live 192-cell binary interactively on every surgical drag or button click without stutter.
-- **Dual Mitosis Decode + Bit-Exact Regeneration**: **`21.07–27.06 ms`** combined for BOTH disjoint halves across all 6 aligned and unaligned prime offsets.
-- **Compile All 4 Species**: **`61.59 ms`** total end-to-end (`Plang` → `PVM-32` → Cauchy → Depth-8 Merkle → 384 RS codewords → `98,304 B` `.hbin`).
-- **`PVM-32` Virtual Machine Throughput**: **`0.082 ms/frame`** (**`27.02 MIPS`**, **`12,195 FPS`** headless ceiling; `< 0.5%` of a 16.67 ms 60 FPS frame budget).
+Measured on Node.js `v25.8.2` (`results/benchmarks.json`, schema `PLANARIA-BENCHMARKS-1.2`, warm-JIT steady state):
+- **Full 96 KiB Decode Latency**: **`5.994 ms`** median (IQR `0.268 ms`, p95 `6.526 ms` across 25 steady-state passes, accelerated by precomputed `GF_MUL_TABLE`) — fast enough to re-decode a live 192-cell binary interactively on every surgical drag or button click without stutter.
+- **Dual Mitosis Decode + Bit-Exact Regeneration**: **`12.57–14.21 ms`** combined for BOTH disjoint halves across all 6 aligned and unaligned prime offsets.
+- **Compile All 4 Species**: **`40.3 ms`** total end-to-end (`Plang` → `PVM-32` → Cauchy → Depth-8 Merkle → 384 RS codewords → `98,304 B` `.hbin`).
+- **`PVM-32` Virtual Machine Throughput**: **`0.041 ms/frame`** median (IQR `0.006 ms`, p95 `0.111 ms`, **`42.85 MIPS`**, **`> 24,000 FPS`** headless ceiling; `< 0.25%` of a 16.67 ms 60 FPS frame budget).
 - **AudioWorklet DSP**: Lock-free 48 kHz stereo PolyBLEP synthesis with per-sample amplitude slewing (`0.008`), one-pole lowpass filtering, master DC-blocking highpass, and denormal flushing — zero GC allocations inside `process()`.
 
 ---
 
-## 8. Formal Verification & Falsification Audit Summary
+## 8. Formal Verification & Falsification Audit Summary (`v2.3.0`)
 
-1. **Lean 4 Kernel Proofs (`lean/`)**: **62/62 theorems built cleanly** under `leanprover/lean4:v4.35.0`, zero warnings, zero `sorryAx`, zero `native_decide`/`trustCompiler`, strictly within `{propext, Classical.choice, Quot.sound}` ([results/lean4-audit.txt](../results/lean4-audit.txt)).
-2. **Executable Falsification & Security Suite (`test/verify.mjs`)**: **24/24 suites passed**, validating both positive survival invariants AND tight negative Popperian failure boundaries (1-bit linear death, $k-1$ Cauchy failure, $e=10>8$ RS rejection, 18 B burst failure, Overlap-Eclipse Trojan deflection, single-Trojan poisoning under `disableImmuneSystem: true`, unpinned tie fail-closed, `BitVec` & `PVM-32` traps, Game3D rewind non-NaN, all 9 CLI subcommands, live `server.mjs` HTTP security/XSS/traversal defense, and on-disk artifact determinism).
-3. **Browser Studio Verification**: Verified live against the hardened `server.mjs` at `http://127.0.0.1:4174` across 3D WebGL2 rendering, Rewind, Mitosis, and Chimera+Heal+Shred with **zero JS console errors, zero failed network fetches, and zero VM traps**.
-4. **Cryptographic Attestation**: [results/attestation.json](../results/attestation.json) binds SHA-256 digests of 44 repository artifacts (all core/compiler/VM/quantum/world/web source files, 4 `.plang` sources, 4 `.hbin` binaries, 7 Lean proof files, frozen 8-page PDF & arXiv tarball, and `results/benchmarks.json`) under a verified Ed25519 self-consistency seal (`selfVerified: true`).
+1. **Lean 4.35.0 6-Kernel Proofs (`lean/`)**: **70/70 theorems built cleanly** under `leanprover/lean4:v4.35.0` (`module` system, zero Mathlib, zero warnings, zero `sorryAx`, zero `native_decide`/`trustCompiler`, strictly within `{propext, Classical.choice, Quot.sound}`, 12 zero-axiom constructive proofs), independently verified across **6 kernels** (`lean4`, `leanchecker`, `leanchecker-paranoid`, `lean4lean`, `nanoda_bin`, `con-leche --verified`, `con-ron --verified`) plus Palomar `lake comparator --config comparator.json --paranoid` against `Challenge.lean` ([results/lean4-audit.txt](../results/lean4-audit.txt), [results/lean4-multi-kernel.txt](../results/lean4-multi-kernel.txt)).
+2. **Executable Falsification, Metamorphic & Mutation Suite (`test/verify.mjs`, `scripts/mutation-test.mjs`)**: **28/28 test suites passed** + **10/10 (100.0%) surgical mutants killed**, validating positive survival invariants, tight negative Popperian failure boundaries (1-bit linear death, $k-1$ Cauchy failure, $e=10>8$ RS rejection, 18 B burst failure, Overlap-Eclipse Trojan deflection, single-Trojan poisoning under `disableImmuneSystem: true`, unpinned tie fail-closed, `BitVec` & `PVM-32` traps, Game3D rewind non-NaN, all 9 CLI subcommands, live `server.mjs` HTTP security/XSS/traversal defense, property-based & metamorphic laws, runnable `examples/01..03`, GitHub Pages subpath safety, and on-disk artifact determinism).
+3. **Browser Studio Verification**: Verified live against the hardened `server.mjs` at `http://127.0.0.1:4174` across 3D WebGL2 rendering, Rewind, Mitosis, and Chimera+Heal+Shred with **zero JS console errors, zero failed network fetches, and zero VM traps** (`docs/media/studio-v2-3.png`).
+4. **Cryptographic Attestation**: [results/attestation.json](../results/attestation.json) binds SHA-256 digests of **61** repository artifacts (all core/compiler/VM/quantum/world/web source files, 4 `.plang` sources, 4 `.hbin` binaries, all Lean proof/spec/Palomar files, frozen 10-page PDF & arXiv tarball, and `results/benchmarks.json`) under a verified Ed25519 self-consistency seal (`selfVerified: true`), complemented by `MANIFEST.sha256` and `data/MANIFEST.sha256`.
 
 ---
 
@@ -187,10 +187,11 @@ Measured on Node.js `v25.8.2` (`results/benchmarks.json`, warm-JIT steady state)
 | Goal | Exact Command |
 |---|---|
 | Compile all 4 `.plang` sources → `.hbin` + verify round-trip | `npm run build` |
-| Run 24-suite falsifiable verification & security harness | `npm test` |
-| Run full Monte Carlo survival benchmarks & Ed25519 attestation | `npm run benchmark` |
+| Run 28-suite falsifiable verification, metamorphic & security harness | `npm test` |
+| Run 10-mutant surgical mutation suite (100% kill gate) | `npm run mutate` |
+| Run full 4-architecture statistical benchmarks & Ed25519 attestation | `npm run benchmark` |
 | Launch 60 FPS WebGL2 + 48 kHz Surgical Vivisection Studio | `npm start` → open `http://127.0.0.1:4174` |
-| Clean-build & audit all 62 Lean 4 theorems | `npm run verify:lean` (or `cd lean && lake clean && lake build`) |
+| Clean-build & audit all 70 Lean 4.35.0 theorems | `npm run verify:lean` (or `cd lean && lake build && lake env lean VerifyAxioms.lean`) |
 | Inspect any `.hbin` (damaged, shifted, or poisoned) | `node bin/planaria.mjs inspect <file.hbin>` |
 | Perform unaligned 50/50 Planarian Mitosis on disk | `node bin/planaria.mjs bisect artifacts/aegis_drift.hbin L.hbin R.hbin --offset 49177` |
 | Fuse multiple damaged shards via raw concatenation | `node bin/planaria.mjs fuse shardA.hbin shardB.hbin -o fused.hbin` |

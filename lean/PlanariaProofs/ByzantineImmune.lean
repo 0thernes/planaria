@@ -1,5 +1,7 @@
 module
 
+public import PlanariaProofs.Spec
+
 /-!
 # PlanariaProofs.ByzantineImmune
 
@@ -15,16 +17,9 @@ Pure Lean 4.35.0 `module` (no Mathlib, no `native_decide`, zero `sorry`).
 
 namespace Planaria.Byzantine
 
--- ============================================================================
--- REAL BYTE-LIST HAMMING METRIC & RS(254, 238) BOUNDED-DISTANCE DECODING
--- ============================================================================
-
-/-- Exact byte-wise Hamming distance between two byte lists. -/
-@[expose] public def hammingDist : List Nat → List Nat → Nat
-  | [], [] => 0
-  | x :: xs, y :: ys => (if x = y then 0 else 1) + hammingDist xs ys
-  | xs, [] => xs.length
-  | [], ys => ys.length
+-- Shared definitions (`hammingDist`, `countEven`, `countOdd`, `evalMerklePath`, `pow2Pair`,
+-- `HarvestedCell`, `HashBinding`, `merkleQuarantine`, `electQuorumAux`, `electUnpinnedQuorum`)
+-- are imported canonically from `PlanariaProofs.Spec`.
 
 /-- Theorem IV.0 (Byte-List Hamming Metric Triangle Inequality):
     For any three equal-length byte codewords `a, b, c`, `hammingDist a c <= hammingDist a b + hammingDist b c`. -/
@@ -70,18 +65,6 @@ public theorem rs_unique_correction_ball_disjoint
     ¬ (hammingDist c1 y ≤ t ∧ hammingDist y c2 ≤ t) := by
   have hTri := hammingDist_triangle c1 y c2 hlen1 hlen2
   omega
-
-/-- Count of even offsets in contiguous interval [start, start + len). -/
-@[expose] public def countEven (start len : Nat) : Nat :=
-  match len with
-  | 0 => 0
-  | n + 1 => (if (start + n) % 2 = 0 then 1 else 0) + countEven start n
-
-/-- Count of odd offsets in contiguous interval [start, start + len). -/
-@[expose] public def countOdd (start len : Nat) : Nat :=
-  match len with
-  | 0 => 0
-  | n + 1 => (if (start + n) % 2 = 1 then 1 else 0) + countOdd start n
 
 private theorem even_step2 (start len : Nat) :
     countEven start (len + 2) = countEven start len + 1 := by
@@ -187,13 +170,6 @@ public theorem interleaved_burst_18_both_lanes_exceed (start : Nat) :
 -- EXPLICIT MERKLE PATH COMMITMENT & BYZANTINE QUARANTINE / QUORUM BOUNDS
 -- ============================================================================
 
-/-- Explicit binary Merkle authentication path evaluator (depth-8 = 8 steps in PLANARIA). -/
-@[expose] public def evalMerklePath (hashPair : Nat → Nat → Nat) : Nat → List (Bool × Nat) → Nat
-  | cur, [] => cur
-  | cur, (isRight, sib) :: rest =>
-    let next := if isRight then hashPair sib cur else hashPair cur sib
-    evalMerklePath hashPair next rest
-
 /-- Theorem IV.7 (Collision-Free Merkle Path Leaf Commitment):
     Under a collision-resistant (injective) compression function `hashPair`, two leaves
     producing the identical Merkle root along the same authentication path MUST be identical! -/
@@ -219,9 +195,6 @@ public theorem merkle_path_collision_free_binding
         exact (hInj l1 sib l2 sib hNext).1
       · simp only [↓reduceIte] at hNext
         exact (hInj sib l1 sib l2 hNext).2
-
-/-- Concrete injective pairing function `(2*a + 1) * 2^b` witnessing non-vacuity of `hInj`. -/
-@[expose] public def pow2Pair (a b : Nat) : Nat := (2 * a + 1) * 2 ^ b
 
 /-- Non-vacuity witness for Theorem IV.7: `pow2Pair` satisfies `hInj` universally over `Nat`. -/
 public theorem pow2Pair_injective :
@@ -260,22 +233,6 @@ public theorem pow2Pair_injective :
       have ⟨ha, hb⟩ := ih m a1 a2 hDiv
       exact ⟨ha, by omega⟩
 
-/-- Model of a harvested RS-valid cell tagged with its computed Merkle root & authenticity. -/
-public structure HarvestedCell where
-  evalX     : Nat
-  rootHash  : Nat
-  authentic : Bool
-  deriving Repr, DecidableEq
-
-/-- Under second-preimage/collision-resistant SHA-256 Merkle binding, a cell's implied
-    root equals the pinned Lineage Root IF AND ONLY IF the cell is authentic. -/
-@[expose] public def HashBinding (pinnedRoot : Nat) (cells : List HarvestedCell) : Prop :=
-  ∀ c ∈ cells, (c.rootHash = pinnedRoot) ↔ (c.authentic = true)
-
-/-- PLANARIA Merkle Quarantine Filter. -/
-@[expose] public def merkleQuarantine (pinnedRoot : Nat) (cells : List HarvestedCell) : List HarvestedCell :=
-  cells.filter (fun c => decide (c.rootHash = pinnedRoot))
-
 /-- Theorem IV.8 (Byzantine Quarantine Zero-Contamination Theorem):
     Under cryptographic Merkle binding, EVERY cell accepted into the Cauchy MDS decoder
     after `merkleQuarantine` is guaranteed 100% authentic (ZERO Byzantine Trojans survive!). -/
@@ -308,25 +265,10 @@ public theorem hashBinding_mixed_nonvacuous :
     let cells : List HarvestedCell := [⟨2, 42, true⟩, ⟨3, 999, false⟩, ⟨4, 42, true⟩]
     HashBinding 42 cells ∧
     merkleQuarantine 42 cells = [⟨2, 42, true⟩, ⟨4, 42, true⟩] := by
-  refine ⟨?_, by decide⟩
+  refine ⟨?_, rfl⟩
   intro c hc
   simp only [List.mem_cons, List.not_mem_nil, or_false] at hc
   rcases hc with rfl | rfl | rfl <;> decide
-
-/-- Executable Unpinned Quorum Election matching `src/core/hbin.js` Step 2:
-    requires count >= 2 AND a STRICT unique maximum across `(rootHash, uniqueCellCount)` buckets,
-    failing closed (`none`) on ties or when no lineage reaches >= 2 cells. -/
-@[expose] public def electQuorumAux (bestRoot bestCnt : Nat) (tied : Bool) :
-    List (Nat × Nat) → Option Nat
-  | [] => if bestCnt ≥ 2 && !tied then some bestRoot else none
-  | (r, c) :: rest =>
-    if c < 2 then electQuorumAux bestRoot bestCnt tied rest
-    else if c > bestCnt then electQuorumAux r c false rest
-    else if c == bestCnt then electQuorumAux bestRoot bestCnt true rest
-    else electQuorumAux bestRoot bestCnt tied rest
-
-@[expose] public def electUnpinnedQuorum (votes : List (Nat × Nat)) : Option Nat :=
-  electQuorumAux 0 0 false votes
 
 private theorem electQuorumAux_strict_leader (bestRoot bestCnt : Nat) (hMin : bestCnt ≥ 2) :
     ∀ rest : List (Nat × Nat), (∀ rc ∈ rest, rc.2 < bestCnt) →

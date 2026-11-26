@@ -1,5 +1,7 @@
 module
 
+public import PlanariaProofs.Spec
+
 /-!
 # PlanariaProofs.XenograftABI
 
@@ -12,8 +14,8 @@ Pure Lean 4.35.0 `module` (no Mathlib, no `native_decide`, zero `sorry`).
 
 namespace Planaria.Xenograft
 
-/-- Exact PVM-32 signed 32-bit RAM address masking matching `(base + offset) & 0xFFF` in `pvm32.js`. -/
-@[expose] public def maskRamAddr32 (addr : BitVec 32) : Nat := (addr &&& 0xFFF#32).toNat
+-- Shared definitions (`maskRamAddr32`, `stepsConsumed`, `BundleSlot`,
+-- `isXenograftableBundle`, `applyXenograft`) are imported canonically from `PlanariaProofs.Spec`.
 
 /-- Theorem V.1 (PVM-32 Signed 32-Bit Memory Sandboxing Invariant):
     For EVERY 32-bit two's-complement register `base` and signed immediate `offset`
@@ -27,14 +29,6 @@ public theorem pvm32_ram_bounds_invariant (base offset : BitVec 32) :
   rw [hEq]
   have hLe : (base + offset).toNat &&& 4095 ≤ 4095 := Nat.and_le_right
   omega
-
-/-- Step counter proving bounded termination in <= budget steps. -/
-@[expose] public def stepsConsumed (stepFn : Nat → Option Nat) : Nat → Nat → Nat
-  | 0, _ => 0
-  | fuel + 1, state =>
-    match stepFn state with
-    | none => 0
-    | some nextState => 1 + stepsConsumed stepFn fuel nextState
 
 /-- Theorem V.2 (PVM-32 Bounded-Step Termination):
     Any organ invocation (primary or xenografted) terminates in at most `budget` cycles —
@@ -51,32 +45,6 @@ public theorem pvm32_bounded_termination (stepFn : Nat → Option Nat) (budget s
       simp only
       have hsub := ih next
       omega
-
-/-- Organ bundle descriptor for ABI-verified Xenografting. -/
-public structure BundleSlot where
-  bundleId      : Nat
-  abiSig        : Nat
-  xenograftable : Bool
-  viable        : Bool
-  deriving Repr, DecidableEq
-
-/-- Exact PLANARIA sovereignty policy: Bundle 0 (KERNEL) and Bundle 6 (GENOME) are non-xenograftable. -/
-@[expose] public def isXenograftableBundle (bundleId : Nat) : Bool :=
-  decide (bundleId ≥ 1 ∧ bundleId ≤ 5)
-
-/-- Safe Xenograft transplant rule matching `src/core/hbin.js` Step 3, enforcing BOTH
-    the protocol-level `isXenograftableBundle` sovereignty boundary AND header flags/ABI. -/
-@[expose] public def applyXenograft (host donor : BundleSlot) : BundleSlot :=
-  if !host.viable &&
-     isXenograftableBundle host.bundleId &&
-     host.xenograftable &&
-     donor.xenograftable &&
-     donor.viable &&
-     (donor.bundleId == host.bundleId) &&
-     (donor.abiSig == host.abiSig) then
-    { host with viable := true }
-  else
-    host
 
 /-- Theorem V.3 (Host Lineage Sovereignty via Header Flag):
     Any bundle with `xenograftable = false` can NEVER be replaced by a foreign donor. -/

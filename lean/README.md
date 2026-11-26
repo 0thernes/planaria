@@ -1,7 +1,7 @@
 # PLANARIA Pure Lean 4.35.0 Multi-Kernel Formal Proof Library
 
 **Toolchain:** `leanprover/lean4:v4.35.0` (`module` system, core Lean 4 only — **zero Mathlib**, **zero errors/warnings**, **zero `sorryAx`**, **zero `native_decide` / `Lean.ofReduceBool` / `Lean.trustCompiler`**, **zero custom axioms**).  
-**Standalone Palomar Spec & Solution:** [`Challenge.lean`](Challenge.lean) (0 project imports, 70 theorem statements) · [`Solution.lean`](Solution.lean) (0 `sorry`) · [`comparator.json`](comparator.json) · [`../formalization.yaml`](../formalization.yaml).  
+**Standalone Palomar Spec & Solution:** [`PlanariaProofs/Spec.lean`](PlanariaProofs/Spec.lean) (pure shared definitions, 0 proofs, 0 `sorry`) · [`Challenge.lean`](Challenge.lean) (0 proof imports, 70 theorem statements) · [`Solution.lean`](Solution.lean) (0 `sorry`) · [`VerifyAxioms.lean`](VerifyAxioms.lean) · [`comparator.json`](comparator.json) · [`../formalization.yaml`](../formalization.yaml).  
 **Audit Transcripts:** [`../results/lean4-audit.txt`](../results/lean4-audit.txt) (70 lines, pure Unix LF, 12 zero-axiom constructive proofs) · [`../results/lean4-multi-kernel.txt`](../results/lean4-multi-kernel.txt) (6 independent kernels).
 
 ## Quick Verification

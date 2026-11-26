@@ -1,5 +1,7 @@
 module
 
+public import PlanariaProofs.Spec
+
 /-!
 # PlanariaProofs.MitosisBounds
 
@@ -35,64 +37,9 @@ public theorem mitosis_unaligned_cut_guarantee (N k : Nat) (h : N ≥ 2 * k + 2)
     (N / 2 - 1) ≥ k ∧ ((N - N / 2) - 1) ≥ k := by
   omega
 
-/-- The exact 7-bundle (k, n) parameter table of PLANARIA .hbin v1.0–v2.3. -/
-@[expose] public def planariaBundleParams : List (Nat × Nat) :=
-  [(2, 24), (4, 24), (4, 24), (8, 32), (6, 24), (16, 40), (8, 24)]
-
-/-- Indexed 7-bundle table `(bundleId, k, n)`. -/
-@[expose] public def planariaIndexedBundles : List (Nat × Nat × Nat) :=
-  [(0, 2, 24), (1, 4, 24), (2, 4, 24), (3, 8, 32), (4, 6, 24), (5, 16, 40), (6, 8, 24)]
-
-/-- Exact integer placement key matching `src/core/hbin.js`:
-    `posNum(b, i, n_b) = (14 * i + 2 * b + 1) * (480 / n_b)`, scaled over `[0, 6720)`
-    with midpoint `3360 = 6720 / 2` (ZERO IEEE-754 floating-point drift!). -/
-@[expose] public def posNum (b i n_b : Nat) : Nat := (14 * i + 2 * b + 1) * (480 / n_b)
-
-/-- Generate all placement keys for bundle `b` across `i ∈ [0, n_b)`. -/
-@[expose] public def bundlePosKeys (b n_b : Nat) : List Nat :=
-  (List.range n_b).map (fun i => posNum b i n_b)
-
-/-- Flatten all 192 lexicographic `(posNum, bundleId)` sort keys (`posNum * 8 + b`),
-    matching `src/core/hbin.js`'s deterministic `(a.posNum - b.posNum) || (a.bundleId - b.bundleId)` order. -/
-@[expose] public def all192LexKeys : List Nat :=
-  planariaIndexedBundles.flatMap (fun (b, _, n_b) =>
-    (List.range n_b).map (fun i => posNum b i n_b * 8 + b))
-
-/-- Structural fuel-bounded merge sort on `List Nat` (pure kernel-reducible in O(N log N)). -/
-@[expose] public def splitAlt : List Nat → List Nat × List Nat
-  | [] => ([], [])
-  | [x] => ([x], [])
-  | x :: y :: rest =>
-    let (a, b) := splitAlt rest
-    (x :: a, y :: b)
-
-@[expose] public def mergeNatFuel : Nat → List Nat → List Nat → List Nat
-  | 0, xs, ys => xs ++ ys
-  | _ + 1, [], ys => ys
-  | _ + 1, xs, [] => xs
-  | f + 1, x :: xs, y :: ys =>
-    if x ≤ y then x :: mergeNatFuel f xs (y :: ys) else y :: mergeNatFuel f (x :: xs) ys
-
-@[expose] public def msortFuel : Nat → List Nat → List Nat
-  | 0, xs => xs
-  | f + 1, xs =>
-    match xs with
-    | [] => []
-    | [x] => [x]
-    | _ =>
-      let (a, b) := splitAlt xs
-      mergeNatFuel (xs.length + 1) (msortFuel f a) (msortFuel f b)
-
-/-- Check strictly increasing order on a sorted `List Nat`. -/
-@[expose] public def isStrictlyIncreasing : List Nat → Bool
-  | [] => true
-  | [_] => true
-  | x :: y :: rest => decide (x < y) && isStrictlyIncreasing (y :: rest)
-
-/-- Exact O(N log N) kernel-reducible sorted distinctness check. -/
-@[expose] public def allDistinctSorted (xs : List Nat) : Bool :=
-  let s := msortFuel 10 xs
-  decide (s.length = xs.length) && isStrictlyIncreasing s
+-- Definitions (`planariaBundleParams`, `planariaIndexedBundles`, `posNum`, `bundlePosKeys`,
+-- `all192LexKeys`, `splitAlt`, `mergeNatFuel`, `msortFuel`, `isStrictlyIncreasing`,
+-- `allDistinctSorted`) are imported canonically from `PlanariaProofs.Spec`.
 
 -- Machine-checked permutation soundness of `msortFuel` -> true `List.Nodup`!
 private theorem splitAlt_perm : ∀ xs : List Nat,

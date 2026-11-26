@@ -10,7 +10,7 @@ Cross-referenced directory of every manuscript, governance document, source modu
 |---|---|---|
 | [`README.md`](README.md) | Flagship Overview | 5-second verbatim `#print axioms` audit, 5 phenomena, quickstart, CLI & runnable examples, 4-architecture statistical benchmarks |
 | [`SUMMARY.md`](SUMMARY.md) | Executive Summary Paper | Standalone technical overview, equal-storage comparison table & honest `0/1,900` Mega-Atlas verdict |
-| [`paper/main.tex`](paper/main.tex) | AMS-LaTeX Source Manuscript | Standalone Tectonic LaTeX source with native TikZ/PGFPlots vector figures, Claims Ledger, Fidelity Table & 21 verified citations |
+| [`paper/main.tex`](paper/main.tex) | AMS-LaTeX Source Manuscript | Standalone Tectonic LaTeX source with native TikZ/PGFPlots vector figures, Claims Ledger, Fidelity Table & 22 verified citations |
 | [`dist/Donahue_2026_planaria.pdf`](dist/Donahue_2026_planaria.pdf) | Frozen Release PDF | Compiled publication-grade white paper PDF (`v2.3.0`) archived in `0thernes-research-archive` |
 | [`dist/arxiv_submission.tar.gz`](dist/arxiv_submission.tar.gz) | Standalone LaTeX Bundle | Verified self-contained compilation bundle (`main.tex`) |
 | [`paper/WHITE_PAPER.md`](paper/WHITE_PAPER.md) | Markdown White Paper | Full 12-section research white paper |
@@ -41,8 +41,8 @@ Cross-referenced directory of every manuscript, governance document, source modu
 ## 3. Compiled Living Programs & Formal Proofs (`programs/`, `artifacts/`, `lean/`, `results/`)
 
 - **4 Living Species:** `quantum_chronicle` (`426` insns), `aegis_drift` (`991` insns), `synth_reactor` (`645` insns), `cipher_vault` (`534` insns) + `artifacts/manifest.json`
-- **Lean 4.35.0 Multi-Kernel Suite (`lean/`):** `Challenge.lean`, `Solution.lean`, `PlanariaProofs.lean`, `VerifyAxioms.lean`, `comparator.json`, `lakefile.toml`, `lean-toolchain`, and `PlanariaProofs/{GF256,MitosisBounds,StratumAnastomosis,ByzantineImmune,XenograftABI,QuantumTemporal}.lean` (**70 audited theorems**)
-- **Empirical & Cryptographic Evidence:** `results/benchmarks.json`, `results/attestation.json` (59 files), `results/lean4-audit.txt` (70 theorems), `results/lean4-multi-kernel.txt` (6 kernels), `MANIFEST.sha256`, `data/MANIFEST.sha256`
+- **Lean 4.35.0 Multi-Kernel Suite (`lean/`):** `Challenge.lean`, `Solution.lean`, `PlanariaProofs.lean`, `VerifyAxioms.lean`, `comparator.json`, `lakefile.toml`, `lean-toolchain`, and `PlanariaProofs/{Spec,GF256,MitosisBounds,StratumAnastomosis,ByzantineImmune,XenograftABI,QuantumTemporal}.lean` (**70 audited theorems**)
+- **Empirical & Cryptographic Evidence:** `results/benchmarks.json`, `results/attestation.json` (61 files), `results/lean4-audit.txt` (70 theorems), `results/lean4-multi-kernel.txt` (6 kernels), `MANIFEST.sha256`, `data/MANIFEST.sha256`
 
 ---
 

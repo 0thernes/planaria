@@ -8,10 +8,11 @@ toolchain: "leanprover/lean4:v4.35.0"
 mathlib_dependency: false
 module_system: true
 lean_root: "lean"
+spec_module: "lean/PlanariaProofs/Spec.lean"
 challenge_module: "lean/Challenge.lean"
 solution_module: "lean/Solution.lean"
 comparator_config: "lean/comparator.json"
-audit_entrypoint: "lean/PlanariaProofs.lean"
+audit_entrypoint: "lean/VerifyAxioms.lean"
 permitted_axioms:
   - propext
   - Quot.sound
